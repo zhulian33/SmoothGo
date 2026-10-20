@@ -1,0 +1,31 @@
+.DS_Store
+presentation/_build/
+presentation/rendered/
+*.inspect.ndjson
+server/.env
+web/config.js
+server/data/*.db
+server/data/*.db-*
+server/data/*.db.bak-*
+__pycache__/
+*.pyc
+
+# Amap harvest intermediates (~1.6 MB). Regenerate with scripts/fetch_poi.py;
+# only the compiled output in web/places.poi.js ships.
+scripts/poi_raw.json
+scripts/poi_raw.json.bak-*
+
+# Internal team division / planning drafts (kept locally, not published)
+SmoothGo_六人分工详细总表.docx
+SmoothGo_MVP与发布检查表.docx
+docs/SmoothGo_六人分工说明.pdf
+docs/roles/
+docs/roles_word/
+docs/team-plan.md
+docs/task-board.csv
+docs/group-message.md
+docs/build_combined_role_doc.py
+docs/build_division_pdf.py
+docs/build_mvp_checklist.py
+docs/build_role_docs.py
+docs/build_simple_role_docs.py

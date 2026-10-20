@@ -1,0 +1,55 @@
+name: Deploy SmoothGo demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Generate config.js
+        env:
+          AMAP_KEY: ${{ secrets.AMAP_KEY }}
+          AMAP_SECURITY_CODE: ${{ secrets.AMAP_SECURITY_CODE }}
+        run: |
+          if [ -n "$AMAP_KEY" ]; then
+            cat > web/config.js <<EOF
+          window.SMOOTHGO_CONFIG = {
+            amapKey: "$AMAP_KEY",
+            amapSecurityJsCode: "$AMAP_SECURITY_CODE",
+            apiBaseUrl: "",
+            authMode: "demo"
+          };
+          EOF
+          else
+            cp web/config.example.js web/config.js
+          fi
+
+      - name: Upload web folder
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

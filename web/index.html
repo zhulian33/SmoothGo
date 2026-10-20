@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="SmoothGo 畅游通 — 用天气、路线、排队和购票信息，帮你安排更顺路的一天。"
+    />
+    <title>SmoothGo 畅游通</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <svg class="sprite" aria-hidden="true">
+      <symbol id="i-pin" viewBox="0 0 24 24">
+        <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+        <circle cx="12" cy="10" r="2.2" />
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+      </symbol>
+      <symbol id="i-car" viewBox="0 0 24 24">
+        <path d="M5 16h14M6 16l1.5-5h9L18 16M4 16v3h3v-2M20 16v3h-3v-2M7 19h10" />
+        <circle cx="7.5" cy="16" r="1.2" />
+        <circle cx="16.5" cy="16" r="1.2" />
+      </symbol>
+      <symbol id="i-bus" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="16" height="13" rx="2" />
+        <path d="M7 8h10M7 12h10M7 17v3M17 17v3M7 8v4M17 8v4" />
+      </symbol>
+      <symbol id="i-walk" viewBox="0 0 24 24">
+        <circle cx="13" cy="4" r="2" />
+        <path d="M13 7l-2 6 3 2 2 5M11 13l-4 2M14 15l4 1M13 10l4 3" />
+      </symbol>
+      <symbol id="i-taxi" viewBox="0 0 24 24">
+        <path d="M5 16h14M6 16l1.5-5h9L18 16M4 16v3h3v-2M20 16v3h-3v-2M9 11V8h6v3M12 8V5" />
+      </symbol>
+      <symbol id="i-food" viewBox="0 0 24 24">
+        <path d="M7 3v8M4 3v5a3 3 0 0 0 6 0V3M7 11v10M16 3v18M16 3c3 1 4 3 4 6h-4" />
+      </symbol>
+      <symbol id="i-palace" viewBox="0 0 24 24">
+        <path d="M3 21h18M5 21V10M9 21V10M15 21V10M19 21V10M2 10l10-6 10 6H2Z" />
+      </symbol>
+      <symbol id="i-queue" viewBox="0 0 24 24">
+        <circle cx="8" cy="9" r="2" />
+        <circle cx="16" cy="9" r="2" />
+        <path d="M4 19c.5-3 2-5 4-5s3.5 2 4 5M12 19c.5-3 2-5 4-5s3.5 2 4 5" />
+      </symbol>
+      <symbol id="i-ticket" viewBox="0 0 24 24">
+        <path d="M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4V7Z" />
+        <path d="M9 7v10" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="6" />
+        <path d="m16 16 5 5" />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="m5 12 4 4L19 6" />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="M6 6l12 12M18 6 6 18" />
+      </symbol>
+      <symbol id="i-star" viewBox="0 0 24 24">
+        <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
+      </symbol>
+      <symbol id="i-route" viewBox="0 0 24 24">
+        <circle cx="6" cy="19" r="2" />
+        <circle cx="18" cy="5" r="2" />
+        <path d="M8 19h4a3 3 0 0 0 3-3V8a3 3 0 0 1 3-3" />
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21c.8-4 3.5-6 8-6s7.2 2 8 6" />
+      </symbol>
+    </svg>
+
+    <div class="app">
+      <header class="topbar">
+        <a class="brand" href="#" data-view="home" aria-label="SmoothGo 主页">
+          <span class="brand-mark">S</span>
+          <span class="brand-type">
+            <strong>SmoothGo</strong>
+            <small>畅游通</small>
+          </span>
+        </a>
+
+        <nav class="tabs" aria-label="主导航">
+          <button class="tab active" type="button" data-view="home">主页</button>
+          <button class="tab" type="button" data-view="map">地图</button>
+          <button class="tab" type="button" data-view="route">路线</button>
+          <button class="tab" type="button" data-view="queue">排队</button>
+        </nav>
+
+        <div class="top-actions">
+          <button class="city-button" type="button" id="cityButton">
+            <svg class="icon"><use href="#i-pin"></use></svg>
+            长春
+          </button>
+          <button class="lang-button" type="button" id="langButton">中文 / EN</button>
+          <span class="guest-badge" id="guestBadge">游客预览</span>
+          <button class="login-button" type="button" id="loginButton">登录</button>
+        </div>
+      </header>
+
+      <aside class="queue-pin" id="queuePin" aria-live="polite" hidden></aside>
+
+      <main>
+        <section class="view active" id="view-home" aria-label="主页">
+          <div class="home-hero">
+            <div class="home-copy">
+              <div class="kicker" id="todayLabel">长春 · 今天</div>
+              <h1>四时俱好<br /><em>是长春。</em></h1>
+              <p>自己填条件，或者直接说一段话。SmoothGo 会把地点、天气、车程、排队和购票连成一天到三周的顺路行程。</p>
+
+              <div class="planner-card">
+                <div class="planner-head">
+                  <strong>一句话规划</strong>
+                  <span>也可以自己编辑下面条件</span>
+                </div>
+                <div class="nlp-row">
+                  <input
+                    id="nlpInput"
+                    type="text"
+                    value="我想带爸妈去长春玩一天，预算 500，喜欢东北菜和历史，不想太累。"
+                    aria-label="用一句话描述你的行程"
+                  />
+                  <button class="button dark" type="button" id="extractButton">提取关键词</button>
+                </div>
+                <div class="field-grid">
+                  <label class="field">
+                    <span>时间</span>
+                    <input id="timeInput" value="今天 · 09:30" />
+                  </label>
+                  <label class="field">
+                    <span>每日预算</span>
+                    <input id="budgetInput" value="¥300–500" />
+                  </label>
+                  <label class="field">
+                    <span>天数</span>
+                    <input id="daysInput" value="1 天" inputmode="numeric" aria-label="规划天数，支持 1 到 21 天" />
+                  </label>
+                  <label class="field">
+                    <span>地点</span>
+                    <input id="locationInput" value="长春市朝阳区" />
+                  </label>
+                  <label class="field">
+                    <span>人群</span>
+                    <input id="peopleInput" value="2 位成人" />
+                  </label>
+                </div>
+                <div class="planner-foot">
+                  <button class="button dark" type="button" id="generateButton">生成路线</button>
+                  <span id="extractStatus">支持自然语言 · 游客也可先预览</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="map-card home-map" id="homeMap" aria-label="长春实时地图预览">
+              <div class="map-top">
+                <span class="map-label">地图预览 · <strong id="homeMapCount">12</strong> 个地点</span>
+                <span class="map-live"><span class="live-dot"></span>高德底图</span>
+              </div>
+              <div class="route-preview-card">
+                <strong>长春一日路线</strong>
+                <span id="homeRouteSummary">3 个地点 · 约 7 小时 · 总车程 57 分钟</span>
+                <button type="button" class="text-link" data-view="route">查看完整路线 →</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="signal-strip">
+            <div class="signal-item"><span>天气</span><strong>—</strong><em>未接入数据源</em></div>
+            <div class="signal-item"><span>排队</span><strong id="queueSignalCount">2 个</strong><em>参考等候 · 非实时</em></div>
+            <div class="signal-item"><span>公交</span><strong>—</strong><em>未接入数据源</em></div>
+            <div class="signal-item"><span>已保存</span><strong id="savedSignalCount">3 个</strong><em>路线中的地点</em></div>
+          </div>
+
+          <div class="section-head">
+            <div>
+              <div class="kicker">今日路线</div>
+              <h2>今天可以这样走</h2>
+            </div>
+            <button class="text-link" type="button" data-view="route">查看完整路线 →</button>
+          </div>
+          <div class="route-preview-row" id="homeRouteRow"></div>
+
+          <section class="history-block" id="historyBlock" hidden>
+            <div class="section-head">
+              <div>
+                <div class="kicker">我的记录</div>
+                <h2>最近的搜索</h2>
+              </div>
+              <button class="text-link" type="button" id="refreshHistoryButton">刷新</button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-map" aria-label="地图找地点">
+          <div class="view-head">
+            <div>
+              <div class="kicker">地图找地点</div>
+              <h2>从地图开始，选你想去的地方</h2>
+              <p>点地图标注或左侧地点卡片，查看实景图、营业时间、参考等候和票务入口。</p>
+            </div>
+            <span class="map-data-note">图片 / 评分 / 营业时间来自高德 · 人均与等候为估算</span>
+          </div>
+
+          <div class="map-toolbar">
+            <div class="search-box">
+              <svg class="icon"><use href="#i-search"></use></svg>
+              <input id="mapSearch" type="search" placeholder="搜索长春的餐厅、景点" />
+            </div>
+            <div class="filter-chips" id="mapFilters">
+              <button class="chip active" type="button" data-filter="all">全部</button>
+              <button class="chip" type="button" data-filter="food">餐厅</button>
+              <button class="chip" type="button" data-filter="attraction">景点</button>
+              <button class="chip" type="button" data-filter="featured">长春特色</button>
+              <button class="chip" type="button" data-filter="short">排队少</button>
+              <button class="chip" type="button" data-filter="budget">人均 ¥100 以下</button>
+              <button class="chip" type="button" data-filter="rating">4.5 分以上</button>
+            </div>
+            <span class="result-count" id="mapCount"></span>
+          </div>
+
+          <div class="map-layer-bar" id="mapLayers" role="group" aria-label="地图图层">
+            <button class="layer-chip active" type="button" data-layer="all">
+              全部 <span id="allLayerCount">23</span>
+            </button>
+            <button class="layer-chip" type="button" data-layer="attraction">
+              景点 <span id="attractionLayerCount">8</span>
+            </button>
+            <button class="layer-chip" type="button" data-layer="transport">
+              交通 <span>未接入</span>
+            </button>
+            <button class="layer-chip" type="button" data-layer="food">
+              美食 <span id="foodLayerCount">4</span>
+            </button>
+            <div class="map-mode-controls" id="mapModes">
+              <span class="map-mode-label">底图</span>
+              <button class="map-mode-chip active" type="button" data-maptype="standard">标准</button>
+              <button class="map-mode-chip" type="button" data-maptype="satellite">卫星</button>
+              <button class="map-mode-chip" type="button" data-traffic-toggle>
+                <span class="live-dot"></span>实时路况
+              </button>
+            </div>
+          </div>
+
+          <div class="map-layout">
+            <aside class="place-list" id="placeList" aria-label="地点列表"></aside>
+            <div class="map-card map-large" id="mapViewMap" aria-label="长春地图"></div>
+          </div>
+
+          <section class="poi-block" id="poiBlock" aria-label="高德门店搜索">
+            <div class="section-head">
+              <div>
+                <div class="kicker">真实门店数据</div>
+                <h2>搜索附近好店</h2>
+              </div>
+              <span class="map-data-note">来自高德 POI · 店名 / 分类 / 地址 / 电话</span>
+            </div>
+
+            <div class="poi-toolbar">
+              <div class="search-box">
+                <svg class="icon"><use href="#i-search"></use></svg>
+                <input id="poiQuery" type="search" placeholder="关键词，如 东北菜 / 咖啡 / 景点" />
+              </div>
+              <input id="poiCity" class="poi-city" value="长春" aria-label="搜索城市" />
+              <button class="button dark" type="button" id="poiSearchButton">搜索</button>
+              <button class="button" type="button" id="poiNearbyButton">搜附近 3 公里</button>
+            </div>
+
+            <div class="poi-status" id="poiStatus"></div>
+            <div class="poi-list" id="poiList"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-route" aria-label="路线规划">
+          <div class="route-page-head">
+            <div>
+              <div class="kicker">路线规划</div>
+              <h2 id="routeTitle">长春一日路线</h2>
+              <p id="routeSubtitle">3 个地点 · 今天 · 09:30 开始</p>
+            </div>
+            <div class="route-summary" id="routeSummary"></div>
+            <div class="route-head-actions">
+              <button class="button outline" type="button" id="routeNavButton">开始导航</button>
+              <button class="button dark" type="button" id="replanButton">智能重排</button>
+              <button class="button outline" type="button" data-view="map">＋ 添加地点</button>
+            </div>
+          </div>
+
+          <div class="day-tabs" id="dayTabs" hidden></div>
+          <div class="replan-banner" id="replanBanner" hidden></div>
+
+          <div class="route-layout">
+            <div class="map-card route-map" id="routeMap" aria-label="路线地图">
+              <div class="map-live-summary" id="routeLiveOverlay"></div>
+            </div>
+            <aside class="route-sheet">
+              <div class="sheet-head">
+                <strong>最优连接</strong>
+                <span>驾车优先 · 按路程估算</span>
+              </div>
+              <div id="routeList"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-queue" aria-label="排队">
+          <div class="view-head">
+            <div>
+              <div class="kicker">现在 · 排队</div>
+              <h2>哪些地方要等，等多久</h2>
+              <p>排队信息来自演示数据，真实产品需场地授权或用户主动上报。</p>
+            </div>
+            <button class="button outline" type="button" id="refreshQueueButton">刷新估算</button>
+          </div>
+          <section class="active-queue-card" id="activeQueueCard" hidden></section>
+          <div class="queue-list" id="queueList"></div>
+          <div class="notice">
+            <svg class="icon"><use href="#i-bell"></use></svg>
+            <span>公交到站时间需要对接公交集团数据源，目前未接入；请以站牌或官方 App 为准。</span>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>演示数据 · 不产生真实订单 · <button class="footer-link" type="button" data-legal>隐私与条款</button></span>
+        <span>天气 / 地图 / 路线 / 排队 / 票务</span>
+      </footer>
+    </div>
+
+    <div class="modal-backdrop" id="loginModal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+        <button class="modal-close" type="button" id="loginModalClose" aria-label="关闭">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+        <span class="kicker" id="loginKicker">手机号登录 · 演示</span>
+        <h2 id="loginTitle">登录后保存路线</h2>
+        <p id="loginDesc">当前是课程演示版本，不会发送真实短信，也不会上传真实手机号。</p>
+        <div id="authForm">
+          <div class="auth-tabs" role="tablist">
+            <button class="auth-tab active" type="button" id="passwordTab" data-auth-mode="password" role="tab">密码登录</button>
+            <button class="auth-tab" type="button" id="codeTab" data-auth-mode="code" role="tab">验证码登录</button>
+          </div>
+          <label class="field modal-field">
+            <span>手机号</span>
+            <input id="phoneInput" inputmode="tel" placeholder="请输入手机号" />
+          </label>
+          <label class="field modal-field" id="passwordField">
+            <span>密码</span>
+            <input id="passwordInput" type="password" autocomplete="current-password" placeholder="至少 6 位" />
+          </label>
+          <div class="code-row" id="codeRow" hidden>
+              <label class="field modal-field">
+                <span>验证码</span>
+                <input id="codeInput" inputmode="numeric" placeholder="6 位验证码" />
+              </label>
+              <button class="button outline" type="button" id="sendCodeButton">发送验证码</button>
+            </div>
+          <button class="button dark full" type="button" id="doLoginButton">登录</button>
+          <p class="modal-footnote">继续即表示同意演示版
+            <button class="link-button" type="button" data-legal>服务条款与隐私说明</button>。
+            <span id="authSwitch"><span id="authSwitchHint">还没有账号？</span><button class="link-button" type="button" id="authSwitchButton">去注册</button></span>
+          </p>
+        </div>
+
+        <div class="auth-signed-in" id="authSignedIn" hidden>
+          <p class="signed-in-text">已登录：<strong id="signedInPhone"></strong></p>
+          <p class="modal-footnote">搜索记录会自动保存在这个账号下。</p>
+          <div class="membership-card">
+            <span class="membership-plan">FREE · 演示会员</span>
+            <strong id="membershipQuota">本月剩余 2 / 2 次</strong>
+            <p id="membershipUsage">基础路线规划免费；排队管家请求只保存演示记录，不产生真实订单。</p>
+            <p class="membership-last-request" id="membershipLastRequest" hidden></p>
+            <button class="text-link" type="button" id="membershipButton">查看会员权益 →</button>
+          </div>
+          <button class="button outline full" type="button" id="logoutButton">退出登录</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="queueModal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="queueTitle">
+        <button class="modal-close" type="button" id="queueModalClose" aria-label="关闭">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+        <span class="kicker">排队管家 · 演示</span>
+        <h2 id="queueTitle">在允许的场地，帮你省下等待</h2>
+        <p id="queueModalText">选择等待时长，提交后会显示模拟的接单流程。</p>
+        <div class="queue-options" id="queueOptions">
+          <button class="queue-option selected" type="button" data-minutes="30">
+            <strong>30 分钟</strong><span>¥10</span>
+          </button>
+          <button class="queue-option" type="button" data-minutes="60">
+            <strong>60 分钟</strong><span>¥18</span>
+          </button>
+          <button class="queue-option" type="button" data-minutes="90">
+            <strong>90 分钟</strong><span>¥26</span>
+          </button>
+        </div>
+        <p class="queue-quota" id="queueQuota">演示会员每月 2 次排队管家额度</p>
+        <div class="notice compact">
+          <svg class="icon"><use href="#i-bell"></use></svg>
+          <span>只对明确允许的餐厅或非严格排队场地提供；景区第一阶段只做信息监测。</span>
+        </div>
+        <button class="button dark full" type="button" id="queueSubmitButton">提交演示请求</button>
+        <div class="queue-success" id="queueSuccess" hidden>
+          <div class="queue-success-head">
+            <span class="success-dot"><svg class="icon"><use href="#i-check"></use></svg></span>
+            <span>演示请求已提交，没有产生真实订单。</span>
+            <strong id="queueRequestId">SG-DEMO</strong>
+          </div>
+          <ol class="queue-timeline" id="queueTimeline">
+            <li class="done"><b>请求已提交</b><span>演示订单已记录</span></li>
+            <li class="active"><b>匹配附近助手</b><span>正式版才会真实派单</span></li>
+            <li><b>到场扫码交接</b><span>用户与助手双向确认</span></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="placeModal" aria-hidden="true">
+      <div class="modal-card place-detail-modal" role="dialog" aria-modal="true" aria-labelledby="placeDetailTitle">
+        <button class="modal-close" type="button" id="placeModalClose" aria-label="关闭">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+        <div class="place-detail-hero">
+          <div class="place-detail-visual" id="placeDetailVisual"></div>
+          <div>
+            <span class="kicker" id="placeDetailType">景点</span>
+            <h2 id="placeDetailTitle">地点详情</h2>
+            <p id="placeDetailSubtitle"></p>
+          </div>
+        </div>
+        <div class="place-detail-stats" id="placeDetailStats"></div>
+        <p class="place-detail-desc" id="placeDetailDesc"></p>
+        <div class="detail-section" id="placeDishesSection">
+          <span class="detail-label">推荐菜</span>
+          <div class="detail-tags" id="placeDishes"></div>
+        </div>
+        <div class="detail-deal" id="placeDealSection">
+          <span class="detail-label">团购</span>
+          <strong id="placeDeal"></strong>
+        </div>
+        <div class="detail-actions">
+          <a id="placeDianping" href="#" target="_blank" rel="noreferrer">大众点评 ↗</a>
+          <a id="placeMeituan" href="#" target="_blank" rel="noreferrer">美团 ↗</a>
+          <a id="placeDouyin" href="#" target="_blank" rel="noreferrer">抖音 ↗</a>
+          <button class="button outline" id="placeNavButton" type="button">导航</button>
+          <button class="button dark" id="placeTicketButton" type="button">购票</button>
+          <button class="button outline" id="placeAddButton" type="button">加入路线</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="ticketModal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ticketTitle">
+        <button class="modal-close" type="button" id="ticketModalClose" aria-label="关闭">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+        <span class="kicker">内置购票 · 演示</span>
+        <h2 id="ticketTitle">选择门票</h2>
+        <p id="ticketDesc">演示订单不会真实出票，也不会产生支付。</p>
+        <div class="ticket-options" id="ticketOptions"></div>
+        <div class="ticket-quantity">
+          <span>数量</span>
+          <button type="button" id="ticketMinus" aria-label="减少数量">−</button>
+          <strong id="ticketQuantity">1</strong>
+          <button type="button" id="ticketPlus" aria-label="增加数量">＋</button>
+        </div>
+        <div class="ticket-total"><span>合计</span><strong id="ticketTotal">¥0</strong></div>
+        <button class="button dark full" type="button" id="ticketSubmitButton">提交演示订单</button>
+        <p class="modal-footnote">真实购票需接入景区官方票务或 OTA 授权接口。</p>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="rideModal" aria-hidden="true">
+      <div class="modal-card ride-modal" role="dialog" aria-modal="true" aria-labelledby="rideTitle">
+        <button class="modal-close" type="button" id="rideModalClose" aria-label="关闭">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+        <span class="kicker">乘车码 · 演示</span>
+        <h2 id="rideTitle">公交乘车码</h2>
+        <p id="rideDesc">向司机出示乘车码，演示环境不会真实扣费。</p>
+        <div class="ride-qr" id="rideQr"></div>
+        <div class="notice compact">
+          <span>演示乘车码，不具备真实乘车和支付能力。</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="legalModal" aria-hidden="true">
+      <div class="modal-card legal-modal" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+        <button class="modal-close" type="button" id="legalModalClose" aria-label="关闭">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+        <span class="kicker">演示版说明</span>
+        <h2 id="legalTitle">隐私、条款与数据边界</h2>
+        <div class="legal-copy">
+          <h3>演示数据</h3>
+          <p>地点、地址、坐标、营业时间、评分和图片来自高德开放平台 POI 数据，会随平台更新而变化；人均消费按品类估算，<strong>非真实账单</strong>。天气、公交到站、实时路况、排队人数、票务与会员支付<strong>尚未接入任何数据源</strong>，页面中的相关数值只用于课程演示。</p>
+          <h3>账号与隐私</h3>
+          <p>本地演示可创建手机号和密码。真实部署应使用 HTTPS，并以隐私政策说明保存目的、保存期限、删除方式和用户权利。</p>
+          <h3>排队管家</h3>
+          <p>当前只模拟请求和状态时间线，不会派单、收款或承诺优先入场。正式服务只应在明确允许的餐厅或非严格排队场地开放，景区第一阶段仅提供信息。</p>
+          <h3>票务与地图</h3>
+          <p>购票按钮只做跳转或演示订单，不直接出票。地图和路线能力接入高德后，仍需遵守其服务条款与配额限制。</p>
+          <h3>正式上线前</h3>
+          <p>还需要合作协议、隐私政策、数据删除机制、客服与应急流程、支付退款规则，以及排队协助人员的实名、培训、保险和交接规范。</p>
+        </div>
+        <button class="button dark full" type="button" id="legalConfirmButton">我知道了</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="config.js"></script>
+    <script src="planner.js"></script>
+    <script src="places.poi.js"></script>
+    <script src="place-photos.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,318 @@
+# SmoothGo (畅游通)
+
+**Travel smart. Skip the wait.**
+
+SmoothGo is an AI-assisted travel planner that turns live crowd and queue signals into a personalized, continuously updated day plan. The first pilot is designed for **Changchun, China**, with a roadmap to expand to other Chinese tourism cities.
+
+> This repository is a student project for the ENGL1006 Business Communication final presentation at Changchun Normal University, delivered in partnership with Southern Cross University (SCU). The demo uses illustrative data and is not affiliated with any venue, map provider, or booking platform.
+
+## The problem
+
+Travelers do not only need a list of attractions. They need to know **what is worth doing now**, given:
+
+- their interests and available time;
+- current crowd levels and queue times;
+- travel distance between stops;
+- weather, opening hours, and energy levels.
+
+Most travel products help users discover places. SmoothGo helps them **decide and re-decide** as conditions change.
+
+## The product
+
+The current web prototype demonstrates:
+
+1. **Editable or natural-language planning** — time, daily budget, location, group, interests and a trip length from 1 to 21 days.
+2. **Map discovery** — 23 illustrative places, filters, ratings, prices and queue estimates.
+3. **Multi-day route planning** — Day tabs, one meal per day, budget-aware choices, and a map that only shows the currently selected day.
+4. **Replan** — replace the busiest stop in the selected day with a same-category alternative, explain the trade-off and undo the change.
+5. **Map navigation** — standard or satellite base map, an Amap live-traffic overlay, estimated crowd counts and one-tap navigation handoff to Amap.
+6. **Queue and transit awareness** — after a demo queue-assist request the page closes the order dialog and pins a live card with tables/people ahead and an estimated wait, which survives navigation and refresh.
+7. **Account and queue assist demos** — guest preview, phone login, saved multi-day routes and membership-quota preview.
+
+All venue, queue, price and crowd data is illustrative. There is no real payment, SMS, ticketing or queue-assistance order in this version.
+
+## Live demo
+
+Open `web/index.html` directly, or serve the folder:
+
+```bash
+cd web
+python3 -m http.server 8080
+```
+
+Then visit `http://localhost:8080`.
+
+The web demo is intentionally dependency-free so it can run from GitHub Pages or a USB stick without a build step.
+
+### Preview
+
+![SmoothGo home](web/preview-home.png)
+
+![SmoothGo multi-day route](web/preview-route.png)
+
+![SmoothGo satellite map and live traffic](web/preview-map.png)
+
+![SmoothGo pinned queue-assist status](web/preview-queue.png)
+
+## Repository structure
+
+```text
+SmoothGo/
+├── web/                  # Static interactive prototype
+├── presentation/         # English slide deck, PDF backup and speaker notes
+├── docs/                 # Team plan, presentation outline, Q&A bank, sources
+├── LICENSE
+└── README.md
+```
+
+## Presentation package
+
+- `presentation/SmoothGo_Presentation.pptx` — 14-slide English deck with speaker notes.
+- `presentation/SmoothGo_Presentation.pdf` — backup copy.
+- `docs/team-plan.md` — six-person roles, task ownership and one-week schedule.
+- `docs/group-message.md` — copy-ready group chat message for assigning tasks.
+- `docs/presentation-outline.md` — slide-by-slide English outline.
+- `docs/qa-bank.md` — likely questions and short answers.
+
+## Product logic (prototype)
+
+The recommendation score combines:
+
+- interest match;
+- current crowd pressure;
+- expected queue time;
+- travel time;
+- venue rating;
+- fit with the user's available time.
+
+The prototype uses a transparent rule-based scorer with illustrative data. It balances interest match, budget fit, queue pressure, rating and travel time, then uses a meal-aware ordering pass for each day. Multi-day plans avoid repeated venues until the Changchun seed pool is exhausted, after which later days visibly reuse places. Replan keeps the venue category, prefers a matching interest, penalises repeated scene types, and only accepts a candidate that reduces queue time. A production version would connect to venue APIs, map services, user reports, and a trained crowd-forecasting model.
+
+## Current web prototype
+
+- `web/index.html` — full-page prototype with four views: Home, Map, Route and Queue.
+- Natural-language extraction recognizes budget, time, group and interest keywords.
+- Multi-day planning supports 1–21 days with Day tabs and per-day Replan; long trips reuse the limited seed venue pool and mark those days as “复用”.
+- Route and home maps show only the selected day’s stops; the discovery map matches the left-hand search and category filters exactly (`全部`, `景点`, `美食`, `交通`).
+- `web/planner.js` — dependency-free route scoring and Replan logic, shared by the browser and unit tests.
+- Amap provides the standard map, satellite imagery and live-traffic tiles; the route line and marker coordinates are illustrative.
+- Satellite imagery cannot count individual people. “Estimated people” values are deterministic demo estimates derived from mock queue data.
+- “开始导航” and the per-place navigation buttons hand off to Amap navigation; the prototype does not run a custom turn-by-turn engine.
+- Dianping-style rating, average price and review-count fields are demo data; a production version requires an authorized API or partnership.
+- The phone login and queue-assist flows are clearly labelled as demos.
+- The account panel shows a demo membership quota; no payment or subscription is processed.
+- Signed-in queue-assist requests are stored per account, so the monthly quota and the pinned live queue card survive a page refresh. Restaurant cards use “桌”, attraction cards use “人”.
+- The footer links to a privacy, terms and data-boundary explainer for the prototype.
+
+## Develop and verify
+
+The maintained source lives in `web/`. Run the planner tests and rebuild the offline single-file backup after changing the web app:
+
+```bash
+node --test tests/planner.test.js
+python3 -m unittest tests.test_server -v
+python3 docs/build_standalone.py
+```
+
+The generated `SmoothGo-Web-Demo.html` runs without a server or Amap key, using the schematic map and guest mode. The online version at `http://localhost:8080/` uses `web/config.js`.
+
+## Accounts and search history
+
+Phone + password registration is the default tab in the login dialog, with the
+original SMS flow kept as a second tab:
+
+- `POST /api/auth/register` — `{phone, password}` creates an account and returns a session token. Passwords must be at least 6 characters and are stored as PBKDF2-HMAC-SHA256 hashes with a random per-user salt; the plaintext never reaches the database.
+- `POST /api/auth/login` — `{phone, password}` returns a session token.
+- `POST /api/auth/verify` — the SMS code flow still works and is unchanged.
+- `GET /api/searches` / `POST /api/searches` — read and append search history for the logged-in user. Rows are scoped by `user_id`, so one account cannot read another account's history. The page records a search automatically after “生成路线”.
+- `GET /api/queue-requests` / `POST /api/queue-requests` — read and save simulated queue-assist requests for the logged-in user. The free demo quota defaults to **2 requests per calendar month** (`QUEUE_MONTHLY_LIMIT`); no request creates a real order or payment.
+
+Accounts created through the SMS flow have no password. They deliberately cannot
+be claimed through password registration, because that would let anyone take over
+a number they do not control — use the code flow for those accounts.
+
+These features need `server/app.py`. GitHub Pages only serves static files, so a
+deployed site stays in guest mode unless you host the API separately and point
+`apiBaseUrl` in `web/config.js` at it.
+
+## Deploy to GitHub Pages
+
+The repository includes `.github/workflows/pages.yml`. In GitHub, open **Settings → Pages** and select **GitHub Actions** as the source. A push to `main` will publish the `web/` folder.
+
+`web/config.js` is gitignored so real keys never enter the repository. The workflow regenerates it at deploy time from repository secrets:
+
+- Go to **Settings → Secrets and variables → Actions → New repository secret**
+- `AMAP_KEY` — your Amap Web JS API key
+- `AMAP_SECURITY_CODE` — the matching security code
+
+If those secrets are missing, the workflow falls back to `web/config.example.js`, so the site still deploys but the map falls back to the schematic view.
+
+## Amap and real phone registration
+
+- **Amap:** apply for a Web JS API key, add your domain to the whitelist, then run `cp web/config.example.js web/config.js` and fill in the two values.
+- **Real phone login:** run `server/app.py` and configure a real SMS provider in `server/.env`.
+- **Local mock mode:** keep `SMS_PROVIDER=mock` and `DEV_SHOW_CODE=1` for testing; this does not send real SMS.
+- **Production:** set `authMode: "real"` in `web/config.js`, use HTTPS, set a strong `OTP_SECRET`, set `DEV_SHOW_CODE=0`, and configure Aliyun SMS or a webhook.
+
+### Recommended for personal accounts: `SMS_PROVIDER=aliyun_verify`
+
+The classic Aliyun `SendSms` API (`SMS_PROVIDER=aliyun`) requires an enterprise
+qualification, a filed signature and an approved template, which personal
+accounts cannot obtain. `aliyun_verify` uses Aliyun **Phone Number Verification
+Service** (`Dypnsapi` / `SendSmsVerifyCode`) instead: it sends through the
+system-granted signature and template, so a personally verified account can send
+real verification codes the same day.
+
+1. Enable **短信认证** and **融合认证** at <https://dypns.console.aliyun.com/functions>.
+2. Create an AccessKey (a RAM user with `dypns:SendSmsVerifyCode` is recommended).
+3. Copy a granted signature and template from
+   <https://dypns.console.aliyun.com/smsCertParamsConfig/sign> — a granted
+   signature must be paired with a granted template.
+4. Fill `ALIYUN_VERIFY_ACCESS_KEY_ID`, `ALIYUN_VERIFY_ACCESS_KEY_SECRET`,
+   `ALIYUN_VERIFY_SIGN_NAME` and `ALIYUN_VERIFY_TEMPLATE_CODE` in `server/.env`,
+   then set `SMS_PROVIDER=aliyun_verify` and `DEV_SHOW_CODE=0`.
+
+Code generation and verification stay local; Aliyun is only the delivery
+channel. Only mainland China numbers are supported, and billing is per delivered
+message (¥0.06 each under 1,000/month — there is **no** free quota, and the
+converged-authentication trial plan cannot be applied to standalone SMS
+verification).
+
+### Free alternative: push the code to WeChat
+
+If you only need the code to reach a phone for a demo or defence, skip SMS
+entirely. Use `SMS_PROVIDER=webhook` with `SMS_WEBHOOK_FORMAT=pushplus`:
+
+```ini
+SMS_PROVIDER=webhook
+SMS_WEBHOOK_FORMAT=pushplus
+SMS_WEBHOOK_TOKEN=<your-pushplus-token>
+```
+
+1. Sign in at <https://www.pushplus.plus> with WeChat; your token is on the home page.
+2. Follow the **pushplus** official account, otherwise sends fail with code `600`.
+3. Restart the server — the code then arrives as a WeChat message, not an SMS.
+
+The free tier allows 200 messages a day, plenty for a demo. Keep
+`SMS_WEBHOOK_FORMAT=raw` if you would rather post to your own gateway, which
+receives `{"phone","code","template"}`.
+
+See [`server/README.md`](server/README.md) for the complete setup.
+
+## Real store data (Amap POI)
+
+The **Map** view ends with a *搜索附近好店* panel: type a keyword such as
+`东北菜`, pick a city, and SmoothGo returns real places with **name, category,
+address and phone number**. Results are dropped onto the live map and each card
+can recentre the map or open Amap navigation.
+
+It calls `AMap.PlaceSearch` straight from the browser with the **Web JS API key
+you already have**, so nothing new has to be applied for and the panel works on
+GitHub Pages, where no backend exists.
+
+```text
+GET /api/poi/search?keywords=东北菜&city=长春        # keyword search
+GET /api/poi/search?keywords=咖啡&location=125.32,43.81&radius=3000
+```
+
+The optional `server/` endpoint above proxies the same data server-side. It is
+only useful if you deploy `server/` yourself and would rather keep a
+**Web-service key** off the page. Add `AMAP_WEB_SERVICE_KEY=...` to
+`server/.env`. Note the two key types are **not interchangeable**: the JS key
+cannot call `restapi.amap.com`, and the Web-service key cannot render a map.
+
+**What Amap does return:** requesting `extensions: "all"` gives a real `rating`,
+`opentime2` and up to three `photos` per place. Those are stored as `rating`,
+`hours` and `photo` / `photos`, and the UI labels the score as **高德 4.7** rather
+than implying it came from anywhere else. Coverage across the generated library:
+rating 99%, photo 97%, hours 87%.
+
+**What Amap does not return:** average spend, ticket price and live queue length.
+Dianping has no public POI API for any of that — its open platform serves
+merchants managing their own stores, not third-party lookups. So `avg` is filled
+by `estimate_spend()` in `scripts/build_places.py`, a **per-person band derived
+from the Amap sub-category** (火锅 95, 东北菜 70, 咖啡 45, parks 0 ...), and the UI
+renders it as **人均约 ¥70** to make clear it is neither a measured bill nor a
+merchant figure. `ticket` stays `null` and the detail sheet links out instead of
+showing a price.
+
+## Place library
+
+The map draws on two layers:
+
+| Source | Count | Fields |
+|---|---|---|
+| `web/app.js` (hand-written) | 23 | 9 attractions + 14 restaurants that Amap indexes poorly: streets, snack rows, night markets. No photos of their own — they borrow the Amap photo on merge |
+| `web/places.poi.js` (generated) | 560 | real name, category, address, phone, coordinates, **rating, opening hours, photos** from Amap |
+
+That is 583 rows before merging. The two layers overlap on 9 places (南湖 vs 南湖公园,
+桂林路 vs 桂林路商业街), so the merged library ships **574 places: 200 attractions
+and 374 restaurants** within 40 km of downtown Changchun. 14 of the 23 hand-written
+rows adopt the Amap rating, hours and photo of the same place, which is why no
+card shows an invented score next to a real one.
+
+**Chains are kept branch by branch.** Searching a brand name (700CC, 老昌春饼,
+王记酱骨) returns every branch inside the city limit, so a chain appears once per
+location with its own address and phone instead of a single generic entry.
+
+**Sub-spots are folded into their host.** Amap returns a scenic area plus every
+point inside it (`净月潭国家森林公园-月潭览胜`, `长春市动植物公园-雉鸡馆`). Keeping
+those would turn one destination into thirty rows, so `is_sub_spot()` in
+`scripts/build_places.py` drops the children and `ALIASES` collapses official
+aliases (净月潭 / 净月潭国家森林公园 / 净月潭国家级风景名胜区) onto one name.
+Entrances, car parks, charging stations, ticket offices and law firms are
+filtered by `BAD_NAME` / `BAD_TYPE`.
+
+**The 长春特色 badge is editorial, not from Amap.** Two tiers are hand-maintained
+in the build script: `FEATURED_ATTRACTION` (20 keywords → badge 长春地标) and
+`FEATURED_FOOD` (18 keywords → badge 长春名吃). Because a chain matches on its
+brand keyword, all its branches are badged too, so 56 of the 574 places carry a
+specialty badge. Category words like 东北菜 or 火锅 are deliberately excluded —
+matching them would badge half the library and the badge would mean nothing.
+The list sorts specialties first, landmarks before food, and a landmark's own
+name before its satellite venues.
+
+**Everything the app claims but cannot source is labelled.** No live feed is
+connected for weather, bus arrival, road congestion, queue length or ticketing,
+so those panels say **未接入** instead of showing a number that looks
+authoritative. What *is* real: place identity, coordinates, opening hours and
+photos come from Amap; route travel time is a haversine distance estimate at 26
+km/h, clamped to 8–90 minutes; the road-colour layer is Amap's own
+`TileLayer.Traffic`. Queue ranges are estimates (`confidence: "低"`) drawn from
+two narrow constants, which is why they are excluded from the home-page
+"waiting venues" signal and every card that shows one carries the suffix
+**参考等候 · 非实时**.
+
+With 574 places on the map, pins overlap badly at city zoom, so the map view
+switches to `AMap.MarkerCluster` above 60 visible places. Clusters render as
+dark bubbles with a count; clicking one zooms in two levels, and past zoom 15 the
+clusters break apart into individual pins. Route view and sparse filters stay on
+plain markers so stop order numbers stay readable.
+
+Rebuild it, or point it at another city by editing `CITY` in
+`scripts/fetch_poi.py`:
+
+```bash
+python3 server/app.py &
+agent-browser open "http://127.0.0.1:8080/#map"
+python3 scripts/fetch_poi.py
+python3 scripts/build_places.py
+agent-browser close
+```
+
+## Safety and compliance
+
+SmoothGo does **not** sell tickets or promise priority entry. Queue assistance is presented as a request-and-handoff service only for venues that explicitly allow it. The pilot prioritizes restaurants and non-strict queue environments; scenic-area queueing remains information-only until local rules are confirmed.
+
+## Roadmap
+
+- **Now:** Changchun pilot with 5–10 partner venues and a clickable prototype.
+- **Next:** user-reported crowd data, merchant dashboard, and English/Chinese UI.
+- **Later:** expand to Xi'an, Chongqing, and Changsha; integrate live venue APIs and a learned queue-forecasting model.
+
+## Team
+
+Six-member student team, Computer Science, Changchun Normal University.
+
+## License
+
+MIT License. See `LICENSE`.
