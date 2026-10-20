@@ -266,6 +266,14 @@ a {
 .lang-button {
   color: var(--muted);
   font-weight: 500;
+  cursor: pointer;
+}
+
+/* English mode: make the active language obvious, not just different text. */
+.lang-button.active {
+  color: var(--ink);
+  font-weight: 700;
+  border-bottom: 1px solid var(--ink);
 }
 
 .guest-badge {

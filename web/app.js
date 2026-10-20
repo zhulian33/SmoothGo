@@ -1,3 +1,16 @@
+/* Bilingual layer. Falls back to identity functions if i18n.js is missing. */
+const I18N = window.SmoothGoI18n || {
+  t: (zh) => zh,
+  tv: (zh) => zh,
+  getLang: () => "zh",
+  setLang: () => "zh",
+  applyStatic: () => {},
+  onLangChange: () => {}
+};
+const t = I18N.t;
+const tv = I18N.tv;
+const th = I18N.th;
+
 const PLACES = [
   {
     id: "jingyuetan",
@@ -728,19 +741,19 @@ function transportLegs(stops = state.route.map(placeById).filter(Boolean)) {
     const km = fact?.drive?.km ?? fact?.bus?.km ?? null;
     const real = fact?.source === "amap";
     const parts = [];
-    if (fact?.drive?.minutes) parts.push(`驾车 ${fact.drive.minutes} 分钟`);
-    if (fact?.bus?.minutes) parts.push(`公交 ${fact.bus.minutes} 分钟`);
+    if (fact?.drive?.minutes) parts.push(t("驾车 {v0} 分钟", { v0: fact.drive.minutes }));
+    if (fact?.bus?.minutes) parts.push(t("公交 {v0} 分钟", { v0: fact.bus.minutes }));
     // 23 km on foot is a true number and a useless one, so only surface walking
     // when it is an option anybody would take.
-    if (fact?.walk?.minutes && fact.walk.minutes <= 30) parts.push(`步行 ${fact.walk.minutes} 分钟`);
-    if (Number.isFinite(km)) parts.push(`${km.toFixed(1)} 公里`);
+    if (fact?.walk?.minutes && fact.walk.minutes <= 30) parts.push(t("步行 {v0} 分钟", { v0: fact.walk.minutes }));
+    if (Number.isFinite(km)) parts.push(t("{v0} 公里", { v0: km.toFixed(1) }));
     legs.push({
       id: `${from.id}~${to.id}`,
       toId: to.id,
       name: `${from.name} → ${to.name}`,
-      type: real ? "高德路线" : "直线估算",
-      detail: real ? parts.join(" · ") : "高德未返回该段路线，暂按直线距离估算",
-      status: real ? "已接入" : "估算",
+      type: real ? t("高德路线") : t("直线估算"),
+      detail: real ? parts.join(" · ") : t("高德未返回该段路线，暂按直线距离估算"),
+      status: real ? t("已接入") : t("估算"),
       lng:
         Number.isFinite(from.lng) && Number.isFinite(to.lng) ? (from.lng + to.lng) / 2 : null,
       lat:
@@ -785,11 +798,11 @@ const state = {
   mapSearch: "",
   mapType: "standard",
   trafficVisible: false,
-  interests: new Set(["自然", "历史"]),
+  interests: new Set([t("自然"), t("历史")]),
   startTime: "09:30",
   budget: "¥300–500",
-  people: "2 位成人",
-  location: "长春市朝阳区",
+  people: t("2 位成人"),
+  location: t("长春市朝阳区"),
   queuePlace: null,
   queueMinutes: 30,
   currentPosition: null,
@@ -811,14 +824,23 @@ const placeById = (id) => PLACES.find((place) => place.id === id);
 const dateLabelForOffset = (offset = 0, includeWeekday = true) => {
   const date = new Date();
   date.setDate(date.getDate() + Number(offset || 0));
-  const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
-  const base = `${date.getMonth() + 1} 月 ${date.getDate()} 日`;
+  const weekdays = [t("周日"), t("周一"), t("周二"), t("周三"), t("周四"), t("周五"), t("周六")];
+  const base = t("{v0} 月 {v1} 日", { v0: date.getMonth() + 1, v1: date.getDate() });
   return includeWeekday ? `${base} · ${weekdays[date.getDay()]}` : base;
 };
-const todayLabel = dateLabelForOffset(0);
+let todayLabel = dateLabelForOffset(0);
 
 function icon(id) {
   return `<svg class="icon" aria-hidden="true"><use href="#${id}"></use></svg>`;
+}
+
+/* POI type strings are data ("景点 · 度假村"). Translate each segment for
+   display only — the stored value stays Chinese so filters keep working. */
+function localizeType(type) {
+  return String(type || "")
+    .split(" · ")
+    .map((part) => tv(part))
+    .join(" · ");
 }
 
 function placeMetrics(place) {
@@ -828,10 +850,10 @@ function placeMetrics(place) {
     // 暂无评分, not 评分待接入: Amap simply has no score for these four (small
     // memorial halls, one sculpture). "待接入" would promise a source that does
     // not exist for them.
-    rating: place.rating ? `高德 ${place.rating}` : "暂无评分",
+    rating: place.rating ? t("高德 {v0}", { v0: place.rating }) : t("暂无评分"),
     // avg is a band derived from the POI sub-category, so 约 is load-bearing.
-    avg: typeof place.avg === "number" ? `人均约 ¥${place.avg}` : "人均待接入",
-    hours: place.hours ? `营业 ${place.hours}` : "营业时间待确认"
+    avg: typeof place.avg === "number" ? t("人均约 ¥{v0}", { v0: place.avg }) : t("人均待接入"),
+    hours: place.hours ? t("营业 {v0}", { v0: th(place.hours) }) : t("营业时间待确认")
     // No ticket field on purpose. The old card printed ¥30 / ¥70 / ¥180 that were
     // typed in by hand, which looks like a fare table and is not one. Anything
     // about price now comes from the booking channels the user actually opens.
@@ -840,7 +862,7 @@ function placeMetrics(place) {
 
 function markerPopover(place) {
   const metrics = placeMetrics(place);
-  return `<span class="marker-popover"><strong>${place.name}</strong><span>${place.subtitle || place.type}</span><em>${metrics.rating} · ${metrics.avg}<br />参考等候 ${queueText(place)} 分钟 · 非实时</em></span>`;
+  return `<span class="marker-popover"><strong>${place.name}</strong><span>${place.subtitle || localizeType(place.type)}</span><em>${metrics.rating} · ${metrics.avg}<br />${t("参考等候 {v0} 分钟 · 非实时", { v0: queueText(place) })}</em></span>`;
 }
 
 function formatMinutes(total) {
@@ -871,7 +893,7 @@ function navigationUrl(place) {
   if (!place) return "";
   const destination = `${place.lng},${place.lat},${encodeURIComponent(place.name)}`;
   const origin = state.currentPosition
-    ? `from=${state.currentPosition[0]},${state.currentPosition[1]},${encodeURIComponent("当前位置")}&`
+    ? `from=${state.currentPosition[0]},${state.currentPosition[1]},${encodeURIComponent(t("当前位置"))}&`
     : "";
   return (
     `https://uri.amap.com/navigation?${origin}to=${destination}` +
@@ -882,7 +904,7 @@ function navigationUrl(place) {
 function openNavigation(place) {
   if (!place) return;
   window.open(navigationUrl(place), "_blank", "noopener");
-  showToast(`正在打开高德导航：${place.name}`);
+  showToast(t("正在打开高德导航：{v0}", { v0: place.name }));
 }
 
 function distanceKm(from, to) {
@@ -954,7 +976,7 @@ function planOnce(mode, from, to) {
     try {
       const options =
         mode === "bus"
-          ? { city: "长春市", policy: window.AMap.TransferPolicy?.LEAST_TIME }
+          ? { city: t("长春市"), policy: window.AMap.TransferPolicy?.LEAST_TIME }
           : mode === "drive"
             ? { policy: window.AMap.DrivingPolicy?.LEAST_TIME }
             : {};
@@ -1023,23 +1045,23 @@ function transportOptions(from, to) {
   const fact = routeFact(from, to);
   const fallbackDrive = travelBetween(from, to);
   const km = fact?.drive?.km || fact?.bus?.km || distanceKm(from, to);
-  const distLabel = Number.isFinite(km) ? `${km.toFixed(1)} 公里` : "距离待接入";
+  const distLabel = Number.isFinite(km) ? t("{v0} 公里", { v0: km.toFixed(1) }) : t("距离待接入");
 
   if (fact?.source === "amap") {
     const drive = fact.drive?.minutes || null;
     const bus = fact.bus?.minutes || null;
     const rows = [];
-    if (drive) rows.push({ mode: "car", label: `驾车 ${drive} 分钟`, active: !bus });
-    if (bus) rows.push({ mode: "bus", label: `公交 ${bus} 分钟`, active: !drive });
-    if (!drive && !bus) rows.push({ mode: "car", label: `驾车约 ${fallbackDrive} 分钟`, active: true });
-    rows.push({ mode: "taxi", label: `打车 ${distLabel}`, active: false });
+    if (drive) rows.push({ mode: "car", label: t("驾车 {v0} 分钟", { v0: drive }), active: !bus });
+    if (bus) rows.push({ mode: "bus", label: t("公交 {v0} 分钟", { v0: bus }), active: !drive });
+    if (!drive && !bus) rows.push({ mode: "car", label: t("驾车约 {v0} 分钟", { v0: fallbackDrive }), active: true });
+    rows.push({ mode: "taxi", label: t("打车 {v0}", { v0: distLabel }), active: false });
     return rows;
   }
 
   return [
-    { mode: "car", label: `驾车约 ${fallbackDrive} 分钟`, active: true },
-    { mode: "bus", label: "公交未接入", active: false },
-    { mode: "taxi", label: `打车 ${distLabel}`, active: false }
+    { mode: "car", label: t("驾车约 {v0} 分钟", { v0: fallbackDrive }), active: true },
+    { mode: "bus", label: t("公交未接入"), active: false },
+    { mode: "taxi", label: t("打车 {v0}", { v0: distLabel }), active: false }
   ];
 }
 
@@ -1063,7 +1085,7 @@ function routePath() {
 
 function mapBackground() {
   return `
-    <svg class="map-svg" viewBox="0 0 600 400" role="img" aria-label="长春示意地图">
+    <svg class="map-svg" viewBox="0 0 600 400" role="img" aria-label="${t("长春示意地图")}">
       <rect width="600" height="400" fill="#f2f2f2" />
       <g fill="#e7e7e7" stroke="#d4d4d4" stroke-width="0.7">
         <path d="M0 30h112v66H0zM138 18h102v55H138zM266 16h126v70H266zM416 23h184v64H416zM28 118h116v58H28zM172 105h104v78H172zM304 110h114v65H304zM448 114h152v72H448zM40 222h104v64H40zM174 210h108v76H174zM312 208h104v72H312zM446 220h154v66H446zM28 326h116v74H28zM174 320h108v80H174zM312 312h104v88H312zM446 326h154v74H446z" />
@@ -1079,9 +1101,9 @@ function mapBackground() {
       <path d="M420 20c44 6 76 24 98 44s45 38 69 38v61c-36-6-66-21-93-43s-46-34-74-38Z" fill="#dde3dd" />
       <path d="M38 228c38-12 73-11 108-1v44c-35-10-70-10-108-1Z" fill="#dde3dd" />
       <path data-route-line d="" fill="none" stroke="#111" stroke-width="1.6" stroke-dasharray="6 5" />
-      <text x="40" y="218" fill="#8b8b8b" font-size="8">南湖</text>
-      <text x="474" y="52" fill="#8b8b8b" font-size="8">北湖</text>
-      <text x="238" y="190" fill="#8b8b8b" font-size="8">人民大街</text>
+      <text x="40" y="218" fill="#8b8b8b" font-size="8">${t("南湖")}</text>
+      <text x="474" y="52" fill="#8b8b8b" font-size="8">${t("北湖")}</text>
+      <text x="238" y="190" fill="#8b8b8b" font-size="8">${t("人民大街")}</text>
     </svg>
   `;
 }
@@ -1113,7 +1135,7 @@ function addAmapCurrentLocation(map) {
     position: state.currentPosition,
     anchor: "center",
     zIndex: 200,
-    content: '<div class="amap-you"><span class="amap-you-dot"></span>你在这里</div>'
+    content: `<div class="amap-you"><span class="amap-you-dot"></span>${t("你在这里")}</div>`
   });
   map.add(marker);
 }
@@ -1274,6 +1296,9 @@ function renderAmap(element, mode = "map") {
     renderSchematicMap(element, mode);
     return;
   }
+  /* The legend survives the switch from the schematic map, so keep it in
+     step with the active language here as well. */
+  syncMapLegend(element);
 
   try {
     renderMapTopOverlay(element, mode);
@@ -1410,9 +1435,9 @@ function renderMapTopOverlay(element, mode = "map") {
   if (!element) return;
   const liveCopy = state.trafficVisible
     ? amapReady
-      ? "实时路况已开"
-      : "路况需联网"
-    : "路况图层";
+      ? t("实时路况已开")
+      : t("路况需联网")
+    : t("路况图层");
   const label = element.querySelector(".map-label");
   const live = element.querySelector(".map-live");
   if (!label || !live) {
@@ -1420,12 +1445,25 @@ function renderMapTopOverlay(element, mode = "map") {
       "beforeend",
       `<div class="map-top"><span class="map-label">${mapBaseLabel(mode)} · <strong>${mapCountForMode(
         mode
-      )}</strong> 个地点</span><span class="map-live"><span class="live-dot"></span>${liveCopy}</span></div>`
+      )}</strong> ${t("个地点")}</span><span class="map-live"><span class="live-dot"></span>${liveCopy}</span></div>`
     );
     return;
   }
-  label.innerHTML = `${mapBaseLabel(mode)} · <strong>${mapCountForMode(mode)}</strong> 个地点`;
+  label.innerHTML = t("{v0} · <strong>{v1}</strong> 个地点", { v0: mapBaseLabel(mode), v1: mapCountForMode(mode) });
   live.innerHTML = `<span class="live-dot"></span>${liveCopy}`;
+}
+
+/* The legend is rebuilt on every render so it follows the active language,
+   whichever map renderer is in charge. */
+function syncMapLegend(element) {
+  if (!element) return;
+  let legend = element.querySelector(".map-legend");
+  if (!legend) {
+    element.insertAdjacentHTML("beforeend", '<div class="map-legend"></div>');
+    legend = element.querySelector(".map-legend");
+    if (!legend) return;
+  }
+  legend.innerHTML = `● ${t("你在这里")} · ○ ${t("地点标记")} · — ${t("推荐路线")}`;
 }
 
 function renderSchematicMap(element, mode = "map") {
@@ -1474,15 +1512,10 @@ function renderSchematicMap(element, mode = "map") {
   element.insertAdjacentHTML("beforeend", markers);
   element.insertAdjacentHTML(
     "beforeend",
-    `<div class="map-you"><span class="map-you-dot"></span>你在这里</div>`
+    `<div class="map-you"><span class="map-you-dot"></span>${t("你在这里")}</div>`
   );
 
-  if (!element.querySelector(".map-legend")) {
-    element.insertAdjacentHTML(
-      "beforeend",
-      `<div class="map-legend">● 你在这里 · ○ 地点 · — 推荐路线</div>`
-    );
-  }
+  syncMapLegend(element);
 
   const path = element.querySelector("[data-route-line]");
   if (path) path.setAttribute("d", routePath());
@@ -1549,8 +1582,8 @@ function renderDayTabs() {
         index === state.selectedDay
       }">
         <strong>Day ${index + 1}</strong>
-        <span>${dateLabelForOffset(index, false)} · ${day.route.length} 站${
-          reused ? " · 复用" : ""
+        <span>${dateLabelForOffset(index, false)} · ${day.route.length} ${t("站")}${
+          reused ? t(" · 复用") : ""
         }</span>
       </button>`;
     })
@@ -1560,22 +1593,22 @@ function renderDayTabs() {
 function renderHome() {
   const schedule = buildSchedule();
   const dateLabel = $("#todayLabel");
-  if (dateLabel) dateLabel.textContent = `长春 · ${todayLabel}`;
+  if (dateLabel) dateLabel.textContent = t("长春 · {v0}", { v0: todayLabel });
   const mapCount = $("#homeMapCount");
   const savedCount = $("#savedSignalCount");
   const queueCount = $("#queueSignalCount");
   if (mapCount) mapCount.textContent = state.route.length;
-  if (savedCount) savedCount.textContent = `${totalItineraryStops()} 个`;
+  if (savedCount) savedCount.textContent = t("{v0} 个", { v0: totalItineraryStops() });
   if (queueCount) {
-    queueCount.textContent = `${PLACES.filter((place) => place.queueMax >= 20 && place.confidence !== "低").length} 个`;
+    queueCount.textContent = t("{v0} 个", { v0: PLACES.filter((place) => place.queueMax >= 20 && place.confidence !== "低").length });
   }
   const dayCopy =
     state.itinerary.length > 1
-      ? `第 ${state.selectedDay + 1}/${state.itinerary.length} 天 · `
+      ? t("第 {v0}/{v1} 天 · ", { v0: state.selectedDay + 1, v1: state.itinerary.length })
       : "";
   const summary = $("#homeRouteSummary");
   if (summary) {
-    summary.textContent = `${dayCopy}${schedule.stops.length} 个地点 · 约 ${formatMinutes(schedule.total)} · 总车程 ${formatMinutes(schedule.totalTravel)}`;
+    summary.textContent = t("{v0}{v1} 个地点 · 约 {v2} · 总车程 {v3}", { v0: dayCopy, v1: schedule.stops.length, v2: formatMinutes(schedule.total), v3: formatMinutes(schedule.totalTravel) });
   }
   const routeRow = $("#homeRouteRow");
   if (routeRow) {
@@ -1585,11 +1618,11 @@ function renderHome() {
     <div class="route-preview-stop">
       <time>${place.arrivalLabel}</time>
       <strong>${escapeHtml(place.name)}</strong>
-      <span>${escapeHtml(place.subtitle || place.type)}<br />${metrics.rating} · ${metrics.hours}<br />参考等候 ${queueText(place)} 分钟 · 非实时</span>
+      <span>${escapeHtml(place.subtitle || localizeType(place.type))}<br />${metrics.rating} · ${metrics.hours}<br />${t("参考等候")} ${queueText(place)} ${t("分钟 · 非实时")}</span>
       ${state.routeReasons[place.id] ? `<em class="route-preview-reason">${escapeHtml(state.routeReasons[place.id])}</em>` : ""}
     </div>
   `;
-    }).join("") + `<div class="route-preview-more"><button class="text-link" type="button" data-view="route">查看完整路线 →</button></div>`;
+    }).join("") + `<div class="route-preview-more"><button class="text-link" type="button" data-view="route">${t("查看完整路线")} →</button></div>`;
   }
   renderMap($("#homeMap"), "home");
 }
@@ -1635,10 +1668,10 @@ function mapCountForMode(mode = "map") {
 }
 
 function mapBaseLabel(mode = "map") {
-  if (state.mapType === "satellite") return amapReady ? "卫星图" : "卫星示意图（需联网）";
-  if (mode === "map") return "地图搜索结果";
-  if (!state.route.length) return "长春特色预览";
-  return `第 ${state.selectedDay + 1} 天路线`;
+  if (state.mapType === "satellite") return amapReady ? t("卫星图") : t("卫星示意图（需联网）");
+  if (mode === "map") return t("地图搜索结果");
+  if (!state.route.length) return t("长春特色预览");
+  return t("第 {v0} 天路线", { v0: state.selectedDay + 1 });
 }
 
 function renderPlaceList() {
@@ -1668,12 +1701,12 @@ function renderPlaceList() {
     const transport = transportLegs(stops).filter((leg) =>
       `${leg.name}${leg.detail}`.toLowerCase().includes(query)
     );
-    $("#mapCount").textContent = `交通 · ${transport.length} 段真实路段`;
+    $("#mapCount").textContent = t("交通 · {v0} 段真实路段", { v0: transport.length });
     const transitCard = `
       <article class="place-card transit-card">
-        <div class="place-card-head"><strong>乘车码</strong><span>地铁 · 公交</span></div>
-        <div class="place-meta">长春轨道交通支持微信 / 支付宝 / 云闪付 / 长春E出行，2 元起步。码由这些平台生成，我们不代扣。</div>
-        <div class="place-actions"><button type="button" data-transit="open">打开乘车码</button></div>
+        <div class="place-card-head"><strong>${t("乘车码")}</strong><span>${t("地铁 · 公交")}</span></div>
+        <div class="place-meta">${t("长春轨道交通支持微信")} / ${t("支付宝")} / ${t("云闪付")} / ${t("长春E出行，2 元起步。码由这些平台生成，我们不代扣")}。</div>
+        <div class="place-actions"><button type="button" data-transit="open">${t("打开乘车码")}</button></div>
       </article>`;
     $("#placeList").innerHTML = transitCard + (
       transport
@@ -1683,35 +1716,35 @@ function renderPlaceList() {
           <div class="place-card-head"><strong>${escapeHtml(leg.name)}</strong><span>${leg.type}</span></div>
           <div class="place-meta">${escapeHtml(leg.detail)}</div>
           <div class="place-queue">${leg.status}</div>
-          <div class="place-actions"><button type="button" data-nav="${leg.toId}">导航</button></div>
+          <div class="place-actions"><button type="button" data-nav="${leg.toId}">${t("导航")}</button></div>
         </article>
       `
         )
         .join("") ||
-      `<div class="notice compact">交通图层显示的是当前行程相邻站点之间的真实路段，先去地图把地点加进路线。</div>`
+      `<div class="notice compact">${t("交通图层显示的是当前行程相邻站点之间的真实路段，先去地图把地点加进路线。")}</div>`
     );
     renderMap($("#mapViewMap"), "map");
     return;
   }
 
   const places = filteredPlaces();
-  $("#mapCount").textContent = `长春 · ${places.length} 个地点`;
+  $("#mapCount").textContent = t("长春 · {v0} 个地点", { v0: places.length });
   $("#placeList").innerHTML = places.map((place) => {
     const inRoute = state.route.includes(place.id);
-    const ratingText = place.rating ? `高德 ${place.rating}` : "暂无评分";
-    const avgText = typeof place.avg === "number" ? `人均约 ¥${place.avg}` : "人均待接入";
-    const hoursText = place.hours ? `营业 ${place.hours}` : "营业时间待确认";
+    const ratingText = place.rating ? t("高德 {v0}", { v0: place.rating }) : t("暂无评分");
+    const avgText = typeof place.avg === "number" ? t("人均约 ¥{v0}", { v0: place.avg }) : t("人均待接入");
+    const hoursText = place.hours ? t("营业 {v0}", { v0: th(place.hours) }) : t("营业时间待确认");
     const tel = String(place.tel || "").trim();
     return `
       <article class="place-card ${state.selectedMapPlace === place.id ? "selected" : ""}" data-place-card="${place.id}">
-        <div class="place-card-head"><strong>${escapeHtml(place.name)}</strong>${place.featured ? `<em class="featured-badge">${escapeHtml(place.badge || "长春特色")}</em>` : ""}<span>${escapeHtml(place.type)}</span></div>
-        <div class="place-meta"><b>${escapeHtml(place.subtitle || place.type)}</b><br />${ratingText} · ${avgText} · ${place.distance} km<br />${hoursText}</div>
+        <div class="place-card-head"><strong>${escapeHtml(place.name)}</strong>${place.featured ? `<em class="featured-badge">${escapeHtml(tv(place.badge || "长春特色"))}</em>` : ""}<span>${escapeHtml(localizeType(place.type))}</span></div>
+        <div class="place-meta"><b>${escapeHtml(place.subtitle || localizeType(place.type))}</b><br />${ratingText} · ${avgText} · ${place.distance} km<br />${hoursText}</div>
         ${tel ? `<div class="poi-tel">${icon("i-bell")} <a href="tel:${escapeHtml(tel)}">${escapeHtml(tel)}</a></div>` : ""}
-        <div class="place-queue">${icon("i-clock")} 参考等候 ${queueText(place)} 分钟 · 非实时</div>
+        <div class="place-queue">${icon("i-clock")} ${t("参考等候")} ${queueText(place)} ${t("分钟 · 非实时")}</div>
         <div class="place-actions">
-          <button type="button" data-add="${place.id}" class="${inRoute ? "added" : ""}">${inRoute ? "已加入路线" : "加入路线"}</button>
-          <button type="button" data-nav="${place.id}">导航</button>
-          <a href="#" data-ticket="${place.id}">购票/订座渠道 ↗</a>
+          <button type="button" data-add="${place.id}" class="${inRoute ? "added" : ""}">${inRoute ? t("已加入路线") : t("加入路线")}</button>
+          <button type="button" data-nav="${place.id}">${t("导航")}</button>
+          <a href="#" data-ticket="${place.id}">${t("购票")}/${t("订座渠道")} ↗</a>
         </div>
       </article>
     `;
@@ -1724,7 +1757,7 @@ function renderPlaceList() {
 let poiSearcher = null;
 let poiMarkers = [];
 
-const poiCityValue = () => String($("#poiCity")?.value || "").trim() || "长春";
+const poiCityValue = () => String($("#poiCity")?.value || "").trim() || t("长春");
 
 async function ensurePoiSearcher() {
   if (!AMAP_KEY) return null;
@@ -1765,7 +1798,7 @@ function drawPoiMarkers(pois) {
     marker.on("click", () => {
       const lines = [`<strong>${escapeHtml(poi.name || "")}</strong>`];
       if (poi.address) lines.push(`<span>${escapeHtml(poi.address)}</span>`);
-      if (poi.tel) lines.push(`<span>电话 ${escapeHtml(String(poi.tel))}</span>`);
+      if (poi.tel) lines.push(t("<span>电话 {v0}</span>", { v0: escapeHtml(String(poi.tel)) }));
       const info = new AMap.InfoWindow({
         content: `<div class="poi-window">${lines.join("")}</div>`,
         offset: new AMap.Pixel(0, -28)
@@ -1787,26 +1820,26 @@ function renderPoiResults(pois, note) {
   if (!list) return;
   if (status) {
     status.textContent =
-      note || (pois.length ? `找到 ${pois.length} 个地点` : "没有找到结果，换个关键词试试。");
+      note || (pois.length ? t("找到 {v0} 个地点", { v0: pois.length }) : t("没有找到结果，换个关键词试试。"));
   }
   list.innerHTML = pois
     .map((poi, index) => {
-      const name = escapeHtml(poi.name || "未命名");
-      const type = escapeHtml(poi.type || "未分类");
-      const address = escapeHtml(poi.address || "暂无地址");
+      const name = escapeHtml(poi.name || t("未命名"));
+      const type = escapeHtml(poi.type || t("未分类"));
+      const address = escapeHtml(poi.address || t("暂无地址"));
       const area = escapeHtml([poi.cityname, poi.adname].filter(Boolean).join(" · "));
       const tel = String(poi.tel || "").trim();
       const telHtml = tel
         ? `<a href="tel:${escapeHtml(tel)}">${escapeHtml(tel)}</a>`
-        : `<span class="poi-empty">暂无电话</span>`;
+        : `<span class="poi-empty">${t("暂无电话")}</span>`;
       return `
       <article class="poi-card">
         <div class="place-card-head"><strong>${name}</strong><span>${type}</span></div>
         <div class="place-meta">${area ? `<b>${area}</b><br />` : ""}${address}</div>
         <div class="poi-tel">${icon("i-bell")} ${telHtml}</div>
         <div class="place-actions">
-          <button type="button" data-poi-focus="${index}">地图定位</button>
-          <a href="#" data-poi-nav="${index}">导航 ↗</a>
+          <button type="button" data-poi-focus="${index}">${t("地图定位")}</button>
+          <a href="#" data-poi-nav="${index}">${t("导航")} ↗</a>
         </div>
       </article>
     `;
@@ -1819,7 +1852,7 @@ function poiNavUrl(poi) {
   if (!coords) return "";
   const destination = `${coords[0]},${coords[1]},${encodeURIComponent(poi.name || "")}`;
   const origin = state.currentPosition
-    ? `from=${state.currentPosition[0]},${state.currentPosition[1]},${encodeURIComponent("当前位置")}&`
+    ? `from=${state.currentPosition[0]},${state.currentPosition[1]},${encodeURIComponent(t("当前位置"))}&`
     : "";
   return (
     `https://uri.amap.com/navigation?${origin}to=${destination}` +
@@ -1832,29 +1865,29 @@ async function searchPoi({ nearby = false } = {}) {
   if (!status) return;
   const keyword = String($("#poiQuery")?.value || "").trim();
   if (!keyword) {
-    status.textContent = "先输入关键词，例如 东北菜、咖啡、景点。";
+    status.textContent = t("先输入关键词，例如 东北菜、咖啡、景点。");
     return;
   }
 
   const searcher = await ensurePoiSearcher();
   if (!searcher) {
     status.textContent = AMAP_KEY
-      ? "高德 POI 插件加载失败，检查 config.js 的 Key 是否开通了 PlaceSearch 服务、域名是否在白名单内。"
-      : "未配置高德 Key：把 web/config.example.js 复制为 config.js，填入 JS API Key 后重试。";
+      ? t("高德 POI 插件加载失败，检查 config.js 的 Key 是否开通了 PlaceSearch 服务、域名是否在白名单内。")
+      : t("未配置高德 Key：把 web/config.example.js 复制为 config.js，填入 JS API Key 后重试。");
     return;
   }
 
   if (nearby && !state.currentPosition) {
-    status.textContent = "还没有定位信息，请先允许浏览器定位，或改用城市搜索。";
+    status.textContent = t("还没有定位信息，请先允许浏览器定位，或改用城市搜索。");
     return;
   }
 
-  status.textContent = "搜索中…";
+  status.textContent = t("搜索中…");
   clearPoiMarkers();
 
   const finish = (searchStatus, result) => {
     if (searchStatus !== "complete" && searchStatus !== "no_data") {
-      status.textContent = `搜索失败：${(result && result.info) || searchStatus}`;
+      status.textContent = t("搜索失败：{v0}", { v0: (result && result.info) || searchStatus });
       return;
     }
     const pois = (result && result.poiList && result.poiList.pois) || [];
@@ -1878,7 +1911,7 @@ function focusPoi(index) {
   if (!coords || !map) return;
   map.setZoomAndCenter(17, coords);
   showView("map");
-  showToast(`已定位：${poi.name || ""}`);
+  showToast(t("已定位：{v0}", { v0: poi.name || "" }));
 }
 
 function renderRoute() {
@@ -1886,25 +1919,25 @@ function renderRoute() {
   ensureItinerary();
   const dayCount = state.itinerary.length;
   $("#routeTitle").textContent =
-    dayCount > 1 ? `长春 ${dayCount} 日路线` : "长春一日路线";
+    dayCount > 1 ? t("长春 {v0} 日路线", { v0: dayCount }) : t("长春一日路线");
   const dateCopy =
     dayCount > 1
-      ? `第 ${state.selectedDay + 1} 天 · ${dateLabelForOffset(state.selectedDay)}`
+      ? t("第 {v0} 天 · {v1}", { v0: state.selectedDay + 1, v1: dateLabelForOffset(state.selectedDay) })
       : todayLabel;
-  $("#routeSubtitle").textContent = `${schedule.stops.length} 个地点 · ${dateCopy} · ${state.startTime} 开始`;
+  $("#routeSubtitle").textContent = t("{v0} 个地点 · {v1} · {v2} 开始", { v0: schedule.stops.length, v1: dateCopy, v2: state.startTime });
   $("#routeSummary").innerHTML = `
-    <div><strong>${schedule.stops.length}</strong><span>个地点</span></div>
-    <div><strong>${formatMinutes(schedule.total)}</strong><span>总时长</span></div>
-    <div><strong>${formatMinutes(schedule.totalTravel)}</strong><span>总车程</span></div>
-    <div><strong>¥${schedule.budget}</strong><span>当日人均 · 估</span></div>
-    ${dayCount > 1 ? `<div><strong>${dayCount}</strong><span>天总行程</span></div>` : ""}
+    <div><strong>${schedule.stops.length}</strong><span>${t("个地点")}</span></div>
+    <div><strong>${formatMinutes(schedule.total)}</strong><span>${t("总时长")}</span></div>
+    <div><strong>${formatMinutes(schedule.totalTravel)}</strong><span>${t("总车程")}</span></div>
+    <div><strong>¥${schedule.budget}</strong><span>${t("当日人均 · 估")}</span></div>
+    ${dayCount > 1 ? `<div><strong>${dayCount}</strong><span>${t("天总行程")}</span></div>` : ""}
   `;
   $("#replanButton").disabled = schedule.stops.length < 2;
   $("#routeNavButton").disabled = !schedule.stops.length;
   renderDayTabs();
 
   if (!schedule.stops.length) {
-    $("#routeList").innerHTML = `<div class="notice compact">还没有地点，先去地图添加。</div>`;
+    $("#routeList").innerHTML = `<div class="notice compact">${t("还没有地点，先去地图添加。")}</div>`;
   } else {
     let html = "";
     schedule.stops.forEach((place, index) => {
@@ -1915,16 +1948,16 @@ function renderRoute() {
           <div>
             <h3>${place.name}</h3>
             <div class="route-stop-meta">
-              ${escapeHtml(place.subtitle || place.type)}<br />
+              ${escapeHtml(place.subtitle || localizeType(place.type))}<br />
               <b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />
-              参考等候 ${queueText(place)} 分钟 · 非实时<br />
-              <a href="#" data-ticket="${place.id}">购票/订座渠道 ↗</a>
-              <button class="route-stop-nav" type="button" data-nav="${place.id}">导航</button>
+              ${t("参考等候")} ${queueText(place)} ${t("分钟 · 非实时")}<br />
+              <a href="#" data-ticket="${place.id}">${t("购票")}/${t("订座渠道")} ↗</a>
+              <button class="route-stop-nav" type="button" data-nav="${place.id}">${t("导航")}</button>
               ${state.routeReasons[place.id] ? `<span class="route-stop-reason">${escapeHtml(state.routeReasons[place.id])}</span>` : ""}
             </div>
-            <button class="route-stop-remove" type="button" data-remove="${place.id}">移除</button>
+            <button class="route-stop-remove" type="button" data-remove="${place.id}">${t("移除")}</button>
           </div>
-          <div class="route-stop-queue">${queueText(place)}<br />分钟</div>
+          <div class="route-stop-queue">${queueText(place)}<br />${t("分钟")}</div>
         </article>
       `;
       if (index < schedule.stops.length - 1) {
@@ -1951,19 +1984,19 @@ function renderRoute() {
     }
     const real = legs.filter((fact) => fact?.source === "amap").length;
     const pending = legs.filter((fact) => !fact).length;
-    const tag = real ? "高德" : pending ? "规划中" : "估算";
+    const tag = real ? t("高德") : pending ? t("规划中") : t("估算");
     const legLabel = real
-      ? `${real}/${legs.length} 段真实`
+      ? t("{v0}/{v1} 段真实", { v0: real, v1: legs.length })
       : pending
-        ? "正在向高德请求…"
-        : "按直线距离估算";
+        ? t("正在向高德请求…")
+        : t("按直线距离估算");
     liveOverlay.innerHTML = `
-      <div class="map-live-title"><strong>路线数据</strong><span class="live-tag">${tag}</span></div>
-      <div class="map-live-row${real ? "" : " muted"}"><span>驾车 · 公交</span><strong>${legLabel}</strong></div>
-      <div class="map-live-row muted"><span>实时到站</span><strong>未接入</strong></div>
-      <div class="map-live-row"><span>乘车码</span><button type="button" class="live-action" data-transit="open">打开</button></div>
-      <div class="map-live-row muted"><span>路况图层</span><strong>${
-        state.trafficVisible ? "已开启" : "未开启"
+      <div class="map-live-title"><strong>${t("路线数据")}</strong><span class="live-tag">${tag}</span></div>
+      <div class="map-live-row${real ? "" : " muted"}"><span>${t("驾车 · 公交")}</span><strong>${legLabel}</strong></div>
+      <div class="map-live-row muted"><span>${t("实时到站")}</span><strong>${t("未接入")}</strong></div>
+      <div class="map-live-row"><span>${t("乘车码")}</span><button type="button" class="live-action" data-transit="open">${t("打开")}</button></div>
+      <div class="map-live-row muted"><span>${t("路况图层")}</span><strong>${
+        state.trafficVisible ? t("已开启") : t("未开启")
       }</strong></div>
     `;
   }
@@ -1995,12 +2028,12 @@ function renderReplanBanner() {
   }
   banner.hidden = false;
   banner.innerHTML = `
-    <span class="replan-badge">已重排</span>
+    <span class="replan-badge">${t("已重排")}</span>
     <div class="replan-copy">
       <strong>${escapeHtml(replan.from.name)} → ${escapeHtml(replan.to.name)}</strong>
       <p>${escapeHtml(replan.reason)}</p>
     </div>
-    <button class="replan-undo" type="button" data-undo-replan>撤销重排</button>
+    <button class="replan-undo" type="button" data-undo-replan>${t("撤销重排")}</button>
   `;
 }
 
@@ -2012,12 +2045,12 @@ function renderQueue() {
     const metrics = placeMetrics(place);
     return `
     <article class="queue-card">
-      <div class="queue-card-head"><strong>${escapeHtml(place.name)}</strong><span>${escapeHtml(place.type)}</span></div>
-      <div class="queue-card-data"><b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />${place.source} · 置信度 ${place.confidence}</div>
-      <div class="queue-range">${queueText(place)} <small>分钟参考等候</small></div>
+      <div class="queue-card-head"><strong>${escapeHtml(place.name)}</strong><span>${escapeHtml(localizeType(place.type))}</span></div>
+      <div class="queue-card-data"><b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />${tv(place.source)} · ${t("置信度")} ${tv(place.confidence)}</div>
+      <div class="queue-range">${queueText(place)} <small>${t("分钟参考等候")}</small></div>
       <div class="queue-actions">
-        <button class="button outline" type="button" data-queue="${place.id}">排队管家</button>
-        <a class="text-link" href="#" data-ticket="${place.id}">购票/订座渠道 ↗</a>
+        <button class="button outline" type="button" data-queue="${place.id}">${t("排队管家")}</button>
+        <a class="text-link" href="#" data-ticket="${place.id}">${t("购票")}/${t("订座渠道")} ↗</a>
       </div>
     </article>
   `;
@@ -2034,7 +2067,7 @@ async function apiFetch(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.error || `请求失败 (${response.status})`);
+    throw new Error(data.error || t("请求失败 ({v0})", { v0: response.status }));
   }
   return data;
 }
@@ -2049,21 +2082,21 @@ function updateAuthCopy() {
   if (AUTH_MODE !== "real") return;
   const kicker = $("#loginKicker");
   const desc = $("#loginDesc");
-  if (kicker) kicker.textContent = "手机号账号登录";
-  if (desc) desc.textContent = "使用手机号和密码登录；首次可注册，也可以切换到验证码登录。";
+  if (kicker) kicker.textContent = t("手机号账号登录");
+  if (desc) desc.textContent = t("使用手机号和密码登录；首次可注册，也可以切换到验证码登录。");
 }
 
 function updateAuthUI() {
   const guest = $("#guestBadge");
   const login = $("#loginButton");
   if (state.loggedIn) {
-    guest.textContent = state.user?.phone ? maskPhone(state.user.phone) : "已登录";
+    guest.textContent = state.user?.phone ? maskPhone(state.user.phone) : t("已登录");
     guest.classList.add("logged-in");
-    login.textContent = "我的";
+    login.textContent = t("我的");
   } else {
-    guest.textContent = "游客预览";
+    guest.textContent = t("游客预览");
     guest.classList.remove("logged-in");
-    login.textContent = "登录";
+    login.textContent = t("登录");
   }
   updateMembershipUI();
 }
@@ -2082,7 +2115,7 @@ function formatHistoryTime(timestamp) {
   const pad = (value) => String(value).padStart(2, "0");
   const clock = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
   const sameDay = date.toDateString() === new Date().toDateString();
-  return sameDay ? `今天 ${clock}` : `${date.getMonth() + 1} 月 ${date.getDate()} 日 ${clock}`;
+  return sameDay ? t("今天 {v0}", { v0: clock }) : t("{v0} 月 {v1} 日 {v2}", { v0: date.getMonth() + 1, v1: date.getDate(), v2: clock });
 }
 
 async function loadSearchHistory() {
@@ -2113,7 +2146,7 @@ async function saveSearch(query, keywords, route, days = null) {
     await loadSearchHistory();
   } catch (error) {
     // History is a convenience; never block the route result on it.
-    console.warn("[SmoothGo] 搜索记录保存失败", error);
+    console.warn(t("[SmoothGo] 搜索记录保存失败"), error);
   }
   return null;
 }
@@ -2131,9 +2164,9 @@ function formatWaitCn(totalMinutes) {
   const minutes = Math.max(0, Math.ceil(Number(totalMinutes) || 0));
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  if (hours && rest) return `${hours} 小时 ${rest} 分`;
-  if (hours) return `${hours} 小时`;
-  return `${rest} 分钟`;
+  if (hours && rest) return t("{v0} 小时 {v1} 分", { v0: hours, v1: rest });
+  if (hours) return t("{v0} 小时", { v0: hours });
+  return t("{v0} 分钟", { v0: rest });
 }
 
 function queueSnapshot(request, nowMs = Date.now()) {
@@ -2148,9 +2181,9 @@ function queueSnapshot(request, nowMs = Date.now()) {
     isFood,
     remainingMinutes: initialWait,
     waitText: formatWaitCn(initialWait),
-    positionText: "队列位置未接入",
-    status: "演示请求",
-    updatedText: `提交于 ${formatHistoryTime(Math.floor(createdAtMs / 1000))}`
+    positionText: t("队列位置未接入"),
+    status: t("演示请求"),
+    updatedText: t("提交于 {v0}", { v0: formatHistoryTime(Math.floor(createdAtMs / 1000)) })
   };
 }
 
@@ -2197,35 +2230,35 @@ function renderActiveQueue() {
       snapshot.request.placeName
     )}</strong></div>
     <div class="queue-pin-metric"><span>${snapshot.status}</span><strong>${snapshot.positionText}</strong></div>
-    <div class="queue-pin-wait"><span>预计等待</span><strong>${snapshot.waitText}</strong></div>
-    <button class="queue-pin-open" type="button" data-view="queue">查看详情</button>
-    <button class="queue-pin-close" type="button" data-queue-dismiss aria-label="收起置顶排队信息">×</button>
+    <div class="queue-pin-wait"><span>${t("预计等待")}</span><strong>${snapshot.waitText}</strong></div>
+    <button class="queue-pin-open" type="button" data-view="queue">${t("查看详情")}</button>
+    <button class="queue-pin-close" type="button" data-queue-dismiss aria-label="${t("收起置顶排队信息")}">×</button>
   `;
 
   bar.hidden = false;
   const guestNote = snapshot.request.guest
-    ? "游客演示 · 这条记录只存在这台浏览器，登录后会保存到账号；"
+    ? t("游客演示 · 这条记录只存在这台浏览器，登录后会保存到账号；")
     : "";
   bar.innerHTML = `
     <div class="queue-topbar-identity">
       <span class="queue-topbar-kicker"><span class="live-dot"></span>${
-        snapshot.isFood ? "餐馆排队参考" : "景区排队参考"
+        snapshot.isFood ? t("餐馆排队参考") : t("景区排队参考")
       } · ${escapeHtml(String(snapshot.request.requestId || "SG-DEMO"))}</span>
       <strong>${escapeHtml(snapshot.request.placeName)}</strong>
     </div>
-    <div class="queue-topbar-metric"><span>预计等待</span><strong>${snapshot.waitText}</strong></div>
-    <div class="queue-topbar-metric is-position"><span>队伍位置</span><strong>未接入</strong></div>
-    <div class="queue-topbar-metric"><span>提交时间</span><strong>${snapshot.updatedText.replace(
-      "提交于 ",
+    <div class="queue-topbar-metric"><span>${t("预计等待")}</span><strong>${snapshot.waitText}</strong></div>
+    <div class="queue-topbar-metric is-position"><span>${t("队伍位置")}</span><strong>${t("未接入")}</strong></div>
+    <div class="queue-topbar-metric"><span>${t("提交时间")}</span><strong>${snapshot.updatedText.replace(
+      t("提交于 "),
       ""
     )}</strong></div>
     <div class="queue-topbar-actions">
       <button class="queue-topbar-link" type="button" data-open-place="${escapeHtml(
         snapshot.request.placeId || ""
-      )}">查看地点</button>
-      <button class="queue-topbar-close" type="button" data-queue-dismiss>收起</button>
+      )}">${t("查看地点")}</button>
+      <button class="queue-topbar-close" type="button" data-queue-dismiss>${t("收起")}</button>
     </div>
-    <p class="queue-topbar-note">${guestNote}等待时长是你提交时选的参考值，队伍位置未接入任何实时数据；不会真实排队、订座或支付。</p>
+    <p class="queue-topbar-note">${guestNote}${t("等待时长是你提交时选的参考值，队伍位置未接入任何实时数据；不会真实排队、订座或支付")}。</p>
   `;
 }
 
@@ -2236,18 +2269,18 @@ function dismissActiveQueue() {
   state.activeQueue = null;
   localStorage.removeItem(ACTIVE_QUEUE_KEY);
   renderActiveQueue();
-  showToast("已收起这条排队信息");
+  showToast(t("已收起这条排队信息"));
 }
 
 function updateMembershipUI() {
   const quota = queueQuotaCopy();
   const heading = $("#membershipQuota");
   const detail = $("#membershipUsage");
-  if (heading) heading.textContent = `本月剩余 ${quota.remaining} / ${quota.limit} 次`;
+  if (heading) heading.textContent = t("本月剩余 {v0} / {v1} 次", { v0: quota.remaining, v1: quota.limit });
   if (detail) {
     detail.textContent = quota.remaining
-      ? `已使用 ${quota.used} 次演示请求；提交记录会保存在当前账号下，不产生真实订单。`
-      : "本月演示额度已用完。正式会员、支付和额度重置尚未接入。";
+      ? t("已使用 {v0} 次演示请求；提交记录会保存在当前账号下，不产生真实订单。", { v0: quota.used })
+      : t("本月演示额度已用完。正式会员、支付和额度重置尚未接入。");
   }
   const lastRequest = state.queueRequests?.[0];
   const lastNode = $("#membershipLastRequest");
@@ -2255,7 +2288,7 @@ function updateMembershipUI() {
     lastNode.hidden = !lastRequest;
     if (lastRequest) {
       lastNode.textContent =
-        `最近请求：${lastRequest.placeName} · ${lastRequest.minutes} 分钟 · ` +
+        t("最近请求：{v0} · {v1} 分钟 · ", { v0: lastRequest.placeName, v1: lastRequest.minutes }) +
         `${lastRequest.requestId} · ${formatHistoryTime(lastRequest.createdAt)}`;
     }
   }
@@ -2341,7 +2374,7 @@ function renderSearchHistory() {
   block.hidden = !state.loggedIn;
   if (!state.loggedIn) return;
   if (!searchHistory.length) {
-    list.innerHTML = '<p class="history-empty">还没有搜索记录，生成一条路线就会出现在这里。</p>';
+    list.innerHTML = `<p class="history-empty">${t("还没有搜索记录，生成一条路线就会出现在这里。")}</p>`;
     return;
   }
   list.innerHTML = searchHistory
@@ -2360,13 +2393,13 @@ function renderSearchHistory() {
       );
       const days =
         item.days?.length > 1
-          ? `<span class="history-chip">${item.days.length} 天</span>`
+          ? `<span class="history-chip">${item.days.length} ${t("天")}</span>`
           : "";
       const meta =
         keywords || route || days
           ? `<div class="history-meta">${days}${keywords}${route}</div>`
           : "";
-      return `<button class="history-item" type="button" data-history-id="${escapeHtml(item.id)}" title="恢复这条路线">
+      return `<button class="history-item" type="button" data-history-id="${escapeHtml(item.id)}" title="${t("恢复这条路线")}">
           <div class="history-item-head">
             <strong class="history-query">${escapeHtml(item.query || "")}</strong>
             <span class="history-time">${formatHistoryTime(item.createdAt)}</span>
@@ -2385,7 +2418,7 @@ function restoreSearchHistory(id) {
     .map((day) => day.filter((placeId) => placeById(placeId)))
     .filter((day) => day.length);
   if (!route.length && !savedDays.length) {
-    showToast("这条记录没有可恢复的路线");
+    showToast(t("这条记录没有可恢复的路线"));
     return;
   }
   const days = savedDays.length ? savedDays : [route];
@@ -2394,10 +2427,10 @@ function restoreSearchHistory(id) {
   state.route = state.itinerary[0].route.slice();
   state.routeReasons = {};
   state.interests = new Set(item.keywords || []);
-  $("#daysInput").value = `${state.itinerary.length} 天`;
+  $("#daysInput").value = t("{v0} 天", { v0: state.itinerary.length });
   clearReplan();
   showView("route");
-  showToast(`已恢复「${item.query || "历史路线"}」`);
+  showToast(t("已恢复「{v0}」", { v0: item.query || "历史路线" }));
 }
 
 async function restoreSession() {
@@ -2443,9 +2476,9 @@ function setMapType(type) {
   showToast(
     state.mapType === "satellite"
       ? amapReady
-        ? "已切换高德卫星图"
-        : "高德卫星图层尚未加载，当前显示示意底图"
-      : "已切换标准地图"
+        ? t("已切换高德卫星图")
+        : t("高德卫星图层尚未加载，当前显示示意底图")
+      : t("已切换标准地图")
   );
 }
 
@@ -2455,9 +2488,9 @@ function toggleTrafficLayer() {
   showToast(
     state.trafficVisible
       ? amapReady
-        ? "已叠加高德实时路况"
-        : "高德图层尚未加载，当前只记录路况开关"
-      : "已关闭实时路况"
+        ? t("已叠加高德实时路况")
+        : t("高德图层尚未加载，当前只记录路况开关")
+      : t("已关闭实时路况")
   );
 }
 
@@ -2491,14 +2524,14 @@ function toggleRoute(id) {
   if (state.route.includes(id)) {
     state.route = state.route.filter((item) => item !== id);
     delete state.routeReasons[id];
-    showToast(`已从路线移除 ${placeById(id).name}`);
+    showToast(t("已从路线移除 {v0}", { v0: placeById(id).name }));
   } else {
     if (state.route.length >= 5) {
-      showToast("演示版最多选 5 个地点");
+      showToast(t("演示版最多选 5 个地点"));
       return;
     }
     state.route = [...state.route, id];
-    showToast(`已加入路线：${placeById(id).name}`);
+    showToast(t("已加入路线：{v0}", { v0: placeById(id).name }));
   }
   clearReplan();
   persistCurrentDay();
@@ -2544,18 +2577,18 @@ function openLegalModal() {
 function openQueueModal(id) {
   state.queuePlace = id || "the-hill";
   const place = placeById(state.queuePlace);
-  $("#queueModalText").textContent = `为 ${place.name} 选择等待时长。提交后排队页最顶上会多出一栏，写着地点和这段时长，不会创建真实订单。`;
+  $("#queueModalText").textContent = t("为 {v0} 选择等待时长。提交后排队页最顶上会多出一栏，写着地点和这段时长，不会创建真实订单。", { v0: place.name });
   const quota = queueQuotaCopy();
   $("#queueQuota").textContent = state.loggedIn
-    ? `本月剩余 ${quota.remaining} / ${quota.limit} 次排队管家额度`
-    : "游客演示模式 · 登录后可保存请求和额度";
+    ? t("本月剩余 {v0} / {v1} 次排队管家额度", { v0: quota.remaining, v1: quota.limit })
+    : t("游客演示模式 · 登录后可保存请求和额度");
   const exhausted = AUTH_MODE === "real" && state.loggedIn && quota.remaining <= 0;
   $("#queueSubmitButton").disabled = exhausted;
-  $("#queueSubmitButton").textContent = exhausted ? "本月额度已用完" : "提交演示请求";
+  $("#queueSubmitButton").textContent = exhausted ? t("本月额度已用完") : t("提交演示请求");
   $("#queueOptions").innerHTML = `
-    <button class="queue-option ${state.queueMinutes === 30 ? "selected" : ""}" type="button" data-minutes="30"><strong>30 分钟</strong><span>¥10</span></button>
-    <button class="queue-option ${state.queueMinutes === 60 ? "selected" : ""}" type="button" data-minutes="60"><strong>60 分钟</strong><span>¥18</span></button>
-    <button class="queue-option ${state.queueMinutes === 90 ? "selected" : ""}" type="button" data-minutes="90"><strong>90 分钟</strong><span>¥26</span></button>
+    <button class="queue-option ${state.queueMinutes === 30 ? "selected" : ""}" type="button" data-minutes="30"><strong>30 ${t("分钟")}</strong><span>¥10</span></button>
+    <button class="queue-option ${state.queueMinutes === 60 ? "selected" : ""}" type="button" data-minutes="60"><strong>60 ${t("分钟")}</strong><span>¥18</span></button>
+    <button class="queue-option ${state.queueMinutes === 90 ? "selected" : ""}" type="button" data-minutes="90"><strong>90 ${t("分钟")}</strong><span>¥26</span></button>
   `;
   openModal("queueModal");
 }
@@ -2578,33 +2611,33 @@ function externalSearchUrl(kind, name) {
 const TRANSIT_APPS = [
   {
     key: "alipay",
-    name: "支付宝乘车码",
-    note: "直接唤起支付宝的乘车码页，进站前点开",
-    action: "打开支付宝",
+    name: t("支付宝乘车码"),
+    note: t("直接唤起支付宝的乘车码页，进站前点开"),
+    action: t("打开支付宝"),
     scheme: "alipays://platformapi/startapp?appId=200011235",
-    steps: "支付宝 → 首页「出行」→ 乘车码"
+    steps: t("支付宝 → 首页「出行」→ 乘车码")
   },
   {
     key: "wechat",
-    name: "微信乘车码",
-    note: "微信没有对外开放的乘车码 scheme，只能进 App 再点两下",
-    action: "打开微信",
+    name: t("微信乘车码"),
+    note: t("微信没有对外开放的乘车码 scheme，只能进 App 再点两下"),
+    action: t("打开微信"),
     scheme: "weixin://",
-    steps: "微信 → 我 → 服务 → 出行服务 → 乘车码"
+    steps: t("微信 → 我 → 服务 → 出行服务 → 乘车码")
   },
   {
     key: "unionpay",
-    name: "云闪付",
-    note: "云闪付首页 → 乘车码，同样支持长春轨道交通",
-    action: "复制名称",
-    copy: "云闪付 乘车码"
+    name: t("云闪付"),
+    note: t("云闪付首页 → 乘车码，同样支持长春轨道交通"),
+    action: t("复制名称"),
+    copy: t("云闪付 乘车码")
   },
   {
     key: "echuxing",
-    name: "长春E出行 / 长春市民卡",
-    note: "长春轨道交通官方 App，地铁公交一码通行；市民卡 App 扫码 9 折",
-    action: "复制名称",
-    copy: "长春E出行"
+    name: t("长春E出行 / 长春市民卡"),
+    note: t("长春轨道交通官方 App，地铁公交一码通行；市民卡 App 扫码 9 折"),
+    action: t("复制名称"),
+    copy: t("长春E出行")
   }
 ];
 
@@ -2650,7 +2683,7 @@ function renderGallery(place) {
   const shots = state.gallery;
   const host = $("#placeGallery");
   if (!shots.length) {
-    host.innerHTML = `<div class="gallery-empty">${icon(place.icon)}<span>暂无实景图</span></div>`;
+    host.innerHTML = `<div class="gallery-empty">${icon(place.icon)}<span>${t("暂无实景图")}</span></div>`;
     return;
   }
   const index = Math.max(0, Math.min(state.galleryIndex, shots.length - 1));
@@ -2662,8 +2695,8 @@ function renderGallery(place) {
       ${
         many
           ? `<span class="gallery-count">${index + 1} / ${shots.length}</span>
-             <button class="gallery-arrow prev" type="button" data-shot="${index - 1}" aria-label="上一张">‹</button>
-             <button class="gallery-arrow next" type="button" data-shot="${index + 1}" aria-label="下一张">›</button>`
+             <button class="gallery-arrow prev" type="button" data-shot="${index - 1}" aria-label="${t("上一张")}">‹</button>
+             <button class="gallery-arrow next" type="button" data-shot="${index + 1}" aria-label="${t("下一张")}">›</button>`
           : ""
       }
     </figure>
@@ -2672,7 +2705,7 @@ function renderGallery(place) {
         ? `<div class="gallery-thumbs">${shots
             .map(
               (url, shotIndex) => `
-          <button class="gallery-thumb ${shotIndex === index ? "is-active" : ""}" type="button" data-shot="${shotIndex}" aria-label="第 ${shotIndex + 1} 张">
+          <button class="gallery-thumb ${shotIndex === index ? "is-active" : ""}" type="button" data-shot="${shotIndex}" aria-label="${t("第")} ${shotIndex + 1} ${t("张")}">
             <img src="${escapeHtml(url)}" alt="" referrerpolicy="no-referrer" />
           </button>`
             )
@@ -2711,16 +2744,16 @@ function menuFor(place) {
   }
   if (entry?.dishes?.length) {
     return {
-      label: "菜单 · 招牌菜",
-      source: "编辑部整理 · 非门店价目表",
+      label: t("菜单 · 招牌菜"),
+      source: t("编辑部整理 · 非门店价目表"),
       note: entry.note || "",
       dishes: entry.dishes,
       place
     };
   }
   return {
-    label: "菜单",
-    source: isStreetFood(place) ? "街区 · 按摊位" : "未收录",
+    label: t("菜单"),
+    source: isStreetFood(place) ? t("街区 · 按摊位") : t("未收录"),
     note: "",
     dishes: [],
     place
@@ -2747,14 +2780,14 @@ function renderMenu(place) {
   } else if (isStreetFood(place)) {
     list.className = "detail-menu is-empty";
     list.innerHTML = `<li class="dish-empty">
-      <span>${escapeHtml(place.name)}是一条街区，没有统一菜单——吃什么取决于你进哪家店。</span>
-      <button type="button" data-copy="${escapeHtml(place.name)}">复制名称去点评搜</button>
+      <span>${escapeHtml(place.name)}${t("是一条街区，没有统一菜单")}——${t("吃什么取决于你进哪家店")}。</span>
+      <button type="button" data-copy="${escapeHtml(place.name)}">${t("复制名称去点评搜")}</button>
     </li>`;
   } else {
     list.className = "detail-menu is-empty";
     list.innerHTML = `<li class="dish-empty">
-      <span>这家店的菜单还没有收录。高德只提供店名、地址和照片，不提供菜品；点评与美团的网页版会把未登录访客拦在门外。</span>
-      <button type="button" data-copy="${escapeHtml(place.name)}">复制店名去点评搜</button>
+      <span>${t("这家店的菜单还没有收录。高德只提供店名、地址和照片，不提供菜品；点评与美团的网页版会把未登录访客拦在门外")}。</span>
+      <button type="button" data-copy="${escapeHtml(place.name)}">${t("复制店名去点评搜")}</button>
     </li>`;
   }
   $("#placeMenuNote").hidden = !menu.note;
@@ -2767,33 +2800,33 @@ function openPlaceModal(id) {
   state.modalPlace = id;
 
   $("#placeDetailType").textContent =
-    place.category === "food" ? "美食 · 本地推荐" : "景点 · 地点详情";
+    place.category === "food" ? t("美食 · 本地推荐") : t("景点 · 地点详情");
   $("#placeDetailTitle").textContent = place.name;
   $("#placeDetailSubtitle").textContent = place.subtitle || place.type;
   state.gallery = galleryFor(place);
   state.galleryIndex = 0;
   renderGallery(place);
   const heroPhoto = state.gallery[0];
-  const ratingText = place.rating ? `${place.rating} 高德` : "暂无";
+  const ratingText = place.rating ? t("{v0} 高德", { v0: place.rating }) : t("暂无");
   const descText = place.description || [place.district, place.address].filter(Boolean).join(" ");
   // Say only what is actually on the card -- four memorials have a photo but no
   // Amap score, so the blanket "图片与评分来自高德" was wrong for them.
   const photoNote = [
     heroPhoto
       ? state.gallery.length > 1
-        ? `${state.gallery.length} 张图 · 来自高德 POI`
-        : "图片来自高德 POI"
-      : "暂无实景图",
-    place.rating ? "评分来自高德" : "无评分来源"
+        ? t("{v0} 张图 · 来自高德 POI", { v0: state.gallery.length })
+        : t("图片来自高德 POI")
+      : t("暂无实景图"),
+    place.rating ? t("评分来自高德") : t("无评分来源")
   ].join(" · ");
-  const avgNote = typeof place.avg === "number" ? " · 人均为品类估算" : "";
+  const avgNote = typeof place.avg === "number" ? t(" · 人均为品类估算") : "";
   $("#placeDetailDesc").innerHTML = `${escapeHtml(descText)}<br /><span class="detail-source">${photoNote}${avgNote}</span>`;
   $("#placeDetailStats").innerHTML = [
-    ["评分", ratingText],
-    ["人均", typeof place.avg === "number" ? `约 ¥${place.avg}` : "待接入"],
-    ["排队", `参考 ${queueText(place)} 分钟`],
-    ["营业", place.hours || "待确认"],
-    ...(place.tel ? [["电话", place.tel]] : [])
+    [t("评分"), ratingText],
+    [t("人均"), typeof place.avg === "number" ? t("约 ¥{v0}", { v0: place.avg }) : t("待接入")],
+    [t("排队"), t("参考 {v0} 分钟", { v0: queueText(place) })],
+    [t("营业"), th(place.hours) || t("待确认")],
+    ...(place.tel ? [[t("电话"), place.tel]] : [])
   ]
     .map(
       ([label, value]) =>
@@ -2811,13 +2844,13 @@ function openPlaceModal(id) {
   // It no longer opens a fake order sheet: it lists the places that actually
   // sell the ticket, so the label can finally say 购票 rather than promise an
   // outcome. The ↗ marks it as leaving the app.
-  ticketButton.textContent = place.category === "food" ? "订座 ↗" : "购票 ↗";
+  ticketButton.textContent = place.category === "food" ? t("订座 ↗") : t("购票 ↗");
   ticketButton.dataset.place = place.id;
 
   const addButton = $("#placeAddButton");
   addButton.textContent = state.route.includes(place.id)
-    ? "已加入路线"
-    : "加入路线";
+    ? t("已加入路线")
+    : t("加入路线");
   addButton.dataset.place = place.id;
 
   $("#placeNavButton").dataset.place = place.id;
@@ -2867,8 +2900,8 @@ function localBookingChannels(place) {
   const channels = [
     {
       key: "official_miniprogram",
-      label: "官方小程序",
-      note: "未收录链接 —— 复制名称，到微信搜索官方小程序",
+      label: t("官方小程序"),
+      note: t("未收录链接 —— 复制名称，到微信搜索官方小程序"),
       available: false,
       url: null,
       kind: "search",
@@ -2876,8 +2909,8 @@ function localBookingChannels(place) {
     },
     {
       key: "official_site",
-      label: "官方网站",
-      note: place.website ? "该机构在高德登记的官网地址" : "未收录官方站点",
+      label: t("官方网站"),
+      note: place.website ? t("该机构在高德登记的官网地址") : t("未收录官方站点"),
       available: Boolean(place.website),
       url: place.website
         ? /^https?:/i.test(String(place.website).trim())
@@ -2888,24 +2921,24 @@ function localBookingChannels(place) {
     },
     {
       key: "phone",
-      label: tel ? `电话 ${tel}` : "场馆电话",
-      note: tel ? "订票、订座与开放时间以对方答复为准" : "该地点暂无登记电话",
+      label: tel ? t("电话 {v0}", { v0: tel }) : t("场馆电话"),
+      note: tel ? t("订票、订座与开放时间以对方答复为准") : t("该地点暂无登记电话"),
       available: Boolean(tel),
       url: tel ? `tel:${tel}` : null,
       kind: tel ? "tel" : "none"
     },
     {
       key: "amap",
-      label: "高德 POI 详情页",
-      note: "完整档案：电话、公告与商家入口",
+      label: t("高德 POI 详情页"),
+      note: t("完整档案：电话、公告与商家入口"),
       available: Boolean(amap),
       url: amap,
       kind: amap ? "link" : "none"
     },
     {
       key: "meituan",
-      label: "美团",
-      note: `在本机美团 App 内搜索「${name}」`,
+      label: t("美团"),
+      note: t("在本机美团 App 内搜索「{v0}」", { v0: name }),
       available: false,
       url: externalSearchUrl("meituan", name),
       kind: "search",
@@ -2913,8 +2946,8 @@ function localBookingChannels(place) {
     },
     {
       key: "dianping",
-      label: "大众点评",
-      note: `在本机大众点评 App 内搜索「${name}」`,
+      label: t("大众点评"),
+      note: t("在本机大众点评 App 内搜索「{v0}」", { v0: name }),
       available: false,
       url: externalSearchUrl("dianping", name),
       kind: "search",
@@ -2922,8 +2955,8 @@ function localBookingChannels(place) {
     },
     {
       key: "douyin",
-      label: "抖音",
-      note: `搜索「${name}」查看团购`,
+      label: t("抖音"),
+      note: t("搜索「{v0}」查看团购", { v0: name }),
       available: Boolean(name),
       url: externalSearchUrl("douyin", name),
       kind: "link"
@@ -2954,13 +2987,13 @@ function renderBookingRows(place, channels) {
           channel.searchHint || place.name
         )}">
           <span><strong>${label}</strong><em>${note}</em></span>
-          <b>复制</b>
+          <b>${t("复制")}</b>
         </button>`;
       }
       if (!channel.available || !channel.url) {
         return `<div class="booking-channel missing">
           <span><strong>${label}</strong><em>${note}</em></span>
-          <b>未收录</b>
+          <b>${t("未收录")}</b>
         </div>`;
       }
       const href = bookingChannelHref(place, channel);
@@ -2979,15 +3012,15 @@ async function renderBookingChannels() {
   const place = placeById(state.bookingPlace);
   if (!place) return;
   const isFood = place.category === "food";
-  $("#ticketTitle").textContent = `${place.name} · ${isFood ? "订座渠道" : "购票渠道"}`;
-  $("#ticketDesc").textContent = `SmoothGo 不出票、不收款。以下为第三方渠道，${
-    isFood ? "是否成功订座" : "票价、库存与开放时间"
-  }以对方页面为准。`;
+  $("#ticketTitle").textContent = `${place.name} · ${isFood ? t("订座渠道") : t("购票渠道")}`;
+  $("#ticketDesc").textContent = `SmoothGo ${t("不出票、不收款。以下为第三方渠道")}，${
+    isFood ? t("是否成功订座") : t("票价、库存与开放时间")
+  }${t("以对方页面为准")}。`;
   // Paint local rows first so the panel is never empty while the API answers.
   renderBookingRows(place, localBookingChannels(place));
   $("#bookingFootnote").textContent =
-    "多数景区只在其官方微信公众号 / 小程序售票或分时预约；官方小程序链接需由景区自己提供，收录后可直跳。" +
-    "滑雪场多数雪季也是先预约后到场。";
+    t("多数景区只在其官方微信公众号 / 小程序售票或分时预约；官方小程序链接需由景区自己提供，收录后可直跳。") +
+    t("滑雪场多数雪季也是先预约后到场。");
 
   try {
     const params = new URLSearchParams(bookingQuery(place));
@@ -3024,13 +3057,13 @@ function extractKeywords() {
   if (budgetMatch) {
     state.budget = `¥${budgetMatch[1]}`;
     $("#budgetInput").value = `¥${budgetMatch[1]}`;
-    found.push(`预算 ${budgetMatch[1]}`);
+    found.push(t("预算 {v0}", { v0: budgetMatch[1] }));
   }
   const timeMatch = text.match(/(上午|下午|晚上)?\s*(\d{1,2})[：:](\d{2})/);
   if (timeMatch) {
     state.startTime = `${String(timeMatch[2]).padStart(2, "0")}:${timeMatch[3]}`;
     $("#timeInput").value = `${todayLabel} · ${state.startTime}`;
-    found.push(`时间 ${state.startTime}`);
+    found.push(t("时间 {v0}", { v0: state.startTime }));
   }
   const daysMatch = text.match(/(\d{1,2})\s*(?:天|日)/);
   const chineseDays = { 一: 1, 两: 2, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7 };
@@ -3045,35 +3078,35 @@ function extractKeywords() {
   }
   if (detectedDays) {
     detectedDays = Math.min(21, detectedDays);
-    $("#daysInput").value = `${detectedDays} 天`;
-    found.push(`${detectedDays} 天`);
+    $("#daysInput").value = t("{v0} 天", { v0: detectedDays });
+    found.push(t("{v0} 天", { v0: detectedDays }));
   }
-  const knownInterests = ["自然", "历史", "美食", "东北菜", "雪景", "电影", "亲子", "拍照", "摄影", "轻松", "休闲"];
+  const knownInterests = [t("自然"), t("历史"), t("美食"), t("东北菜"), t("雪景"), t("电影"), t("亲子"), t("拍照"), t("摄影"), t("轻松"), t("休闲")];
   const detected = knownInterests.filter((item) => text.includes(item));
-  if (text.includes("东北菜")) detected.push("美食");
-  if (text.includes("雪景")) detected.push("自然");
-  if (text.includes("拍照")) detected.push("摄影");
+  if (text.includes("东北菜")) detected.push(t("美食"));
+  if (text.includes("雪景")) detected.push(t("自然"));
+  if (text.includes("拍照")) detected.push(t("摄影"));
   if (detected.length) {
     state.interests = new Set(detected);
     found.push(...detected);
   }
   if (/爸妈|父母|家人|家庭/.test(text)) {
-    state.people = "家庭";
-    $("#peopleInput").value = "家庭";
-    found.push("家庭");
+    state.people = t("家庭");
+    $("#peopleInput").value = t("家庭");
+    found.push(t("家庭"));
   } else if (/一个人|独自/.test(text)) {
-    state.people = "1 位成人";
-    $("#peopleInput").value = "1 位成人";
-    found.push("独自");
+    state.people = t("1 位成人");
+    $("#peopleInput").value = t("1 位成人");
+    found.push(t("独自"));
   } else if (/情侣|两个人|两人/.test(text)) {
-    state.people = "2 位成人";
-    $("#peopleInput").value = "2 位成人";
-    found.push("2 位成人");
+    state.people = t("2 位成人");
+    $("#peopleInput").value = t("2 位成人");
+    found.push(t("2 位成人"));
   }
   $("#extractStatus").textContent = found.length
-    ? `已提取：${[...new Set(found)].join(" / ")}`
-    : "没有识别到关键词，可以手动填写";
-  showToast(found.length ? `已提取 ${found.length} 个关键词` : "没有识别到关键词");
+    ? t("已提取：{v0}", { v0: [...new Set(found)].join(" / ") })
+    : t("没有识别到关键词，可以手动填写");
+  showToast(found.length ? t("已提取 {v0} 个关键词", { v0: found.length }) : t("没有识别到关键词"));
 }
 
 function currentPreferences() {
@@ -3113,13 +3146,13 @@ function generateRoute() {
   renderAll();
   showToast(
     requestedDays > 1
-      ? `已生成 ${requestedDays} 天路线（演示）`
-      : "已按你的条件生成路线（演示）"
+      ? t("已生成 {v0} 天路线（演示）", { v0: requestedDays })
+      : t("已按你的条件生成路线（演示）")
   );
   if (state.loggedIn) {
     const query = $("#nlpInput").value.trim();
     saveSearch(
-      query || "手动条件生成",
+      query || t("手动条件生成"),
       [...state.interests],
       state.route.slice(),
       state.itinerary.map((day) => day.route.slice())
@@ -3129,7 +3162,7 @@ function generateRoute() {
 
 function replanRoute() {
   if (state.route.length < 2) {
-    showToast("至少需要两个地点才能重排");
+    showToast(t("至少需要两个地点才能重排"));
     return;
   }
   const result = PLANNER.chooseReplan(PLACES, state.route, currentPreferences(), {
@@ -3137,7 +3170,7 @@ function replanRoute() {
     travelBetween
   });
   if (!result) {
-    showToast("当前路线已经是较优的排队组合");
+    showToast(t("当前路线已经是较优的排队组合"));
     return;
   }
 
@@ -3155,7 +3188,7 @@ function replanRoute() {
   persistCurrentDay();
   showView("route");
   renderAll();
-  showToast(`已重排：预计少排 ${result.queueSaved} 分钟`);
+  showToast(t("已重排：预计少排 {v0} 分钟", { v0: result.queueSaved }));
 }
 
 function undoReplan() {
@@ -3165,7 +3198,7 @@ function undoReplan() {
   clearReplan();
   persistCurrentDay();
   renderAll();
-  showToast("已恢复重排前的路线");
+  showToast(t("已恢复重排前的路线"));
 }
 
 function setMapLayer(layer, filter = "all") {
@@ -3197,7 +3230,7 @@ function refreshQueues() {
     place.queueMax = Math.max(place.queueMin + 3, place.queueMax + delta);
   });
   renderAll();
-  showToast("已刷新排队估算（演示数据）");
+  showToast(t("已刷新排队估算（演示数据）"));
 }
 
 document.addEventListener("click", (event) => {
@@ -3266,7 +3299,7 @@ document.addEventListener("click", (event) => {
     const steps = scheme.dataset.steps || "";
     window.location.href = scheme.dataset.scheme;
     window.setTimeout(() => {
-      if (!document.hidden) showToast(`没唤起？${steps}`);
+      if (!document.hidden) showToast(t("没唤起？{v0}", { v0: steps }));
     }, 1400);
     return;
   }
@@ -3275,7 +3308,7 @@ document.addEventListener("click", (event) => {
   if (copy) {
     event.preventDefault();
     const text = copy.dataset.copy || "";
-    const done = () => showToast(`已复制「${text}」，到 App 里粘贴搜索`);
+    const done = () => showToast(t("已复制「{v0}」，到 App 里粘贴搜索", { v0: text }));
     if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(text).then(done, done);
     } else {
@@ -3385,7 +3418,7 @@ $("#poiList").addEventListener("click", (event) => {
     const poi = state.poiResults?.[Number(nav.dataset.poiNav)];
     const url = poiNavUrl(poi);
     if (url) window.open(url, "_blank", "noopener");
-    else showToast("这个地点没有坐标，无法导航。");
+    else showToast(t("这个地点没有坐标，无法导航。"));
   }
 });
 
@@ -3397,8 +3430,55 @@ $("#routeNavButton").addEventListener("click", () => {
   if (firstStop) openNavigation(firstStop);
 });
 $("#refreshQueueButton").addEventListener("click", refreshQueues);
-$("#cityButton").addEventListener("click", () => showToast("城市切换：当前为长春演示"));
-$("#langButton").addEventListener("click", () => showToast("英文版将在后续版本开放"));
+$("#cityButton").addEventListener("click", () => showToast(t("城市切换：当前为长春演示")));
+$("#langButton").addEventListener("click", () => {
+  I18N.setLang(I18N.getLang() === "en" ? "zh" : "en");
+});
+
+function updateLangButton() {
+  const button = $("#langButton");
+  if (!button) return;
+  const english = I18N.getLang() === "en";
+  button.classList.toggle("active", english);
+  button.textContent = english ? "EN / 中文" : "中文 / EN";
+  button.setAttribute(
+    "aria-label",
+    english ? "Switch the interface to Chinese" : "Switch the interface to English"
+  );
+}
+
+/* Prefilled form values double as parser input, so only rewrite the ones
+   the visitor has not touched. The day parser reads the digits, not 天. */
+const DEFAULT_FIELD_VALUES = {
+  "#daysInput": "1 天",
+  "#peopleInput": "2 位成人",
+  "#nlpInput": "我想带爸妈去长春玩一天，预算 500，喜欢东北菜和历史，不想太累。"
+};
+["#daysInput", "#peopleInput", "#nlpInput", "#timeInput"].forEach((selector) => {
+  const field = $(selector);
+  if (field) field.addEventListener("input", () => { field.dataset.edited = "1"; });
+});
+
+function refreshDefaultFields() {
+  Object.keys(DEFAULT_FIELD_VALUES).forEach((selector) => {
+    const field = $(selector);
+    if (!field || field.dataset.edited === "1") return;
+    field.value = t(DEFAULT_FIELD_VALUES[selector]);
+  });
+  const timeField = $("#timeInput");
+  if (timeField && timeField.dataset.edited !== "1") {
+    timeField.value = `${todayLabel} · ${state.startTime}`;
+  }
+}
+
+I18N.onLangChange(() => {
+  todayLabel = dateLabelForOffset(0);
+  updateLangButton();
+  renderAll();
+  renderMapModeControls();
+  refreshDefaultFields();
+  I18N.applyStatic(document.body);
+});
 
 $("#loginButton").addEventListener("click", () => {
   updateAuthPanel();
@@ -3414,7 +3494,7 @@ function updateAuthPanel() {
   if (state.loggedIn) {
     $("#signedInPhone").textContent = state.user?.phone
       ? maskPhone(state.user.phone)
-      : "已登录";
+      : t("已登录");
   }
 }
 
@@ -3436,15 +3516,15 @@ $("#logoutButton").addEventListener("click", async () => {
   updateAuthUI();
   renderSearchHistory();
   closeModal("loginModal");
-  showToast("已退出登录");
+  showToast(t("已退出登录"));
 });
 
 $("#refreshHistoryButton").addEventListener("click", async () => {
   await loadSearchHistory();
   showToast(
     searchHistory.length
-      ? `已加载 ${searchHistory.length} 条搜索记录`
-      : "还没有搜索记录"
+      ? t("已加载 {v0} 条搜索记录", { v0: searchHistory.length })
+      : t("还没有搜索记录")
   );
 });
 
@@ -3456,7 +3536,7 @@ $("#loginModal").addEventListener("click", (event) => {
 $("#sendCodeButton").addEventListener("click", async () => {
   const phone = $("#phoneInput").value.trim();
   if (phone.length < 6) {
-    showToast("请输入手机号");
+    showToast(t("请输入手机号"));
     return;
   }
   if (AUTH_MODE === "real") {
@@ -3467,7 +3547,7 @@ $("#sendCodeButton").addEventListener("click", async () => {
         body: JSON.stringify({ phone })
       });
       if (data.devCode) $("#codeInput").value = data.devCode;
-      showToast(data.devCode ? `演示验证码：${data.devCode}` : "验证码已发送，请查看短信");
+      showToast(data.devCode ? t("演示验证码：{v0}", { v0: data.devCode }) : t("验证码已发送，请查看短信"));
     } catch (error) {
       showToast(error.message);
     } finally {
@@ -3475,7 +3555,7 @@ $("#sendCodeButton").addEventListener("click", async () => {
     }
   } else {
     $("#codeInput").value = "123456";
-    showToast("验证码已发送（演示验证码 123456）");
+    showToast(t("验证码已发送（演示验证码 123456）"));
   }
 });
 
@@ -3497,9 +3577,9 @@ function setAuthMode(mode) {
 function setAuthAction(action) {
   authAction = action === "register" ? "register" : "login";
   const isRegister = authAction === "register";
-  $("#doLoginButton").textContent = isRegister ? "注册并登录" : "登录";
-  $("#authSwitchHint").textContent = isRegister ? "已有账号？" : "还没有账号？";
-  $("#authSwitchButton").textContent = isRegister ? "去登录" : "去注册";
+  $("#doLoginButton").textContent = isRegister ? t("注册并登录") : t("登录");
+  $("#authSwitchHint").textContent = isRegister ? t("已有账号？") : t("还没有账号？");
+  $("#authSwitchButton").textContent = isRegister ? t("去登录") : t("去注册");
   $("#passwordInput").autocomplete = isRegister ? "new-password" : "current-password";
 }
 
@@ -3514,14 +3594,14 @@ $("#authSwitchButton").addEventListener("click", () => {
 $("#doLoginButton").addEventListener("click", async () => {
   const phone = $("#phoneInput").value.trim();
   if (phone.length < 6) {
-    showToast("请输入手机号");
+    showToast(t("请输入手机号"));
     return;
   }
 
   if (authMode === "password") {
     const password = $("#passwordInput").value;
     if (password.length < 6) {
-      showToast("密码至少 6 位");
+      showToast(t("密码至少 6 位"));
       return;
     }
     if (AUTH_MODE !== "real") {
@@ -3529,7 +3609,7 @@ $("#doLoginButton").addEventListener("click", async () => {
       state.user = { phone };
       updateAuthUI();
       closeModal("loginModal");
-      showToast("演示登录成功");
+      showToast(t("演示登录成功"));
       return;
     }
     const endpoint = authAction === "register" ? "/api/auth/register" : "/api/auth/login";
@@ -3544,7 +3624,7 @@ $("#doLoginButton").addEventListener("click", async () => {
       state.user = data.user;
       updateAuthUI();
       closeModal("loginModal");
-      showToast(authAction === "register" ? "注册成功，已自动登录" : "登录成功");
+      showToast(authAction === "register" ? t("注册成功，已自动登录") : t("登录成功"));
       loadSearchHistory();
       loadQueueState();
     } catch (error) {
@@ -3557,7 +3637,7 @@ $("#doLoginButton").addEventListener("click", async () => {
 
   const code = $("#codeInput").value.trim();
   if (code.length < 4) {
-    showToast("请输入验证码");
+    showToast(t("请输入验证码"));
     return;
   }
   if (AUTH_MODE === "real") {
@@ -3572,7 +3652,7 @@ $("#doLoginButton").addEventListener("click", async () => {
       state.user = data.user;
       updateAuthUI();
       closeModal("loginModal");
-      showToast("登录成功");
+      showToast(t("登录成功"));
       loadSearchHistory();
       loadQueueState();
     } catch (error) {
@@ -3585,7 +3665,7 @@ $("#doLoginButton").addEventListener("click", async () => {
     state.user = { phone };
     updateAuthUI();
     closeModal("loginModal");
-    showToast("演示登录成功");
+    showToast(t("演示登录成功"));
   }
 });
 
@@ -3606,14 +3686,14 @@ $("#queueSubmitButton").addEventListener("click", async () => {
   const place = placeById(state.queuePlace);
   if (!place) return;
   $("#queueSubmitButton").disabled = true;
-  $("#queueSubmitButton").textContent = "提交中…";
+  $("#queueSubmitButton").textContent = t("提交中…");
   let request;
   try {
     request = await saveQueueRequest(place);
   } catch (error) {
     showToast(error.message);
     $("#queueSubmitButton").disabled = false;
-    $("#queueSubmitButton").textContent = "提交演示请求";
+    $("#queueSubmitButton").textContent = t("提交演示请求");
     return;
   }
   if (!request) return;
@@ -3623,8 +3703,8 @@ $("#queueSubmitButton").addEventListener("click", async () => {
   // with nothing behind it. Say where the bar is, not that it moves.
   showToast(
     request.guest
-      ? `${place.name} 已生成演示排队 · 排队页顶部可以看到`
-      : `${place.name} 已约排 · 排队页顶部可以看到`
+      ? t("{v0} 已生成演示排队 · 排队页顶部可以看到", { v0: place.name })
+      : t("{v0} 已约排 · 排队页顶部可以看到", { v0: place.name })
   );
 });
 
@@ -3645,8 +3725,8 @@ $("#placeAddButton").addEventListener("click", () => {
   if (!state.modalPlace) return;
   toggleRoute(state.modalPlace);
   $("#placeAddButton").textContent = state.route.includes(state.modalPlace)
-    ? "已加入路线"
-    : "加入路线";
+    ? t("已加入路线")
+    : t("加入路线");
 });
 
 $("#ticketModalClose").addEventListener("click", () => closeModal("ticketModal"));
@@ -3660,7 +3740,7 @@ $("#transitModal").addEventListener("click", (event) => {
 });
 
 $("#membershipButton").addEventListener("click", () => {
-  showToast("会员权益为演示内容：多日路线、更多排队预测次数");
+  showToast(t("会员权益为演示内容：多日路线、更多排队预测次数"));
 });
 
 $("#legalModalClose").addEventListener("click", () => closeModal("legalModal"));
@@ -3684,6 +3764,10 @@ $("#timeInput").value = `${todayLabel} · ${state.startTime}`;
 restoreLocalQueue();
 renderActiveQueue();
 updateAuthCopy();
+updateLangButton();
+I18N.applyStatic(document.body);
+refreshDefaultFields();
+renderAll();
 const initialView = window.location.hash.replace("#", "");
 if (["home", "map", "route", "queue"].includes(initialView) && initialView !== "home") {
   showView(initialView);

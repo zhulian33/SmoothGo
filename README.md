@@ -31,6 +31,7 @@ The current web prototype demonstrates:
 8. **Transit-code handoff** — 交通 view and route panel open a 乘车码 sheet. 支付宝乘车码 has a public scheme and is opened directly; 微信 and 云闪付 have none, so those rows show the tap path; 长春E出行 / 长春市民卡 are named as the official apps (the 市民卡 app gives 9折 on 长春轨道交通). SmoothGo does not render a code and does not take the fare — an earlier version drew a fake QR out of the line name, which is exactly what this replaces.
 9. **Queue assist demo** — submitting a request adds a bar at the top of the 排队 page (it stays there while you scroll) and a compact strip under the header on the other views. Both repeat the wait length you picked in the sheet; neither counts down, because no queue feed is connected. Guests can submit: the request is stored in the browser and marked 游客演示, and only a signed-in account saves it server-side against the monthly quota.
 10. **Account and queue assist demos** — guest preview, phone login, saved multi-day routes and membership-quota preview.
+11. **Bilingual interface** — the whole UI runs in Chinese or English; the switch sits in the header and the choice is remembered per browser.
 
 **Place identity is real.** Names, coordinates, districts, opening hours, scores and photos come from the Amap POI API. Everything else is either derived — average spend from a category band, travel time from a distance estimate or an Amap route — or explicitly labelled 未接入 / 演示. There is no real payment, SMS, ticketing or queue-assistance order in this version.
 
@@ -46,6 +47,18 @@ python3 -m http.server 8080
 Then visit `http://localhost:8080`.
 
 The web demo is intentionally dependency-free so it can run from GitHub Pages or a USB stick without a build step.
+
+### Bilingual interface (中文 / EN)
+
+The interface is bilingual and defaults to Chinese. The switch in the header toggles between `中文` and `EN`, and the choice is kept in `localStorage` under `smoothgo_lang`, so it survives a reload.
+
+How it is put together:
+
+- `web/i18n.js` owns both dictionaries. `EN` covers strings the code renders; `EN_MARKUP` covers the sentences that sit in `index.html`. The Chinese text is the key, so a missing entry falls back to Chinese instead of showing an empty label.
+- `t()` translates copy, `tv()` translates vocabulary that is also a data value (categories, badges, confidence levels), and `th()` rewrites the recurring words in Amap opening-hours strings, so `周二至周日 09:00-17:00` becomes `Tue–Sun 09:00-17:00`.
+- The static markup is translated by walking text nodes and remembering the Chinese, so switching back restores it exactly.
+
+What stays in Chinese, on purpose — the same way a maps app shows a local business in its own language: place names, the hand-written subtitles, and any Amap category the dictionary has not met yet. Nothing invents an English name for a shop.
 
 ### Preview
 
