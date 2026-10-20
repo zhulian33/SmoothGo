@@ -22,14 +22,15 @@ Most travel products help users discover places. SmoothGo helps them **decide an
 The current web prototype demonstrates:
 
 1. **Editable or natural-language planning** — time, daily budget, location, group, interests and a trip length from 1 to 21 days.
-2. **Map discovery** — 23 illustrative places, filters, ratings, prices and queue estimates.
+2. **Map discovery** — 574 places seeded from the Amap POI harvest, filters by category and specialty, real Amap scores and opening hours, queue estimates.
 3. **Multi-day route planning** — Day tabs, one meal per day, budget-aware choices, and a map that only shows the currently selected day.
 4. **Replan** — replace the busiest stop in the selected day with a same-category alternative, explain the trade-off and undo the change.
-5. **Map navigation** — standard or satellite base map, an Amap live-traffic overlay, estimated crowd counts and one-tap navigation handoff to Amap.
-6. **Queue and transit awareness** — after a demo queue-assist request the page closes the order dialog and pins a live card with tables/people ahead and an estimated wait, which survives navigation and refresh.
-7. **Account and queue assist demos** — guest preview, phone login, saved multi-day routes and membership-quota preview.
+5. **Map navigation** — standard or satellite base map, an Amap live-traffic overlay, and one-tap navigation handoff to Amap. No crowd counters: any number of that kind would be invented.
+6. **Booking handoff** — each place links out to whoever actually sells the ticket: the venue's own phone line (426 of 574 places have one), its Amap POI page, 美团, 点评 and 抖音. SmoothGo issues no order, takes no payment and shows no fare table.
+7. **Queue assist demo** — a request pins a card showing the wait length you picked. It does not tick down, because no queue feed is connected.
+8. **Account and queue assist demos** — guest preview, phone login, saved multi-day routes and membership-quota preview.
 
-All venue, queue, price and crowd data is illustrative. There is no real payment, SMS, ticketing or queue-assistance order in this version.
+**Place identity is real.** Names, coordinates, districts, opening hours, scores and photos come from the Amap POI API. Everything else is either derived — travel time from a haversine distance, average spend from a category band — or explicitly labelled 未接入 / 演示. There is no real payment, SMS, ticketing or queue-assistance order in this version.
 
 ## Live demo
 
@@ -232,8 +233,11 @@ merchants managing their own stores, not third-party lookups. So `avg` is filled
 by `estimate_spend()` in `scripts/build_places.py`, a **per-person band derived
 from the Amap sub-category** (火锅 95, 东北菜 70, 咖啡 45, parks 0 ...), and the UI
 renders it as **人均约 ¥70** to make clear it is neither a measured bill nor a
-merchant figure. `ticket` stays `null` and the detail sheet links out instead of
-showing a price.
+merchant figure. The old hand-written cards did carry a `ticket` field (¥30, ¥70,
+¥180 — none of it checked); it is gone, and the 购票 button opens a list of
+outbound channels instead, because printing a fare the app cannot honour is how a
+demo starts lying about money. Channels always resolve: every place came from
+Amap, so its Amap page and its listed phone always exist.
 
 ## Place library
 

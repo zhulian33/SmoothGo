@@ -12,7 +12,6 @@ const PLACES = [
     queueMin: 18,
     queueMax: 25,
     hours: "08:00–17:00",
-    ticket: "¥30",
     visit: 90,
     travel: 25,
     x: 18,
@@ -38,7 +37,6 @@ const PLACES = [
     queueMin: 25,
     queueMax: 35,
     hours: "10:00–22:00",
-    ticket: "免费入内",
     visit: 75,
     travel: 16,
     x: 55,
@@ -60,7 +58,6 @@ const PLACES = [
     queueMin: 30,
     queueMax: 45,
     hours: "08:30–17:20",
-    ticket: "¥70",
     visit: 75,
     travel: 18,
     x: 67,
@@ -82,7 +79,6 @@ const PLACES = [
     queueMin: 20,
     queueMax: 30,
     hours: "09:00–17:00",
-    ticket: "¥180",
     visit: 120,
     travel: 30,
     x: 37,
@@ -104,7 +100,6 @@ const PLACES = [
     queueMin: 10,
     queueMax: 18,
     hours: "全天",
-    ticket: "无需门票",
     visit: 60,
     travel: 8,
     x: 48,
@@ -127,7 +122,6 @@ const PLACES = [
     queueMin: 5,
     queueMax: 10,
     hours: "05:00–22:00",
-    ticket: "免费",
     visit: 60,
     travel: 20,
     x: 30,
@@ -150,7 +144,6 @@ const PLACES = [
     queueMin: 3,
     queueMax: 8,
     hours: "全天",
-    ticket: "免费",
     visit: 40,
     travel: 12,
     x: 42,
@@ -172,7 +165,6 @@ const PLACES = [
     queueMin: 15,
     queueMax: 25,
     hours: "10:00–22:00",
-    ticket: "无需门票",
     visit: 60,
     travel: 14,
     x: 30,
@@ -195,7 +187,6 @@ const PLACES = [
     queueMin: 12,
     queueMax: 22,
     hours: "08:30–16:30",
-    ticket: "¥60",
     visit: 100,
     travel: 22,
     x: 26,
@@ -217,7 +208,6 @@ const PLACES = [
     queueMin: 18,
     queueMax: 28,
     hours: "10:00–22:00",
-    ticket: "无需门票",
     visit: 60,
     travel: 13,
     x: 52,
@@ -239,7 +229,6 @@ const PLACES = [
     queueMin: 8,
     queueMax: 15,
     hours: "09:00–17:00",
-    ticket: "¥80",
     visit: 70,
     travel: 16,
     x: 44,
@@ -262,7 +251,6 @@ const PLACES = [
     queueMin: 5,
     queueMax: 12,
     hours: "全天",
-    ticket: "免费",
     visit: 40,
     travel: 10,
     x: 50,
@@ -284,7 +272,6 @@ const PLACES = [
     queueMin: 20,
     queueMax: 30,
     hours: "10:30–21:00",
-    ticket: "订座",
     visit: 75,
     travel: 14,
     x: 41,
@@ -306,7 +293,6 @@ const PLACES = [
     queueMin: 30,
     queueMax: 45,
     hours: "10:00–22:00",
-    ticket: "订座",
     visit: 90,
     travel: 12,
     x: 45,
@@ -328,7 +314,6 @@ const PLACES = [
     queueMin: 20,
     queueMax: 35,
     hours: "10:30–21:30",
-    ticket: "订座",
     visit: 80,
     travel: 15,
     x: 39,
@@ -350,7 +335,6 @@ const PLACES = [
     queueMin: 25,
     queueMax: 40,
     hours: "10:30–21:30",
-    ticket: "订座",
     visit: 85,
     travel: 16,
     x: 47,
@@ -372,7 +356,6 @@ const PLACES = [
     queueMin: 20,
     queueMax: 35,
     hours: "16:00–02:00",
-    ticket: "订座",
     visit: 75,
     travel: 18,
     x: 54,
@@ -395,7 +378,6 @@ const PLACES = [
     queueMin: 8,
     queueMax: 15,
     hours: "10:00–20:30",
-    ticket: "无需订座",
     visit: 45,
     travel: 12,
     x: 58,
@@ -417,7 +399,6 @@ const PLACES = [
     queueMin: 12,
     queueMax: 22,
     hours: "09:30–20:00",
-    ticket: "无需订座",
     visit: 45,
     travel: 14,
     x: 62,
@@ -439,7 +420,6 @@ const PLACES = [
     queueMin: 5,
     queueMax: 12,
     hours: "10:00–22:00",
-    ticket: "无需订座",
     visit: 25,
     travel: 10,
     x: 35,
@@ -461,7 +441,6 @@ const PLACES = [
     queueMin: 20,
     queueMax: 35,
     hours: "16:30–01:00",
-    ticket: "订座",
     visit: 75,
     travel: 20,
     x: 64,
@@ -484,7 +463,6 @@ const PLACES = [
     queueMin: 8,
     queueMax: 16,
     hours: "11:00–22:00",
-    ticket: "无需订座",
     visit: 45,
     travel: 13,
     x: 43,
@@ -506,7 +484,6 @@ const PLACES = [
     queueMin: 10,
     queueMax: 20,
     hours: "10:00–21:00",
-    ticket: "无需订座",
     visit: 45,
     travel: 15,
     x: 49,
@@ -575,6 +552,12 @@ if (typeof POI_GENERATED_PLACES !== "undefined") {
       place.ratingSource = "高德";
     }
     if (amap.hours) place.hours = amap.hours;
+    // Same reasoning for contact details: all 23 curated rows were written with
+    // no tel, so the booking sheet could offer no number even though Amap has one
+    // for most of them (净月潭 0431-84518000, 伪满皇宫 0431-82866611). Let Amap
+    // fill the gap instead of leaving the panel empty.
+    if (amap.tel && !place.tel) place.tel = amap.tel;
+    if (amap.website && !place.website) place.website = amap.website;
   });
   const curatedNames = new Set(PLACES.map((place) => placeNameKey(place.name)));
   PLACES.push(
@@ -637,161 +620,138 @@ const PLACE_DETAILS = {
     description: "长春最适合慢走的一片森林与水域，适合把一上午留给步道、湖面和树影。",
     recommended: [],
     deal: "",
-    ticketTypes: [{ name: "成人票", price: 30 }]
   },
   "the-hill": {
     subtitle: "室内文旅商业 · 美食/拍照 · 建议1.5h",
     description: "把餐饮、山体空间和城市拍照放在一起的室内街区，适合作为雨天的午餐停留点。",
     recommended: ["锅包肉", "烤冷面", "东北菜"],
     deal: "双人小吃组合 ¥98",
-    ticketTypes: []
   },
   imperial: {
     subtitle: "历史景点 · 《人世间》缉熙楼取景地 · 建议2h",
     description: "末代皇帝溥仪在长春的宫廷旧址，建筑和展览都适合慢慢看。",
     recommended: [],
     deal: "",
-    ticketTypes: [{ name: "成人票", price: 70 }]
   },
   film: {
     subtitle: "电影主题公园 · 亲子 · 建议4h",
     description: "以电影工业和特效体验为主的主题公园，适合带孩子或留出完整半天。",
     recommended: [],
     deal: "",
-    ticketTypes: [{ name: "成人票", price: 180 }]
   },
   guilin: {
     subtitle: "美食街区 · 小吃 · 建议1.5h",
     description: "长春本地小吃和夜间烟火气比较集中的街区，适合边逛边吃。",
     recommended: ["烤冷面", "烤串", "冰糖葫芦"],
     deal: "小吃组合 ¥39",
-    ticketTypes: []
   },
   southlake: {
     subtitle: "城市公园 · 《人世间》取景地 · 建议1h",
     description: "市区里适合散步和看落日的公园，也是《人世间》的取景地之一。",
     recommended: [],
     deal: "",
-    ticketTypes: []
   },
   "culture-square": {
     subtitle: "城市广场 · 拍照 · 建议0.5h",
     description: "长春的城市公共空间，适合路过时停留拍照，不需要专门安排太久。",
     recommended: [],
     deal: "",
-    ticketTypes: []
   },
   hongqi: {
     subtitle: "商圈美食 · 建议1.5h",
     description: "购物、餐饮和城市生活混在一起的商圈，适合作为路线中的补给点。",
     recommended: ["东北菜", "烤肉"],
     deal: "双人餐 ¥128",
-    ticketTypes: []
   },
   zoo: {
     subtitle: "亲子自然 · 建议3h",
     description: "适合家庭游客的动植物公园，步行距离较长，建议留出完整半天。",
     recommended: [],
     deal: "",
-    ticketTypes: [{ name: "成人票", price: 60 }]
   },
   "chongqing-road": {
     subtitle: "商圈小吃 · 建议1h",
     description: "市中心的老牌商圈，适合快速吃饭和补充物资。",
     recommended: ["小吃", "甜品"],
     deal: "小吃券 ¥49",
-    ticketTypes: []
   },
   "changying-old": {
     subtitle: "电影历史 · 《人世间》人民电影院取景地 · 建议1.5h",
     description: "长影旧址博物馆保留了长春电影工业的记忆，也是《人世间》的取景地。",
     recommended: [],
     deal: "",
-    ticketTypes: [{ name: "成人票", price: 80 }]
   },
   "people-square": {
     subtitle: "城市广场 · 建议0.5h",
     description: "适合在城市中心短暂停留、换乘和拍照的公共空间。",
     recommended: [],
     deal: "",
-    ticketTypes: []
   },
   louwailou: {
     subtitle: "东北菜 · 本地推荐 · 建议1.5h",
     description: "适合想吃一顿正经东北菜的午餐点，建议提前看排队和订座。",
     recommended: ["锅包肉", "雪衣豆沙", "东北乱炖"],
     deal: "双人餐 ¥168",
-    ticketTypes: []
   },
   yuanshengju: {
     subtitle: "火锅 · 本地推荐 · 建议1.5h",
     description: "长春本地人常去的火锅选择，适合晚餐或冷天的一顿热食。",
     recommended: ["手切羊肉", "麻酱", "糖蒜"],
     deal: "四人餐 ¥298",
-    ticketTypes: []
   },
   dasheke: {
     subtitle: "非遗吉菜 · 本地推荐 · 建议1.5h",
     description: "来自长春美食合集的本地吉菜选择，适合想认真吃一顿东北菜的午餐或晚餐。",
     recommended: ["锅包肉", "吉菜", "东北菜"],
     deal: "双人吉菜套餐（演示）",
-    ticketTypes: []
   },
   donglu: {
     subtitle: "烤鸭 · 聚餐 · 建议1.5h",
     description: "适合多人聚餐的烤鸭店，建议先看排队和订座情况。",
     recommended: ["烤鸭", "京味菜", "凉菜"],
     deal: "四人烤鸭套餐（演示）",
-    ticketTypes: []
   },
   qianfeng: {
     subtitle: "炭缸烧烤 · 夜宵 · 建议1.5h",
     description: "适合晚上和朋友一起吃的烧烤，排队通常集中在晚餐后。",
     recommended: ["炭缸烧烤", "烤串", "东北烧烤"],
     deal: "双人烧烤套餐（演示）",
-    ticketTypes: []
   },
   tufengzheng: {
     subtitle: "牛腱面 · 快餐 · 建议45分钟",
     description: "适合路线中快速解决一顿的面馆，排队短、停留时间也短。",
     recommended: ["牛腱面", "小菜"],
     deal: "单人面套餐（演示）",
-    ticketTypes: []
   },
   haihua: {
     subtitle: "鱿鱼蒸饺 · 本地小吃 · 建议45分钟",
     description: "偏本地小吃的一顿，适合想尝试东北特色主食的人。",
     recommended: ["鱿鱼蒸饺", "蒸饺", "小菜"],
     deal: "双人小吃套餐（演示）",
-    ticketTypes: []
   },
   "700cc": {
     subtitle: "饮品 · 奶茶 · 建议20分钟",
     description: "适合路线中补充饮品和休息，不需要专门安排一顿正餐。",
     recommended: ["奶茶", "果茶"],
     deal: "双杯饮品券（演示）",
-    ticketTypes: []
   },
   maquez: {
     subtitle: "小龙虾 · 夜宵 · 建议1.5h",
     description: "适合晚餐或夜宵的小龙虾店，旺季排队时间可能更长。",
     recommended: ["小龙虾", "夜宵"],
     deal: "双人小龙虾套餐（演示）",
-    ticketTypes: []
   },
   jiumi: {
     subtitle: "绵绵冰 · 简餐 · 建议45分钟",
     description: "适合下午休息的甜品和简餐点，适合放在两段景点之间。",
     recommended: ["绵绵冰", "简餐", "甜品"],
     deal: "双人甜品套餐（演示）",
-    ticketTypes: []
   },
   dache: {
     subtitle: "砂锅土豆粉 · 小吃 · 建议45分钟",
     description: "适合快速吃一顿的砂锅小吃，适合作为路线中的轻量补给。",
     recommended: ["砂锅土豆粉", "砂锅"],
     deal: "单人砂锅套餐（演示）",
-    ticketTypes: []
   }
 };
 
@@ -882,9 +842,7 @@ const state = {
   queueMinutes: 30,
   currentPosition: null,
   modalPlace: null,
-  ticketPlace: null,
-  ticketTypeIndex: 0,
-  ticketQuantity: 1,
+  bookingPlace: null,
   routeReasons: {},
   lastReplan: null,
   queueRequests: [],
@@ -920,8 +878,10 @@ function placeMetrics(place) {
     rating: place.rating ? `高德 ${place.rating}` : "暂无评分",
     // avg is a band derived from the POI sub-category, so 约 is load-bearing.
     avg: typeof place.avg === "number" ? `人均约 ¥${place.avg}` : "人均待接入",
-    hours: place.hours ? `营业 ${place.hours}` : "营业时间待确认",
-    ticket: place.ticket || "票务待接入"
+    hours: place.hours ? `营业 ${place.hours}` : "营业时间待确认"
+    // No ticket field on purpose. The old card printed ¥30 / ¥70 / ¥180 that were
+    // typed in by hand, which looks like a fare table and is not one. Anything
+    // about price now comes from the booking channels the user actually opens.
   };
 }
 
@@ -1555,7 +1515,7 @@ function renderHome() {
     <div class="route-preview-stop">
       <time>${place.arrivalLabel}</time>
       <strong>${escapeHtml(place.name)}</strong>
-      <span>${escapeHtml(place.subtitle || place.type)}<br />${metrics.rating} · ${metrics.hours}<br />${metrics.ticket} · ${queueText(place)} 分钟排队</span>
+      <span>${escapeHtml(place.subtitle || place.type)}<br />${metrics.rating} · ${metrics.hours}<br />参考等候 ${queueText(place)} 分钟 · 非实时</span>
       ${state.routeReasons[place.id] ? `<em class="route-preview-reason">${escapeHtml(state.routeReasons[place.id])}</em>` : ""}
     </div>
   `;
@@ -1657,7 +1617,7 @@ function renderPlaceList() {
         <div class="place-actions">
           <button type="button" data-add="${place.id}" class="${inRoute ? "added" : ""}">${inRoute ? "已加入路线" : "加入路线"}</button>
           <button type="button" data-nav="${place.id}">导航</button>
-          <a href="#" data-ticket="${place.id}">官方购票/订座 ↗</a>
+          <a href="#" data-ticket="${place.id}">购票/订座渠道 ↗</a>
         </div>
       </article>
     `;
@@ -1863,8 +1823,8 @@ function renderRoute() {
             <div class="route-stop-meta">
               ${escapeHtml(place.subtitle || place.type)}<br />
               <b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />
-              ${metrics.ticket} · ${queueText(place)} 分钟排队<br />
-              <a href="#" data-ticket="${place.id}">官方购票/订座 ↗</a>
+              参考等候 ${queueText(place)} 分钟 · 非实时<br />
+              <a href="#" data-ticket="${place.id}">购票/订座渠道 ↗</a>
               <button class="route-stop-nav" type="button" data-nav="${place.id}">导航</button>
               ${state.routeReasons[place.id] ? `<span class="route-stop-reason">${escapeHtml(state.routeReasons[place.id])}</span>` : ""}
             </div>
@@ -1938,7 +1898,7 @@ function renderQueue() {
       <div class="queue-range">${queueText(place)} <small>分钟参考等候</small></div>
       <div class="queue-actions">
         <button class="button outline" type="button" data-queue="${place.id}">排队管家</button>
-        <a class="text-link" href="#" data-ticket="${place.id}">官方购票/订座 ↗</a>
+        <a class="text-link" href="#" data-ticket="${place.id}">购票/订座渠道 ↗</a>
       </div>
     </article>
   `;
@@ -2542,10 +2502,10 @@ function openPlaceModal(id) {
   $("#placeDouyin").href = externalSearchUrl("douyin", place.name);
 
   const ticketButton = $("#placeTicketButton");
-  // "免费预约" promised something the app cannot do -- it opens a demo ticket
-  // sheet, and plenty of these attractions do charge. Name the panel, not an
-  // outcome. The sheet itself says 演示订单不会真实出票.
-  ticketButton.textContent = place.category === "food" ? "订座" : "门票";
+  // It no longer opens a fake order sheet: it lists the places that actually
+  // sell the ticket, so the label can finally say 购票 rather than promise an
+  // outcome. The ↗ marks it as leaving the app.
+  ticketButton.textContent = place.category === "food" ? "订座 ↗" : "购票 ↗";
   ticketButton.dataset.place = place.id;
 
   const addButton = $("#placeAddButton");
@@ -2559,39 +2519,82 @@ function openPlaceModal(id) {
   openModal("placeModal");
 }
 
-function renderTicketOptions() {
-  const place = placeById(state.ticketPlace);
-  if (!place) return;
-  const types = place.ticketTypes?.length
-    ? place.ticketTypes
-    : [{ name: place.category === "food" ? "订座" : "免费预约", price: 0 }];
-  const selected = types[state.ticketTypeIndex] || types[0];
-  $("#ticketTitle").textContent = `${place.name} · ${
-    place.category === "food" ? "订座" : "门票"
-  }`;
-  $("#ticketDesc").textContent =
-    place.category === "food"
-      ? "演示订座请求，不会真实锁定座位。"
-      : "演示订单不会真实出票，也不会产生支付。";
-  $("#ticketOptions").innerHTML = types
-    .map(
-      (type, index) => `
-        <button class="ticket-option ${index === state.ticketTypeIndex ? "selected" : ""}" type="button" data-ticket-type="${index}">
-          <span>${type.name}</span>
-          <strong>${type.price ? `¥${type.price}` : "免费"}</strong>
-        </button>
-      `
-    )
-    .join("");
-  $("#ticketQuantity").textContent = String(state.ticketQuantity);
-  $("#ticketTotal").textContent = `¥${selected.price * state.ticketQuantity}`;
+// Outbound booking links, not an order. The app has no ticketing API and no
+// payment licence, so the honest thing it can do is hand the user over to
+// whoever does sell the ticket. Every place came from Amap, so its Amap page
+// always exists and always carries the official phone; everything else is a
+// search URL rather than a deep link we could not guarantee resolves.
+function bookingChannels(place) {
+  const channels = [];
+  if (place.website) {
+    const raw = String(place.website).trim();
+    channels.push({
+      label: "官方网站",
+      note: "该机构在高德登记的官网地址",
+      url: /^https?:/i.test(raw) ? raw : `https://${raw}`
+    });
+  }
+  if (place.tel) {
+    channels.push({
+      label: `电话 ${place.tel}`,
+      note: "订票、订座与开放时间以对方答复为准",
+      url: `tel:${place.tel}`
+    });
+  }
+  if (typeof place.lng === "number" && typeof place.lat === "number") {
+    channels.push({
+      label: "高德 POI 详情页",
+      note: "该地点的完整档案：电话、公告与商家入口",
+      url:
+        `https://uri.amap.com/marker?position=${place.lng},${place.lat}` +
+        `&name=${encodeURIComponent(place.name)}&src=SmoothGo&coordinate=gaode&callnative=1`
+    });
+  }
+  channels.push({
+    label: "美团",
+    note: "搜索该名称，门票与团购以美团页面为准",
+    url: externalSearchUrl("meituan", place.name)
+  });
+  channels.push({
+    label: "大众点评",
+    note: "搜索该名称查看评价与套餐",
+    url: externalSearchUrl("dianping", place.name)
+  });
+  channels.push({
+    label: "抖音",
+    note: "搜索该名称查看团购",
+    url: externalSearchUrl("douyin", place.name)
+  });
+  return channels;
 }
 
-function openTicketModal(id) {
-  state.ticketPlace = id;
-  state.ticketTypeIndex = 0;
-  state.ticketQuantity = 1;
-  renderTicketOptions();
+function renderBookingChannels() {
+  const place = placeById(state.bookingPlace);
+  if (!place) return;
+  const isFood = place.category === "food";
+  $("#ticketTitle").textContent = `${place.name} · ${isFood ? "订座渠道" : "购票渠道"}`;
+  $("#ticketDesc").textContent = `以下为第三方渠道，${
+    isFood ? "是否成功订座" : "票价、库存与开放时间"
+  }以对方页面为准。`;
+  $("#bookingOptions").innerHTML = bookingChannels(place)
+    .map((channel) => {
+      const external = /^https?:/i.test(channel.url);
+      return `<a class="booking-channel" href="${escapeHtml(channel.url)}"${
+        external ? ' target="_blank" rel="noreferrer noopener"' : ""
+      }>
+          <span><strong>${escapeHtml(channel.label)}</strong><em>${escapeHtml(channel.note)}</em></span>
+          <b>↗</b>
+        </a>`;
+    })
+    .join("");
+  $("#bookingFootnote").textContent =
+    "多数景区只在其官方微信公众号 / 小程序售票或分时预约，微信内搜索该名称即可抵达。" +
+    "滑雪场多数雪季也是先预约后到场。";
+}
+
+function openBookingModal(id) {
+  state.bookingPlace = id;
+  renderBookingChannels();
   openModal("ticketModal");
 }
 
@@ -2830,7 +2833,7 @@ document.addEventListener("click", (event) => {
   const ticket = event.target.closest("[data-ticket]");
   if (ticket) {
     event.preventDefault();
-    showToast("演示：正式版会打开官方购票/订座页面");
+    openBookingModal(ticket.dataset.ticket);
     return;
   }
 
@@ -3179,7 +3182,7 @@ $("#placeModal").addEventListener("click", (event) => {
 });
 
 $("#placeTicketButton").addEventListener("click", () => {
-  if (state.modalPlace) openTicketModal(state.modalPlace);
+  if (state.modalPlace) openBookingModal(state.modalPlace);
 });
 
 $("#placeNavButton").addEventListener("click", () => {
@@ -3197,31 +3200,6 @@ $("#placeAddButton").addEventListener("click", () => {
 $("#ticketModalClose").addEventListener("click", () => closeModal("ticketModal"));
 $("#ticketModal").addEventListener("click", (event) => {
   if (event.target.id === "ticketModal") closeModal("ticketModal");
-});
-
-$("#ticketOptions").addEventListener("click", (event) => {
-  const option = event.target.closest("[data-ticket-type]");
-  if (!option) return;
-  state.ticketTypeIndex = Number(option.dataset.ticketType);
-  renderTicketOptions();
-});
-
-$("#ticketMinus").addEventListener("click", () => {
-  state.ticketQuantity = Math.max(1, state.ticketQuantity - 1);
-  renderTicketOptions();
-});
-
-$("#ticketPlus").addEventListener("click", () => {
-  state.ticketQuantity = Math.min(9, state.ticketQuantity + 1);
-  renderTicketOptions();
-});
-
-$("#ticketSubmitButton").addEventListener("click", () => {
-  const place = placeById(state.ticketPlace);
-  if (!place) return;
-  closeModal("ticketModal");
-  closeModal("placeModal");
-  showToast(`${place.name}：演示订单已提交，未产生真实支付`);
 });
 
 $("#rideModalClose").addEventListener("click", () => closeModal("rideModal"));

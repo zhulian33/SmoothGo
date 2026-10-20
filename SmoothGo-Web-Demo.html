@@ -565,9 +565,65 @@ main {
   background: var(--paper);
 }
 
+.amap-marker.category.featured {
+  width: 11px;
+  height: 11px;
+  border-width: 2px;
+  background: var(--ink);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+
 .amap-marker.category.selected {
   transform: scale(1.6);
   background: var(--paper);
+}
+
+.featured-badge {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.amap-cluster {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid var(--paper);
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--sans);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.amap-cluster:hover {
+  transform: scale(1.12);
+}
+
+.amap-cluster.md {
+  width: 34px;
+  height: 34px;
+  font-size: 12px;
+}
+
+.amap-cluster.lg {
+  width: 42px;
+  height: 42px;
+  font-size: 13px;
 }
 
 .amap-transport-marker {
@@ -804,6 +860,21 @@ main {
   font-size: 7px;
   font-weight: 600;
   text-align: right;
+}
+
+/* Rows whose data source is not connected yet: present but visibly inert, so a
+   placeholder is never mistaken for a live reading. */
+.map-live-row.muted strong {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.live-tag {
+  padding: 1px 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 6px;
 }
 
 .marker-popover {
@@ -1851,8 +1922,8 @@ main {
 
 .place-detail-hero {
   display: grid;
-  grid-template-columns: 118px minmax(0, 1fr);
-  gap: 15px;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 16px;
   align-items: start;
   padding-right: 24px;
 }
@@ -1860,11 +1931,19 @@ main {
 .place-detail-visual {
   display: grid;
   place-items: center;
-  width: 118px;
-  height: 112px;
+  width: 190px;
+  height: 128px;
+  overflow: hidden;
   border: 1px solid var(--line);
   background: var(--soft);
   color: var(--ink);
+}
+
+.place-detail-visual .place-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .place-detail-visual .icon {
@@ -1990,79 +2069,49 @@ main {
   margin-left: auto;
 }
 
-.ticket-options {
+.booking-options {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 7px;
   margin-top: 14px;
 }
 
-.ticket-option {
+.booking-channel {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px;
+  gap: 10px;
+  padding: 11px 12px;
   border: 1px solid var(--line);
   background: var(--paper);
-  color: var(--ink-soft);
-  font-size: 8px;
-  text-align: left;
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.16s ease, background 0.16s ease;
 }
 
-.ticket-option.selected {
+.booking-channel:hover {
   border-color: var(--ink);
   background: var(--soft);
 }
 
-.ticket-option strong {
+.booking-channel strong {
+  display: block;
+  font-size: 10px;
   font-weight: 600;
 }
 
-.ticket-quantity {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 13px;
+.booking-channel em {
+  display: block;
+  margin-top: 3px;
   color: var(--muted);
   font-size: 8px;
+  font-style: normal;
+  line-height: 1.5;
 }
 
-.ticket-quantity button {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border: 1px solid var(--line-dark);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: 14px;
-}
-
-.ticket-quantity strong {
-  min-width: 18px;
-  color: var(--ink);
-  font-size: 10px;
-  text-align: center;
-}
-
-.ticket-total {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
+.booking-channel b {
+  flex: none;
   color: var(--muted);
-  font-size: 8px;
-}
-
-.ticket-total strong {
-  color: var(--ink);
-  font-family: var(--serif);
-  font-size: 24px;
+  font-size: 12px;
   font-weight: 400;
 }
 
@@ -2623,6 +2672,15 @@ main {
     flex-direction: column;
     padding: 10px 14px 14px;
   }
+
+  .place-detail-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .place-detail-visual {
+    width: 100%;
+    height: 172px;
+  }
 }
 
 @media (max-width: 430px) {
@@ -2674,6 +2732,92 @@ main {
   }
 
   .queue-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+.poi-block {
+  margin-top: 20px;
+}
+
+.poi-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.poi-city {
+  width: 92px;
+  min-height: 32px;
+  padding: 0 9px;
+  border: 1px solid var(--line-dark);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 8px;
+}
+
+.poi-status {
+  min-height: 14px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.poi-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.poi-card {
+  padding: 11px;
+  border: 1px solid var(--line-dark);
+  background: var(--paper);
+}
+
+.poi-tel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.poi-tel a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line-dark);
+}
+
+.poi-tel .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.poi-empty {
+  color: var(--muted);
+}
+
+.poi-window {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px;
+  border: 1px solid var(--line-dark);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 9px;
+}
+
+.poi-window span {
+  color: var(--muted);
+}
+
+@media (max-width: 720px) {
+  .poi-list {
     grid-template-columns: 1fr;
   }
 }
@@ -2841,8 +2985,8 @@ main {
 
             <div class="map-card home-map" id="homeMap" aria-label="长春实时地图预览">
               <div class="map-top">
-                <span class="map-label">实时地图预览 · <strong id="homeMapCount">12</strong> 个地点</span>
-                <span class="map-live"><span class="live-dot"></span>实时路况</span>
+                <span class="map-label">地图预览 · <strong id="homeMapCount">12</strong> 个地点</span>
+                <span class="map-live"><span class="live-dot"></span>高德底图</span>
               </div>
               <div class="route-preview-card">
                 <strong>长春一日路线</strong>
@@ -2853,9 +2997,9 @@ main {
           </div>
 
           <div class="signal-strip">
-            <div class="signal-item"><span>天气</span><strong>18°C</strong><em>15:00 小雨 40%</em></div>
-            <div class="signal-item"><span>排队</span><strong id="queueSignalCount">2 个</strong><em>附近需要等待的地点</em></div>
-            <div class="signal-item"><span>实时公交</span><strong>2 min</strong><em>42 路下一班</em></div>
+            <div class="signal-item"><span>天气</span><strong>—</strong><em>未接入数据源</em></div>
+            <div class="signal-item"><span>排队</span><strong id="queueSignalCount">2 个</strong><em>参考等候 · 非实时</em></div>
+            <div class="signal-item"><span>公交</span><strong>—</strong><em>未接入数据源</em></div>
             <div class="signal-item"><span>已保存</span><strong id="savedSignalCount">3 个</strong><em>路线中的地点</em></div>
           </div>
 
@@ -2885,9 +3029,9 @@ main {
             <div>
               <div class="kicker">地图找地点</div>
               <h2>从地图开始，选你想去的地方</h2>
-              <p>点地图标注或左侧地点卡片，查看营业时间、排队、点评字段和购票入口。</p>
+              <p>点地图标注或左侧地点卡片，查看实景图、营业时间、参考等候和票务入口。</p>
             </div>
-            <span class="map-data-note">卫星/路况来自高德 · 人数为演示估算</span>
+            <span class="map-data-note">图片 / 评分 / 营业时间来自高德 · 人均与等候为估算</span>
           </div>
 
           <div class="map-toolbar">
@@ -2899,6 +3043,7 @@ main {
               <button class="chip active" type="button" data-filter="all">全部</button>
               <button class="chip" type="button" data-filter="food">餐厅</button>
               <button class="chip" type="button" data-filter="attraction">景点</button>
+              <button class="chip" type="button" data-filter="featured">长春特色</button>
               <button class="chip" type="button" data-filter="short">排队少</button>
               <button class="chip" type="button" data-filter="budget">人均 ¥100 以下</button>
               <button class="chip" type="button" data-filter="rating">4.5 分以上</button>
@@ -2914,7 +3059,7 @@ main {
               景点 <span id="attractionLayerCount">8</span>
             </button>
             <button class="layer-chip" type="button" data-layer="transport">
-              交通 <span>实时拥挤</span>
+              交通 <span>未接入</span>
             </button>
             <button class="layer-chip" type="button" data-layer="food">
               美食 <span id="foodLayerCount">4</span>
@@ -2933,6 +3078,29 @@ main {
             <aside class="place-list" id="placeList" aria-label="地点列表"></aside>
             <div class="map-card map-large" id="mapViewMap" aria-label="长春地图"></div>
           </div>
+
+          <section class="poi-block" id="poiBlock" aria-label="高德门店搜索">
+            <div class="section-head">
+              <div>
+                <div class="kicker">真实门店数据</div>
+                <h2>搜索附近好店</h2>
+              </div>
+              <span class="map-data-note">来自高德 POI · 店名 / 分类 / 地址 / 电话</span>
+            </div>
+
+            <div class="poi-toolbar">
+              <div class="search-box">
+                <svg class="icon"><use href="#i-search"></use></svg>
+                <input id="poiQuery" type="search" placeholder="关键词，如 东北菜 / 咖啡 / 景点" />
+              </div>
+              <input id="poiCity" class="poi-city" value="长春" aria-label="搜索城市" />
+              <button class="button dark" type="button" id="poiSearchButton">搜索</button>
+              <button class="button" type="button" id="poiNearbyButton">搜附近 3 公里</button>
+            </div>
+
+            <div class="poi-status" id="poiStatus"></div>
+            <div class="poi-list" id="poiList"></div>
+          </section>
         </section>
 
         <section class="view" id="view-route" aria-label="路线规划">
@@ -2960,7 +3128,7 @@ main {
             <aside class="route-sheet">
               <div class="sheet-head">
                 <strong>最优连接</strong>
-                <span>驾车优先 · 实时路况</span>
+                <span>驾车优先 · 按路程估算</span>
               </div>
               <div id="routeList"></div>
             </aside>
@@ -2980,7 +3148,7 @@ main {
           <div class="queue-list" id="queueList"></div>
           <div class="notice">
             <svg class="icon"><use href="#i-bell"></use></svg>
-            <span>实时公交 42 路 · 2 分钟后到站。可开启到站提醒，避免在门口空等。</span>
+            <span>公交到站时间需要对接公交集团数据源，目前未接入；请以站牌或官方 App 为准。</span>
           </div>
         </section>
       </main>
@@ -3120,19 +3288,11 @@ main {
         <button class="modal-close" type="button" id="ticketModalClose" aria-label="关闭">
           <svg class="icon"><use href="#i-close"></use></svg>
         </button>
-        <span class="kicker">内置购票 · 演示</span>
-        <h2 id="ticketTitle">选择门票</h2>
-        <p id="ticketDesc">演示订单不会真实出票，也不会产生支付。</p>
-        <div class="ticket-options" id="ticketOptions"></div>
-        <div class="ticket-quantity">
-          <span>数量</span>
-          <button type="button" id="ticketMinus" aria-label="减少数量">−</button>
-          <strong id="ticketQuantity">1</strong>
-          <button type="button" id="ticketPlus" aria-label="增加数量">＋</button>
-        </div>
-        <div class="ticket-total"><span>合计</span><strong id="ticketTotal">¥0</strong></div>
-        <button class="button dark full" type="button" id="ticketSubmitButton">提交演示订单</button>
-        <p class="modal-footnote">真实购票需接入景区官方票务或 OTA 授权接口。</p>
+        <span class="kicker">购票渠道 · 外链</span>
+        <h2 id="ticketTitle">购票渠道</h2>
+        <p id="ticketDesc">SmoothGo 不出票、不收款。</p>
+        <div class="booking-options" id="bookingOptions"></div>
+        <p class="modal-footnote" id="bookingFootnote"></p>
       </div>
     </div>
 
@@ -3160,13 +3320,13 @@ main {
         <h2 id="legalTitle">隐私、条款与数据边界</h2>
         <div class="legal-copy">
           <h3>演示数据</h3>
-          <p>页面中的天气、排队、评分、价格、公交和票务信息均为 illustrative data，只用于课程演示，不代表任何场地的实时状态。</p>
+          <p>地点、地址、坐标、营业时间、评分和图片来自高德开放平台 POI 数据，会随平台更新而变化；人均消费按品类估算，<strong>非真实账单</strong>。天气、公交到站、实时路况、排队人数、票务与会员支付<strong>尚未接入任何数据源</strong>，页面中的相关数值只用于课程演示。</p>
           <h3>账号与隐私</h3>
           <p>本地演示可创建手机号和密码。真实部署应使用 HTTPS，并以隐私政策说明保存目的、保存期限、删除方式和用户权利。</p>
           <h3>排队管家</h3>
           <p>当前只模拟请求和状态时间线，不会派单、收款或承诺优先入场。正式服务只应在明确允许的餐厅或非严格排队场地开放，景区第一阶段仅提供信息。</p>
           <h3>票务与地图</h3>
-          <p>购票按钮只做跳转或演示订单，不直接出票。地图和路线能力接入高德后，仍需遵守其服务条款与配额限制。</p>
+          <p>「购票 / 订座」按钮只把用户送到真正售票的地方——景区电话、高德 POI 详情页、美团、点评、抖音——本应用<strong>不出票、不收款、不采集支付信息</strong>，票价与库存以对方页面为准。地图和路线能力接入高德后，仍需遵守其服务条款与配额限制。</p>
           <h3>正式上线前</h3>
           <p>还需要合作协议、隐私政策、数据删除机制、客服与应急流程、支付退款规则，以及排队协助人员的实名、培训、保险和交接规范。</p>
         </div>
@@ -3209,6 +3369,18 @@ window.SMOOTHGO_CONFIG = {
   const DEFAULT_LIMIT = 3;
   const LUNCH_START = 11 * 60 + 30;
   const LUNCH_END = 13 * 60 + 30;
+
+  // The three-stop day is scored by brute force: every two-attraction + one-meal
+  // combination, reordered by optimizeOrder(). That is O(A^2 * F * 6) and the
+  // place library now holds ~200 attractions and ~360 restaurants, so the full
+  // cross product costs 43 million summarize() calls per day -- 29 s for one
+  // day, and 14 days froze the tab for seven minutes.
+  //
+  // ranked[] is already sorted by scorePlace(), so the tail is by definition the
+  // worst-scoring tail. Trimming to the top N before the cross product drops it
+  // to ~5.5k calls per day with no measurable change to which day wins.
+  const MAX_ATTRACTION_CANDIDATES = 14;
+  const MAX_FOOD_CANDIDATES = 10;
 
   function parseBudget(value, fallback = 500) {
     const numbers = String(value ?? "").match(/\d+(?:\.\d+)?/g);
@@ -3354,10 +3526,12 @@ window.SMOOTHGO_CONFIG = {
     // field real rather than decorative.
     if (limit === 3 && attractions.length >= 2 && foods.length) {
       let best = null;
-      for (let first = 0; first < attractions.length; first += 1) {
-        for (let second = first + 1; second < attractions.length; second += 1) {
-          foods.forEach((food) => {
-            const combo = [attractions[first], attractions[second], food];
+      const attractionPool = attractions.slice(0, MAX_ATTRACTION_CANDIDATES);
+      const foodPool = foods.slice(0, MAX_FOOD_CANDIDATES);
+      for (let first = 0; first < attractionPool.length; first += 1) {
+        for (let second = first + 1; second < attractionPool.length; second += 1) {
+          foodPool.forEach((food) => {
+            const combo = [attractionPool[first], attractionPool[second], food];
             const order = optimizeOrder(combo, {
               startMinutes,
               travelBetween: options.travelBetween
@@ -3547,6 +3721,8 @@ window.SMOOTHGO_CONFIG = {
 });
 
 </script>
+    <script src="places.poi.js"></script>
+    <script src="place-photos.js"></script>
     <script>
 const PLACES = [
   {
@@ -3562,59 +3738,58 @@ const PLACES = [
     queueMin: 18,
     queueMax: 25,
     hours: "08:00–17:00",
-    ticket: "¥30",
     visit: 90,
     travel: 25,
     x: 18,
     y: 28,
     interests: ["自然", "摄影", "亲子"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-palace"
   },
   {
     id: "the-hill",
     name: "这有山",
-    type: "餐饮 · 室内",
-    category: "food",
+    // An indoor hill-town you wander for an hour or two -- Amap types it 步行街
+    // under 购物服务. It was filed as food here, which made the planner spend
+    // the day's single meal slot on a shopping street instead of a restaurant.
+    type: "商业 · 室内小镇",
+    category: "attraction",
     rating: 4.6,
-    avg: 120,
+    avg: 60,
     distance: 3.1,
     lng: 125.291,
     lat: 43.857,
     queueMin: 25,
     queueMax: 35,
     hours: "10:00–22:00",
-    ticket: "订座",
     visit: 75,
     travel: 16,
     x: 55,
     y: 47,
-    interests: ["美食", "历史", "摄影"],
-    source: "点评 · 演示",
+    interests: ["美食", "摄影", "城市"],
+    source: "本地整理",
     confidence: "中",
-    icon: "i-food"
+    icon: "i-palace"
   },
   {
     id: "imperial",
     name: "伪满皇宫",
     type: "历史 · 室内",
     category: "attraction",
-    rating: 4.7,
-    avg: 70,
+    rating: 4.7,avg: 30,
     distance: 5.4,
     lng: 125.350,
     lat: 43.901,
     queueMin: 30,
     queueMax: 45,
     hours: "08:30–17:20",
-    ticket: "¥70",
     visit: 75,
     travel: 18,
     x: 67,
     y: 59,
     interests: ["历史", "摄影"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-palace"
   },
@@ -3623,21 +3798,19 @@ const PLACES = [
     name: "长影世纪城",
     type: "电影 · 亲子",
     category: "attraction",
-    rating: 4.6,
-    avg: 180,
+    rating: 4.6,avg: 150,
     distance: 12,
     lng: 125.269,
     lat: 43.783,
     queueMin: 20,
     queueMax: 30,
     hours: "09:00–17:00",
-    ticket: "¥180",
     visit: 120,
     travel: 30,
     x: 37,
     y: 33,
     interests: ["电影", "亲子", "摄影"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-route"
   },
@@ -3646,21 +3819,19 @@ const PLACES = [
     name: "桂林路",
     type: "街区 · 小吃",
     category: "food",
-    rating: 4.5,
-    avg: 80,
+    rating: 4.5,avg: 45,
     distance: 4.2,
     lng: 125.310,
     lat: 43.842,
     queueMin: 10,
     queueMax: 18,
     hours: "全天",
-    ticket: "无需门票",
     visit: 60,
     travel: 8,
     x: 48,
     y: 64,
     interests: ["美食", "夜生活"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -3677,13 +3848,12 @@ const PLACES = [
     queueMin: 5,
     queueMax: 10,
     hours: "05:00–22:00",
-    ticket: "免费",
     visit: 60,
     travel: 20,
     x: 30,
     y: 71,
     interests: ["自然", "休闲"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-palace"
   },
@@ -3700,13 +3870,12 @@ const PLACES = [
     queueMin: 3,
     queueMax: 8,
     hours: "全天",
-    ticket: "免费",
     visit: 40,
     travel: 12,
     x: 42,
     y: 38,
     interests: ["休闲", "摄影"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-pin"
   },
@@ -3715,21 +3884,19 @@ const PLACES = [
     name: "红旗街",
     type: "商圈 · 美食",
     category: "food",
-    rating: 4.4,
-    avg: 100,
+    rating: 4.4,avg: 70,
     distance: 3.8,
     lng: 125.285,
     lat: 43.860,
     queueMin: 15,
     queueMax: 25,
     hours: "10:00–22:00",
-    ticket: "无需门票",
     visit: 60,
     travel: 14,
     x: 30,
     y: 53,
     interests: ["美食", "购物"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -3746,13 +3913,12 @@ const PLACES = [
     queueMin: 12,
     queueMax: 22,
     hours: "08:30–16:30",
-    ticket: "¥60",
     visit: 100,
     travel: 22,
     x: 26,
     y: 23,
     interests: ["亲子", "自然"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-palace"
   },
@@ -3761,21 +3927,19 @@ const PLACES = [
     name: "重庆路",
     type: "商圈 · 小吃",
     category: "food",
-    rating: 4.4,
-    avg: 90,
+    rating: 4.4,avg: 45,
     distance: 3.5,
     lng: 125.332,
     lat: 43.886,
     queueMin: 18,
     queueMax: 28,
     hours: "10:00–22:00",
-    ticket: "无需门票",
     visit: 60,
     travel: 13,
     x: 52,
     y: 35,
     interests: ["美食", "购物"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -3784,21 +3948,19 @@ const PLACES = [
     name: "长影旧址博物馆",
     type: "电影 · 历史",
     category: "attraction",
-    rating: 4.6,
-    avg: 80,
+    rating: 4.6,avg: 30,
     distance: 4.9,
     lng: 125.285,
     lat: 43.845,
     queueMin: 8,
     queueMax: 15,
     hours: "09:00–17:00",
-    ticket: "¥80",
     visit: 70,
     travel: 16,
     x: 44,
     y: 28,
     interests: ["电影", "历史"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-route"
   },
@@ -3815,13 +3977,12 @@ const PLACES = [
     queueMin: 5,
     queueMax: 12,
     hours: "全天",
-    ticket: "免费",
     visit: 40,
     travel: 10,
     x: 50,
     y: 58,
     interests: ["休闲", "摄影"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-pin"
   },
@@ -3830,21 +3991,19 @@ const PLACES = [
     name: "楼外楼",
     type: "东北菜 · 本地推荐",
     category: "food",
-    rating: 4.6,
-    avg: 100,
+    rating: 4.6,avg: 70,
     distance: 3.4,
     lng: 125.305,
     lat: 43.862,
     queueMin: 20,
     queueMax: 30,
     hours: "10:30–21:00",
-    ticket: "订座",
     visit: 75,
     travel: 14,
     x: 41,
     y: 50,
     interests: ["美食", "历史", "摄影"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -3853,21 +4012,19 @@ const PLACES = [
     name: "元盛居",
     type: "火锅 · 本地推荐",
     category: "food",
-    rating: 4.5,
-    avg: 90,
+    rating: 4.5,avg: 95,
     distance: 2.9,
     lng: 125.318,
     lat: 43.865,
     queueMin: 30,
     queueMax: 45,
     hours: "10:00–22:00",
-    ticket: "订座",
     visit: 90,
     travel: 12,
     x: 45,
     y: 54,
     interests: ["美食", "聚餐"],
-    source: "点评 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -3876,21 +4033,19 @@ const PLACES = [
     name: "大食客·非遗吉菜",
     type: "吉菜 · 本地推荐",
     category: "food",
-    rating: 4.6,
-    avg: 95,
+    rating: 4.6,avg: 70,
     distance: 3.8,
     lng: 125.300,
     lat: 43.850,
     queueMin: 20,
     queueMax: 35,
     hours: "10:30–21:30",
-    ticket: "订座",
     visit: 80,
     travel: 15,
     x: 39,
     y: 43,
     interests: ["美食", "历史"],
-    source: "小红书公开合集 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -3899,21 +4054,19 @@ const PLACES = [
     name: "董鲁烤鸭（云琅店）",
     type: "烤鸭 · 聚餐",
     category: "food",
-    rating: 4.6,
-    avg: 110,
+    rating: 4.6,avg: 70,
     distance: 4.4,
     lng: 125.310,
     lat: 43.860,
     queueMin: 25,
     queueMax: 40,
     hours: "10:30–21:30",
-    ticket: "订座",
     visit: 85,
     travel: 16,
     x: 47,
     y: 39,
     interests: ["美食", "聚餐"],
-    source: "小红书公开合集 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -3922,21 +4075,19 @@ const PLACES = [
     name: "钱锋炭缸烧烤",
     type: "烧烤 · 夜宵",
     category: "food",
-    rating: 4.5,
-    avg: 85,
+    rating: 4.5,avg: 95,
     distance: 5.2,
     lng: 125.320,
     lat: 43.830,
     queueMin: 20,
     queueMax: 35,
     hours: "16:00–02:00",
-    ticket: "订座",
     visit: 75,
     travel: 18,
     x: 54,
     y: 60,
     interests: ["美食", "夜生活"],
-    source: "小红书公开合集 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -3953,13 +4104,12 @@ const PLACES = [
     queueMin: 8,
     queueMax: 15,
     hours: "10:00–20:30",
-    ticket: "无需订座",
     visit: 45,
     travel: 12,
     x: 58,
     y: 45,
     interests: ["美食"],
-    source: "小红书公开合集 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -3968,21 +4118,19 @@ const PLACES = [
     name: "海华鱿鱼蒸饺",
     type: "蒸饺 · 本地小吃",
     category: "food",
-    rating: 4.6,
-    avg: 50,
+    rating: 4.6,avg: 35,
     distance: 4.1,
     lng: 125.340,
     lat: 43.840,
     queueMin: 12,
     queueMax: 22,
     hours: "09:30–20:00",
-    ticket: "无需订座",
     visit: 45,
     travel: 14,
     x: 62,
     y: 52,
     interests: ["美食"],
-    source: "小红书公开合集 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -3991,21 +4139,19 @@ const PLACES = [
     name: "700CC",
     type: "饮品 · 奶茶",
     category: "food",
-    rating: 4.4,
-    avg: 20,
+    rating: 4.4,avg: 25,
     distance: 3.1,
     lng: 125.290,
     lat: 43.840,
     queueMin: 5,
     queueMax: 12,
     hours: "10:00–22:00",
-    ticket: "无需订座",
     visit: 25,
     travel: 10,
     x: 35,
     y: 57,
     interests: ["美食", "休闲"],
-    source: "小红书公开合集 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -4014,21 +4160,19 @@ const PLACES = [
     name: "麻雀牌小龙虾",
     type: "小龙虾 · 夜宵",
     category: "food",
-    rating: 4.5,
-    avg: 100,
+    rating: 4.5,avg: 95,
     distance: 5.5,
     lng: 125.350,
     lat: 43.830,
     queueMin: 20,
     queueMax: 35,
     hours: "16:30–01:00",
-    ticket: "订座",
     visit: 75,
     travel: 20,
     x: 64,
     y: 61,
     interests: ["美食", "夜生活"],
-    source: "小红书公开合集 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -4045,13 +4189,12 @@ const PLACES = [
     queueMin: 8,
     queueMax: 16,
     hours: "11:00–22:00",
-    ticket: "无需订座",
     visit: 45,
     travel: 13,
     x: 43,
     y: 62,
     interests: ["美食", "休闲"],
-    source: "小红书公开合集 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   },
@@ -4060,25 +4203,142 @@ const PLACES = [
     name: "大车砂锅土豆粉",
     type: "砂锅 · 小吃",
     category: "food",
-    rating: 4.4,
-    avg: 40,
+    rating: 4.4,avg: 35,
     distance: 4.6,
     lng: 125.320,
     lat: 43.810,
     queueMin: 10,
     queueMax: 20,
     hours: "10:00–21:00",
-    ticket: "无需订座",
     visit: 45,
     travel: 15,
     x: 49,
     y: 68,
     interests: ["美食"],
-    source: "小红书公开合集 · 演示",
+    source: "本地整理",
     confidence: "中",
     icon: "i-food"
   }
 ];
+
+// Real Changchun places harvested from the Amap POI API (see places.poi.js).
+// Optional so the page still works if that file is missing.
+// The hand-written entries carry the full demo data, so they win on a collision
+// -- otherwise 净月潭 shows up twice, once rich and once hollow. Names are
+// compared after stripping the 长春 prefix and official suffixes, because the
+// two sources spell the same place differently (南湖 vs 南湖公园).
+const placeNameKey = (name) => {
+  const stripped = String(name)
+    .replace(/^长春市?/, "")
+    .replace(/(国家森林公园|国家级风景名胜区|风景名胜区|旅游景区|风景区|景区|公园)$/, "");
+  return stripped.length >= 2 ? stripped : String(name);
+};
+// Amap names a chain branch 元盛居(亚泰大街店); the hand-written row is just
+// 元盛居. Stripping the branch suffix lets the curated card borrow the photo and
+// rating of whichever branch Amap returned first.
+const chainKey = (name) =>
+  placeNameKey(name)
+    .replace(/[（(][^）)]*[）)]/g, "")
+    .trim();
+// Generic tail Amap appends to a street POI: 桂林路 -> 桂林路商业街.
+const STREET_SUFFIX = /(商业街|步行街|商圈)$/;
+
+if (typeof POI_GENERATED_PLACES !== "undefined") {
+  const generatedByKey = new Map();
+  const generatedByChain = new Map();
+  POI_GENERATED_PLACES.forEach((place) => {
+    const key = placeNameKey(place.name);
+    if (!generatedByKey.has(key)) generatedByKey.set(key, place);
+    const chain = chainKey(place.name);
+    if (!generatedByChain.has(chain)) generatedByChain.set(chain, place);
+  });
+  // The hand-written rows predate the Amap harvest and carry invented demo
+  // ratings with no photo. When Amap knows the same place, its real rating,
+  // opening hours and photo win -- otherwise one card shows 点评 4.7 (made up)
+  // next to another showing a real Amap score.
+  PLACES.forEach((place) => {
+    const amap =
+      generatedByKey.get(placeNameKey(place.name)) ||
+      generatedByChain.get(chainKey(place.name)) ||
+      // Last resort for a curated row whose Amap name carries a long suffix:
+      // 楼外楼 vs 楼外楼大刀肉传统火锅居(幸福街店). The length guard keeps a
+      // two-character stub from latching onto an unrelated shop.
+      (place.name.length >= 3
+        ? POI_GENERATED_PLACES.find((row) => row.name.startsWith(place.name))
+        : null);
+    if (!amap) return;
+    if (amap.photo && !place.photo) {
+      place.photo = amap.photo;
+      place.photos = amap.photos;
+    } else if (amap.photos?.length && !place.photos?.length) {
+      place.photos = amap.photos;
+    }
+    if (amap.rating) {
+      place.rating = amap.rating;
+      place.ratingSource = "高德";
+    }
+    if (amap.hours) place.hours = amap.hours;
+    // Same reasoning for contact details: all 23 curated rows were written with
+    // no tel, so the booking sheet could offer no number even though Amap has one
+    // for most of them (净月潭 0431-84518000, 伪满皇宫 0431-82866611). Let Amap
+    // fill the gap instead of leaving the panel empty.
+    if (amap.tel && !place.tel) place.tel = amap.tel;
+    if (amap.website && !place.website) place.website = amap.website;
+  });
+  const curatedNames = new Set(PLACES.map((place) => placeNameKey(place.name)));
+  PLACES.push(
+    ...POI_GENERATED_PLACES.filter((place) => {
+      if (curatedNames.has(placeNameKey(place.name))) return false;
+      // 桂林路 vs the harvested 桂林路商业街: one street, two cards. Strip the
+      // generic street suffix and compare again so the curated row wins.
+      const stripped = place.name.replace(STREET_SUFFIX, "");
+      return stripped === place.name || !curatedNames.has(placeNameKey(stripped));
+    })
+  );
+}
+
+// Shopping streets are typed 地名地址信息 by Amap and get filtered out of the
+// harvest, and the small snack shops sit below its search threshold, so those
+// photos are collected by exact name in scripts/ and shipped as a small table.
+if (typeof CURATED_PHOTOS !== "undefined") {
+  PLACES.forEach((place) => {
+    if (!place.photo && CURATED_PHOTOS[place.name]) {
+      place.photo = CURATED_PHOTOS[place.name];
+    }
+  });
+}
+
+// The hand-written 23 are not automatically "specialties" -- 桂林路 and 重庆路
+// are generic shopping streets and 700CC is a chain with branches nationwide.
+// Only the ones below earn a badge; everything else stays unmarked so the
+// badge keeps its meaning.
+// Rank drives list order for specialties: lower is more iconic. Landmarks use
+// 0-99, food 100+, matching featured_rank() in scripts/build_places.py so the
+// hand-written and harvested entries interleave instead of forming two blocks.
+const CURATED_BADGES = {
+  净月潭: ["长春地标", 0],
+  伪满皇宫: ["长春地标", 10],
+  长影世纪城: ["长春地标", 20],
+  长影旧址博物馆: ["长春地标", 30],
+  南湖公园: ["长春地标", 40],
+  长春动植物公园: ["长春地标", 146],
+  元盛居: ["长春名吃", 100],
+  大食客·非遗吉菜: ["长春名吃", 101],
+  "董鲁烤鸭（云琅店）": ["长春名吃", 102],
+  钱锋炭缸烧烤: ["长春名吃", 103],
+  土风筝牛腱面: ["长春名吃", 104],
+  海华鱿鱼蒸饺: ["长春名吃", 105]
+};
+PLACES.forEach((place) => {
+  const curated = CURATED_BADGES[place.name];
+  if (curated) {
+    place.featured = true;
+    place.badge = curated[0];
+    place.rank = curated[1];
+  } else if (typeof place.featured !== "boolean") {
+    place.featured = false;
+  }
+});
 
 const PLACE_DETAILS = {
   jingyuetan: {
@@ -4086,173 +4346,156 @@ const PLACE_DETAILS = {
     description: "长春最适合慢走的一片森林与水域，适合把一上午留给步道、湖面和树影。",
     recommended: [],
     deal: "",
-    ticketTypes: [{ name: "成人票", price: 30 }]
   },
   "the-hill": {
     subtitle: "室内文旅商业 · 美食/拍照 · 建议1.5h",
     description: "把餐饮、山体空间和城市拍照放在一起的室内街区，适合作为雨天的午餐停留点。",
     recommended: ["锅包肉", "烤冷面", "东北菜"],
     deal: "双人小吃组合 ¥98",
-    ticketTypes: []
   },
   imperial: {
     subtitle: "历史景点 · 《人世间》缉熙楼取景地 · 建议2h",
     description: "末代皇帝溥仪在长春的宫廷旧址，建筑和展览都适合慢慢看。",
     recommended: [],
     deal: "",
-    ticketTypes: [{ name: "成人票", price: 70 }]
   },
   film: {
     subtitle: "电影主题公园 · 亲子 · 建议4h",
     description: "以电影工业和特效体验为主的主题公园，适合带孩子或留出完整半天。",
     recommended: [],
     deal: "",
-    ticketTypes: [{ name: "成人票", price: 180 }]
   },
   guilin: {
     subtitle: "美食街区 · 小吃 · 建议1.5h",
     description: "长春本地小吃和夜间烟火气比较集中的街区，适合边逛边吃。",
     recommended: ["烤冷面", "烤串", "冰糖葫芦"],
     deal: "小吃组合 ¥39",
-    ticketTypes: []
   },
   southlake: {
     subtitle: "城市公园 · 《人世间》取景地 · 建议1h",
     description: "市区里适合散步和看落日的公园，也是《人世间》的取景地之一。",
     recommended: [],
     deal: "",
-    ticketTypes: []
   },
   "culture-square": {
     subtitle: "城市广场 · 拍照 · 建议0.5h",
     description: "长春的城市公共空间，适合路过时停留拍照，不需要专门安排太久。",
     recommended: [],
     deal: "",
-    ticketTypes: []
   },
   hongqi: {
     subtitle: "商圈美食 · 建议1.5h",
     description: "购物、餐饮和城市生活混在一起的商圈，适合作为路线中的补给点。",
     recommended: ["东北菜", "烤肉"],
     deal: "双人餐 ¥128",
-    ticketTypes: []
   },
   zoo: {
     subtitle: "亲子自然 · 建议3h",
     description: "适合家庭游客的动植物公园，步行距离较长，建议留出完整半天。",
     recommended: [],
     deal: "",
-    ticketTypes: [{ name: "成人票", price: 60 }]
   },
   "chongqing-road": {
     subtitle: "商圈小吃 · 建议1h",
     description: "市中心的老牌商圈，适合快速吃饭和补充物资。",
     recommended: ["小吃", "甜品"],
     deal: "小吃券 ¥49",
-    ticketTypes: []
   },
   "changying-old": {
     subtitle: "电影历史 · 《人世间》人民电影院取景地 · 建议1.5h",
     description: "长影旧址博物馆保留了长春电影工业的记忆，也是《人世间》的取景地。",
     recommended: [],
     deal: "",
-    ticketTypes: [{ name: "成人票", price: 80 }]
   },
   "people-square": {
     subtitle: "城市广场 · 建议0.5h",
     description: "适合在城市中心短暂停留、换乘和拍照的公共空间。",
     recommended: [],
     deal: "",
-    ticketTypes: []
   },
   louwailou: {
     subtitle: "东北菜 · 本地推荐 · 建议1.5h",
     description: "适合想吃一顿正经东北菜的午餐点，建议提前看排队和订座。",
     recommended: ["锅包肉", "雪衣豆沙", "东北乱炖"],
     deal: "双人餐 ¥168",
-    ticketTypes: []
   },
   yuanshengju: {
     subtitle: "火锅 · 本地推荐 · 建议1.5h",
     description: "长春本地人常去的火锅选择，适合晚餐或冷天的一顿热食。",
     recommended: ["手切羊肉", "麻酱", "糖蒜"],
     deal: "四人餐 ¥298",
-    ticketTypes: []
   },
   dasheke: {
     subtitle: "非遗吉菜 · 本地推荐 · 建议1.5h",
     description: "来自长春美食合集的本地吉菜选择，适合想认真吃一顿东北菜的午餐或晚餐。",
     recommended: ["锅包肉", "吉菜", "东北菜"],
     deal: "双人吉菜套餐（演示）",
-    ticketTypes: []
   },
   donglu: {
     subtitle: "烤鸭 · 聚餐 · 建议1.5h",
     description: "适合多人聚餐的烤鸭店，建议先看排队和订座情况。",
     recommended: ["烤鸭", "京味菜", "凉菜"],
     deal: "四人烤鸭套餐（演示）",
-    ticketTypes: []
   },
   qianfeng: {
     subtitle: "炭缸烧烤 · 夜宵 · 建议1.5h",
     description: "适合晚上和朋友一起吃的烧烤，排队通常集中在晚餐后。",
     recommended: ["炭缸烧烤", "烤串", "东北烧烤"],
     deal: "双人烧烤套餐（演示）",
-    ticketTypes: []
   },
   tufengzheng: {
     subtitle: "牛腱面 · 快餐 · 建议45分钟",
     description: "适合路线中快速解决一顿的面馆，排队短、停留时间也短。",
     recommended: ["牛腱面", "小菜"],
     deal: "单人面套餐（演示）",
-    ticketTypes: []
   },
   haihua: {
     subtitle: "鱿鱼蒸饺 · 本地小吃 · 建议45分钟",
     description: "偏本地小吃的一顿，适合想尝试东北特色主食的人。",
     recommended: ["鱿鱼蒸饺", "蒸饺", "小菜"],
     deal: "双人小吃套餐（演示）",
-    ticketTypes: []
   },
   "700cc": {
     subtitle: "饮品 · 奶茶 · 建议20分钟",
     description: "适合路线中补充饮品和休息，不需要专门安排一顿正餐。",
     recommended: ["奶茶", "果茶"],
     deal: "双杯饮品券（演示）",
-    ticketTypes: []
   },
   maquez: {
     subtitle: "小龙虾 · 夜宵 · 建议1.5h",
     description: "适合晚餐或夜宵的小龙虾店，旺季排队时间可能更长。",
     recommended: ["小龙虾", "夜宵"],
     deal: "双人小龙虾套餐（演示）",
-    ticketTypes: []
   },
   jiumi: {
     subtitle: "绵绵冰 · 简餐 · 建议45分钟",
     description: "适合下午休息的甜品和简餐点，适合放在两段景点之间。",
     recommended: ["绵绵冰", "简餐", "甜品"],
     deal: "双人甜品套餐（演示）",
-    ticketTypes: []
   },
   dache: {
     subtitle: "砂锅土豆粉 · 小吃 · 建议45分钟",
     description: "适合快速吃一顿的砂锅小吃，适合作为路线中的轻量补给。",
     recommended: ["砂锅土豆粉", "砂锅"],
     deal: "单人砂锅套餐（演示）",
-    ticketTypes: []
   }
 };
 
 PLACES.forEach((place) => Object.assign(place, PLACE_DETAILS[place.id] || {}));
 
+// Static reference rows, not a live feed. They used to promise "2 分钟后到站"
+// and "人民大街 南向北拥堵 · +8 分钟" -- numbers nothing in this app measures.
+// Kept because the transport layer needs somewhere to put its markers, but the
+// copy now describes the line rather than pretending to know its state.
+// Real arrivals need a 公交/地铁 data agreement; the traffic layer toggle does
+// use AMap's own live tile layer, so that one is genuine.
 const TRANSPORT_STATUS = [
   {
     id: "bus-42",
     name: "42 路",
-    type: "实时公交",
-    detail: "2 分钟后到站 · 开往净月潭",
-    status: "2 min",
+    type: "公交线路",
+    detail: "开往净月潭方向 · 到站时间未接入",
+    status: "未接入",
     lng: 125.315,
     lat: 43.855,
     x: 46,
@@ -4262,8 +4505,8 @@ const TRANSPORT_STATUS = [
     id: "metro-3",
     name: "轻轨 3 号线",
     type: "轨道交通",
-    detail: "正常 · 约 6 分钟一班",
-    status: "正常",
+    detail: "运营时间与班次以官方为准",
+    status: "未接入",
     lng: 125.330,
     lat: 43.870,
     x: 58,
@@ -4272,9 +4515,9 @@ const TRANSPORT_STATUS = [
   {
     id: "people-road",
     name: "人民大街",
-    type: "实时路况",
-    detail: "南向北拥堵 · +8 分钟",
-    status: "拥堵",
+    type: "主要道路",
+    detail: "打开地图右上角路况图层查看实时拥堵",
+    status: "见路况图层",
     lng: 125.323,
     lat: 43.860,
     x: 51,
@@ -4296,9 +4539,10 @@ let amapLoadPromise = null;
 const amapInstances = new WeakMap();
 const amapBaseLayers = new WeakMap();
 const geolocationRequested = new WeakSet();
+const MAP_CLUSTER_THRESHOLD = 60;
+const amapClusters = new WeakMap();
 const PLANNER = window.SmoothGoPlanner;
 let queueTimers = [];
-let queueTicker = null;
 
 const state = {
   view: "home",
@@ -4324,15 +4568,14 @@ const state = {
   queueMinutes: 30,
   currentPosition: null,
   modalPlace: null,
-  ticketPlace: null,
-  ticketTypeIndex: 0,
-  ticketQuantity: 1,
+  bookingPlace: null,
   routeReasons: {},
   lastReplan: null,
   queueRequests: [],
   queueQuota: { limit: 2, used: 0, remaining: 2 },
   activeQueue: null,
-  pendingQueuePlace: null
+  pendingQueuePlace: null,
+  poiResults: []
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -4351,8 +4594,26 @@ function icon(id) {
   return `<svg class="icon" aria-hidden="true"><use href="#${id}"></use></svg>`;
 }
 
+function placeMetrics(place) {
+  return {
+    // It is Amap's own star rating, not a Dianping score -- say so rather than
+    // letting the old 点评 label imply a source we never had.
+    // 暂无评分, not 评分待接入: Amap simply has no score for these four (small
+    // memorial halls, one sculpture). "待接入" would promise a source that does
+    // not exist for them.
+    rating: place.rating ? `高德 ${place.rating}` : "暂无评分",
+    // avg is a band derived from the POI sub-category, so 约 is load-bearing.
+    avg: typeof place.avg === "number" ? `人均约 ¥${place.avg}` : "人均待接入",
+    hours: place.hours ? `营业 ${place.hours}` : "营业时间待确认"
+    // No ticket field on purpose. The old card printed ¥30 / ¥70 / ¥180 that were
+    // typed in by hand, which looks like a fare table and is not one. Anything
+    // about price now comes from the booking channels the user actually opens.
+  };
+}
+
 function markerPopover(place) {
-  return `<span class="marker-popover"><strong>${place.name}</strong><span>${place.subtitle || place.type}</span><em>点评 ${place.rating} · 人均 ¥${place.avg}<br />人数估算约 ${estimatedPeople(place)} 人 · 排队 ${queueText(place)} 分钟</em></span>`;
+  const metrics = placeMetrics(place);
+  return `<span class="marker-popover"><strong>${place.name}</strong><span>${place.subtitle || place.type}</span><em>${metrics.rating} · ${metrics.avg}<br />参考等候 ${queueText(place)} 分钟 · 非实时</em></span>`;
 }
 
 function formatMinutes(total) {
@@ -4379,16 +4640,6 @@ function queueText(place) {
   return `${place.queueMin}–${place.queueMax}`;
 }
 
-function queueAverage(place) {
-  return Math.round((place.queueMin + place.queueMax) / 2);
-}
-
-function estimatedPeople(place) {
-  const queue = queueAverage(place);
-  const base = 40 + queue * 11 + Math.max(0, Number(place.visit) || 60) * 1.8;
-  return Math.max(30, Math.round(base / 10) * 10);
-}
-
 function navigationUrl(place) {
   if (!place) return "";
   const destination = `${place.lng},${place.lat},${encodeURIComponent(place.name)}`;
@@ -4407,24 +4658,40 @@ function openNavigation(place) {
   showToast(`正在打开高德导航：${place.name}`);
 }
 
+function distanceKm(from, to) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(to.lat - from.lat);
+  const dLng = toRad(to.lng - from.lng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+// The old build carried a hand-tuned table keyed by slug ids
+// (jingyuetan/the-hill/imperial/...). Those 7 ids belonged to the original 19
+// hand-written rows and no longer exist now that the Amap harvest replaced the
+// library, so every call silently fell through to a Manhattan distance over the
+// 0-100 demo grid. Real coords are present, so measure them instead.
+//
+// Straight-line km understates city driving: roads detour (x1.35) and the urban
+// average including signals is about 26 km/h. The 8 minute floor covers parking
+// and the walk in; the 90 minute ceiling stops one bad pair from dominating a
+// day's score.
+const travelCache = new Map();
+
 function travelBetween(from, to) {
   if (!from || !to) return 15;
-  const key = `${from.id}|${to.id}`;
-  const known = {
-    "jingyuetan|the-hill": 16,
-    "the-hill|imperial": 18,
-    "jingyuetan|imperial": 28,
-    "the-hill|guilin": 8,
-    "imperial|guilin": 12,
-    "guilin|southlake": 14,
-    "culture-square|the-hill": 9,
-    "jingyuetan|film": 21
-  };
-  return (
-    known[key] ||
-    known[`${to.id}|${from.id}`] ||
-    Math.max(10, Math.round(Math.abs(from.x - to.x) * 0.45 + Math.abs(from.y - to.y) * 0.35))
-  );
+  if (from.id === to.id) return 0;
+  if (!Number.isFinite(from.lat) || !Number.isFinite(to.lat)) return 15;
+  const key = from.id < to.id ? `${from.id}|${to.id}` : `${to.id}|${from.id}`;
+  const cached = travelCache.get(key);
+  if (cached !== undefined) return cached;
+  const km = distanceKm(from, to);
+  const minutes = Math.max(8, Math.min(90, Math.round(((km * 1.35) / 26) * 60)));
+  travelCache.set(key, minutes);
+  return minutes;
 }
 
 function transportOptions(from, to) {
@@ -4492,7 +4759,7 @@ function loadAmap() {
 
   amapLoadPromise = new Promise((resolve) => {
     const script = document.createElement("script");
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(AMAP_KEY)}&plugin=AMap.Geolocation,AMap.Driving,AMap.Transfer,AMap.Walking,AMap.Scale,AMap.TileLayer.Satellite,AMap.TileLayer.RoadNet,AMap.TileLayer.Traffic`;
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(AMAP_KEY)}&plugin=AMap.Geolocation,AMap.Driving,AMap.Transfer,AMap.Walking,AMap.Scale,AMap.PlaceSearch,AMap.MarkerCluster,AMap.TileLayer.Satellite,AMap.TileLayer.RoadNet,AMap.TileLayer.Traffic`;
     script.async = true;
     script.onload = () => resolve(Boolean(window.AMap));
     script.onerror = () => resolve(false);
@@ -4585,6 +4852,84 @@ function applyAmapBaseLayers(element, map) {
   layers.appliedTraffic = state.trafficVisible;
 }
 
+function placeMarkerContent(place, mode) {
+  const routeIndex = state.route.indexOf(place.id);
+  const content = document.createElement("button");
+  content.type = "button";
+  if (mode === "map") {
+    content.className = `amap-marker category ${place.category}${place.featured ? " featured" : ""} ${state.selectedMapPlace === place.id ? "selected" : ""}`;
+    content.textContent = "";
+  } else {
+    content.className = `amap-marker ${routeIndex < 0 ? "minor" : ""} ${state.selectedMapPlace === place.id ? "selected" : ""}`;
+    content.textContent = routeIndex >= 0 ? String(routeIndex + 1) : "";
+  }
+  content.setAttribute("aria-label", place.name);
+  content.title = place.name;
+  content.insertAdjacentHTML("beforeend", markerPopover(place));
+  content.addEventListener("click", () => {
+    selectMapPlace(place.id);
+    if (mode === "map") openPlaceModal(place.id);
+  });
+  return { content, routeIndex };
+}
+
+function placeMarker(place, mode) {
+  const { content, routeIndex } = placeMarkerContent(place, mode);
+  return new AMap.Marker({
+    position: [place.lng, place.lat],
+    content,
+    anchor: "center",
+    zIndex: routeIndex >= 0 ? 120 : 100
+  });
+}
+
+function destroyAmapCluster(element) {
+  const cluster = amapClusters.get(element);
+  if (!cluster) return;
+  try {
+    cluster.setMap(null);
+  } catch (error) {
+    console.warn("Amap cluster teardown failed.", error);
+  }
+  amapClusters.delete(element);
+}
+
+function createPlaceCluster(map, places) {
+  return new AMap.MarkerCluster(
+    map,
+    places.map((place) => ({ lnglat: [place.lng, place.lat], place })),
+    {
+      gridSize: 60,
+      maxZoom: 15,
+      averageCenter: true,
+      renderMarker: (context) => {
+        const bucket = Array.isArray(context.data) ? context.data : [context.data];
+        const place = bucket[0] && bucket[0].place;
+        if (!place) return;
+        const { content } = placeMarkerContent(place, "map");
+        context.marker.setContent(content);
+        context.marker.setAnchor("center");
+        context.marker.setzIndex(110);
+      },
+      renderClusterMarker: (context) => {
+        const count = context.count || 0;
+        const bubble = document.createElement("div");
+        bubble.className = `amap-cluster${count >= 30 ? " lg" : count >= 10 ? " md" : ""}`;
+        bubble.textContent = String(count);
+        context.marker.setContent(bubble);
+        context.marker.setAnchor("center");
+        context.marker.setzIndex(130);
+        context.marker.on("click", () => {
+          const position = context.marker.getPosition();
+          if (position) {
+            map.setZoomAndCenter(Math.min(19, map.getZoom() + 2), position);
+          }
+        });
+      }
+    }
+  );
+}
+
 function renderAmap(element, mode = "map") {
   if (!window.AMap) {
     renderSchematicMap(element, mode);
@@ -4595,6 +4940,9 @@ function renderAmap(element, mode = "map") {
     renderMapTopOverlay(element, mode);
     let map = amapInstances.get(element);
     if (!map) {
+      element
+        .querySelectorAll(".map-svg, .map-marker, .map-you, .map-transport-marker")
+        .forEach((node) => node.remove());
       element.classList.add("amap-active");
       const holder = document.createElement("div");
       holder.className = "amap-container";
@@ -4609,8 +4957,10 @@ function renderAmap(element, mode = "map") {
       amapInstances.set(element, map);
     }
 
+    destroyAmapCluster(element);
     map.clearMap();
     let markers = [];
+    let fitBounds = null;
     if (mode === "map" && state.mapLayer === "transport") {
       markers = TRANSPORT_STATUS.map((status) => {
         const content = document.createElement("div");
@@ -4628,33 +4978,30 @@ function renderAmap(element, mode = "map") {
         mode === "map"
           ? filteredPlaces()
           : state.route.map(placeById).filter(Boolean);
-      markers = visiblePlaces.map((place) => {
-        const routeIndex = state.route.indexOf(place.id);
-        const content = document.createElement("button");
-        content.type = "button";
-        if (mode === "map") {
-          content.className = `amap-marker category ${place.category} ${state.selectedMapPlace === place.id ? "selected" : ""}`;
-          content.textContent = "";
-        } else {
-          content.className = `amap-marker ${routeIndex < 0 ? "minor" : ""} ${state.selectedMapPlace === place.id ? "selected" : ""}`;
-          content.textContent = routeIndex >= 0 ? String(routeIndex + 1) : "";
-        }
-        content.setAttribute("aria-label", place.name);
-        content.title = place.name;
-        content.insertAdjacentHTML("beforeend", markerPopover(place));
-        content.addEventListener("click", () => {
-          selectMapPlace(place.id);
-          if (mode === "map") openPlaceModal(place.id);
-        });
-        return new AMap.Marker({
-          position: [place.lng, place.lat],
-          content,
-          anchor: "center",
-          zIndex: routeIndex >= 0 ? 120 : 100
-        });
-      });
+      // An empty route used to leave the home-page map blank, which looks broken
+      // next to a 583-place library. Fall back to the featured set as a preview.
+      const previewPlaces =
+        mode === "home" && !visiblePlaces.length
+          ? PLACES.filter((place) => place.featured).slice(0, 40)
+          : visiblePlaces;
+      const located = previewPlaces.filter((place) => place.lng && place.lat);
+      const canCluster =
+        mode === "map" &&
+        typeof AMap.MarkerCluster === "function" &&
+        located.length > MAP_CLUSTER_THRESHOLD;
+      if (canCluster) {
+        amapClusters.set(element, createPlaceCluster(map, located));
+        const lngs = located.map((place) => place.lng);
+        const lats = located.map((place) => place.lat);
+        fitBounds = new AMap.Bounds(
+          [Math.min(...lngs), Math.min(...lats)],
+          [Math.max(...lngs), Math.max(...lats)]
+        );
+      } else {
+        markers = previewPlaces.map((place) => placeMarker(place, mode));
+      }
     }
-    map.add(markers);
+    if (markers.length) map.add(markers);
 
     if (state.route.length > 1) {
       const path = state.route
@@ -4693,7 +5040,14 @@ function renderAmap(element, mode = "map") {
     }
 
     applyAmapBaseLayers(element, map);
-    if (markers.length) {
+    // Fitting while the container is display:none yields a degenerate viewport
+    // (Amap reads the size as 0 and zooms out to the whole country), and the map
+    // never recovers on the next render. Only fit when the box has real pixels.
+    if (!element.offsetParent) return;
+    if (fitBounds) {
+      map.setBounds(fitBounds, false, [60, 60, 60, 60]);
+      if (map.getZoom() > 15) map.setZoom(15);
+    } else if (markers.length) {
       map.setFitView(markers, false, [70, 70, 70, 70]);
     }
   } catch (error) {
@@ -4869,7 +5223,7 @@ function renderHome() {
   if (mapCount) mapCount.textContent = state.route.length;
   if (savedCount) savedCount.textContent = `${totalItineraryStops()} 个`;
   if (queueCount) {
-    queueCount.textContent = `${PLACES.filter((place) => place.queueMax >= 20).length} 个`;
+    queueCount.textContent = `${PLACES.filter((place) => place.queueMax >= 20 && place.confidence !== "低").length} 个`;
   }
   const dayCopy =
     state.itinerary.length > 1
@@ -4881,14 +5235,17 @@ function renderHome() {
   }
   const routeRow = $("#homeRouteRow");
   if (routeRow) {
-    routeRow.innerHTML = schedule.stops.map((place) => `
+    routeRow.innerHTML = schedule.stops.map((place) => {
+      const metrics = placeMetrics(place);
+      return `
     <div class="route-preview-stop">
       <time>${place.arrivalLabel}</time>
-      <strong>${place.name}</strong>
-      <span>${place.subtitle || place.type}<br />点评 ${place.rating} · ${place.hours}<br />${place.ticket} · ${queueText(place)} 分钟排队</span>
+      <strong>${escapeHtml(place.name)}</strong>
+      <span>${escapeHtml(place.subtitle || place.type)}<br />${metrics.rating} · ${metrics.hours}<br />参考等候 ${queueText(place)} 分钟 · 非实时</span>
       ${state.routeReasons[place.id] ? `<em class="route-preview-reason">${escapeHtml(state.routeReasons[place.id])}</em>` : ""}
     </div>
-  `).join("") + `<div class="route-preview-more"><button class="text-link" type="button" data-view="route">查看完整路线 →</button></div>`;
+  `;
+    }).join("") + `<div class="route-preview-more"><button class="text-link" type="button" data-view="route">查看完整路线 →</button></div>`;
   }
   renderMap($("#homeMap"), "home");
 }
@@ -4903,8 +5260,9 @@ function filteredPlaces() {
     if (state.mapFilter === "food") return place.category === "food";
     if (state.mapFilter === "attraction") return place.category === "attraction";
     if (state.mapFilter === "short") return place.queueMax <= 20;
-    if (state.mapFilter === "budget") return place.avg <= 100;
-    if (state.mapFilter === "rating") return place.rating >= 4.5;
+    if (state.mapFilter === "budget") return typeof place.avg === "number" && place.avg <= 100;
+    if (state.mapFilter === "rating") return typeof place.rating === "number" && place.rating >= 4.5;
+    if (state.mapFilter === "featured") return place.featured === true;
     return true;
   });
   const query = state.mapSearch.trim().toLowerCase();
@@ -4913,16 +5271,29 @@ function filteredPlaces() {
       `${place.name}${place.type}${place.interests.join("")}`.toLowerCase().includes(query)
     );
   }
-  return result;
+  // Local specialties lead the list, ordered by editorial rank (so 净月潭 and
+  // 伪满皇宫 come first even though they sit far from downtown), then the rest by
+  // distance. Without this the hand-written 23 sit at the top and push the
+  // landmarks down the page.
+  const distanceOf = (place) => (typeof place.distance === "number" ? place.distance : 999);
+  const rankOf = (place) => (typeof place.rank === "number" ? place.rank : 99);
+  return result.sort((a, b) => {
+    if (Boolean(a.featured) !== Boolean(b.featured)) return a.featured ? -1 : 1;
+    if (a.featured && rankOf(a) !== rankOf(b)) return rankOf(a) - rankOf(b);
+    return distanceOf(a) - distanceOf(b);
+  });
 }
 
 function mapCountForMode(mode = "map") {
-  return mode === "map" ? filteredPlaces().length : state.route.length;
+  if (mode === "map") return filteredPlaces().length;
+  if (!state.route.length) return Math.min(40, PLACES.filter((place) => place.featured).length);
+  return state.route.length;
 }
 
 function mapBaseLabel(mode = "map") {
   if (state.mapType === "satellite") return amapReady ? "卫星图" : "卫星示意图（需联网）";
   if (mode === "map") return "地图搜索结果";
+  if (!state.route.length) return "长春特色预览";
   return `第 ${state.selectedDay + 1} 天路线`;
 }
 
@@ -4940,7 +5311,7 @@ function renderPlaceList() {
     const transport = TRANSPORT_STATUS.filter((status) =>
       `${status.name}${status.type}${status.detail}`.toLowerCase().includes(query)
     );
-    $("#mapCount").textContent = `交通 · ${transport.length} 个实时状态`;
+    $("#mapCount").textContent = `交通 · ${transport.length} 条线路`;
     $("#placeList").innerHTML = transport.map(
       (status) => `
         <article class="place-card transport-card">
@@ -4959,20 +5330,187 @@ function renderPlaceList() {
   $("#mapCount").textContent = `长春 · ${places.length} 个地点`;
   $("#placeList").innerHTML = places.map((place) => {
     const inRoute = state.route.includes(place.id);
+    const ratingText = place.rating ? `高德 ${place.rating}` : "暂无评分";
+    const avgText = typeof place.avg === "number" ? `人均约 ¥${place.avg}` : "人均待接入";
+    const hoursText = place.hours ? `营业 ${place.hours}` : "营业时间待确认";
+    const tel = String(place.tel || "").trim();
     return `
       <article class="place-card ${state.selectedMapPlace === place.id ? "selected" : ""}" data-place-card="${place.id}">
-        <div class="place-card-head"><strong>${place.name}</strong><span>${place.type}</span></div>
-        <div class="place-meta"><b>${place.subtitle || place.type}</b><br />点评 ${place.rating} · 人均 ¥${place.avg} · ${place.distance} km<br />营业 ${place.hours}</div>
-        <div class="place-queue">${icon("i-clock")} ${queueText(place)} 分钟排队 · 估算约 ${estimatedPeople(place)} 人</div>
+        <div class="place-card-head"><strong>${escapeHtml(place.name)}</strong>${place.featured ? `<em class="featured-badge">${escapeHtml(place.badge || "长春特色")}</em>` : ""}<span>${escapeHtml(place.type)}</span></div>
+        <div class="place-meta"><b>${escapeHtml(place.subtitle || place.type)}</b><br />${ratingText} · ${avgText} · ${place.distance} km<br />${hoursText}</div>
+        ${tel ? `<div class="poi-tel">${icon("i-bell")} <a href="tel:${escapeHtml(tel)}">${escapeHtml(tel)}</a></div>` : ""}
+        <div class="place-queue">${icon("i-clock")} 参考等候 ${queueText(place)} 分钟 · 非实时</div>
         <div class="place-actions">
           <button type="button" data-add="${place.id}" class="${inRoute ? "added" : ""}">${inRoute ? "已加入路线" : "加入路线"}</button>
           <button type="button" data-nav="${place.id}">导航</button>
-          <a href="#" data-ticket="${place.id}">官方购票/订座 ↗</a>
+          <a href="#" data-ticket="${place.id}">购票/订座渠道 ↗</a>
         </div>
       </article>
     `;
   }).join("");
   renderMap($("#mapViewMap"), "map");
+}
+
+/* ---------- Amap POI search: real stores (name / category / address / phone) ---------- */
+
+let poiSearcher = null;
+let poiMarkers = [];
+
+const poiCityValue = () => String($("#poiCity")?.value || "").trim() || "长春";
+
+async function ensurePoiSearcher() {
+  if (!AMAP_KEY) return null;
+  const loaded = await loadAmap();
+  if (!loaded || !window.AMap || !AMap.PlaceSearch) return null;
+  if (!poiSearcher) {
+    poiSearcher = new AMap.PlaceSearch({ pageSize: 20, pageIndex: 1, extensions: "all" });
+  }
+  return poiSearcher;
+}
+
+function poiCoords(poi) {
+  const loc = poi && poi.location;
+  if (!loc) return null;
+  if (typeof loc === "string") {
+    const parts = loc.split(",").map(Number);
+    return parts.length === 2 && parts.every(Number.isFinite) ? parts : null;
+  }
+  const lng = typeof loc.lng === "function" ? loc.lng() : loc.lng;
+  const lat = typeof loc.lat === "function" ? loc.lat() : loc.lat;
+  return Number.isFinite(lng) && Number.isFinite(lat) ? [lng, lat] : null;
+}
+
+function clearPoiMarkers() {
+  const map = amapInstances.get($("#mapViewMap"));
+  if (map && poiMarkers.length) map.remove(poiMarkers);
+  poiMarkers = [];
+}
+
+function drawPoiMarkers(pois) {
+  const map = amapInstances.get($("#mapViewMap"));
+  if (!map || !window.AMap) return;
+  clearPoiMarkers();
+  pois.forEach((poi) => {
+    const coords = poiCoords(poi);
+    if (!coords) return;
+    const marker = new AMap.Marker({ position: coords, title: poi.name || "" });
+    marker.on("click", () => {
+      const lines = [`<strong>${escapeHtml(poi.name || "")}</strong>`];
+      if (poi.address) lines.push(`<span>${escapeHtml(poi.address)}</span>`);
+      if (poi.tel) lines.push(`<span>电话 ${escapeHtml(String(poi.tel))}</span>`);
+      const info = new AMap.InfoWindow({
+        content: `<div class="poi-window">${lines.join("")}</div>`,
+        offset: new AMap.Pixel(0, -28)
+      });
+      info.open(map, coords);
+    });
+    poiMarkers.push(marker);
+  });
+  if (poiMarkers.length) {
+    map.add(poiMarkers);
+    map.setFitView(poiMarkers);
+  }
+}
+
+function renderPoiResults(pois, note) {
+  const list = $("#poiList");
+  const status = $("#poiStatus");
+  state.poiResults = pois || [];
+  if (!list) return;
+  if (status) {
+    status.textContent =
+      note || (pois.length ? `找到 ${pois.length} 个地点` : "没有找到结果，换个关键词试试。");
+  }
+  list.innerHTML = pois
+    .map((poi, index) => {
+      const name = escapeHtml(poi.name || "未命名");
+      const type = escapeHtml(poi.type || "未分类");
+      const address = escapeHtml(poi.address || "暂无地址");
+      const area = escapeHtml([poi.cityname, poi.adname].filter(Boolean).join(" · "));
+      const tel = String(poi.tel || "").trim();
+      const telHtml = tel
+        ? `<a href="tel:${escapeHtml(tel)}">${escapeHtml(tel)}</a>`
+        : `<span class="poi-empty">暂无电话</span>`;
+      return `
+      <article class="poi-card">
+        <div class="place-card-head"><strong>${name}</strong><span>${type}</span></div>
+        <div class="place-meta">${area ? `<b>${area}</b><br />` : ""}${address}</div>
+        <div class="poi-tel">${icon("i-bell")} ${telHtml}</div>
+        <div class="place-actions">
+          <button type="button" data-poi-focus="${index}">地图定位</button>
+          <a href="#" data-poi-nav="${index}">导航 ↗</a>
+        </div>
+      </article>
+    `;
+    })
+    .join("");
+}
+
+function poiNavUrl(poi) {
+  const coords = poiCoords(poi);
+  if (!coords) return "";
+  const destination = `${coords[0]},${coords[1]},${encodeURIComponent(poi.name || "")}`;
+  const origin = state.currentPosition
+    ? `from=${state.currentPosition[0]},${state.currentPosition[1]},${encodeURIComponent("当前位置")}&`
+    : "";
+  return (
+    `https://uri.amap.com/navigation?${origin}to=${destination}` +
+    "&mode=car&policy=1&src=SmoothGo&coordinate=gaode&callnative=1"
+  );
+}
+
+async function searchPoi({ nearby = false } = {}) {
+  const status = $("#poiStatus");
+  if (!status) return;
+  const keyword = String($("#poiQuery")?.value || "").trim();
+  if (!keyword) {
+    status.textContent = "先输入关键词，例如 东北菜、咖啡、景点。";
+    return;
+  }
+
+  const searcher = await ensurePoiSearcher();
+  if (!searcher) {
+    status.textContent = AMAP_KEY
+      ? "高德 POI 插件加载失败，检查 config.js 的 Key 是否开通了 PlaceSearch 服务、域名是否在白名单内。"
+      : "未配置高德 Key：把 web/config.example.js 复制为 config.js，填入 JS API Key 后重试。";
+    return;
+  }
+
+  if (nearby && !state.currentPosition) {
+    status.textContent = "还没有定位信息，请先允许浏览器定位，或改用城市搜索。";
+    return;
+  }
+
+  status.textContent = "搜索中…";
+  clearPoiMarkers();
+
+  const finish = (searchStatus, result) => {
+    if (searchStatus !== "complete" && searchStatus !== "no_data") {
+      status.textContent = `搜索失败：${(result && result.info) || searchStatus}`;
+      return;
+    }
+    const pois = (result && result.poiList && result.poiList.pois) || [];
+    renderPoiResults(pois);
+    drawPoiMarkers(pois);
+  };
+
+  if (nearby) {
+    searcher.searchNearBy(keyword, state.currentPosition, 3000, finish);
+  } else {
+    searcher.setCity(poiCityValue());
+    searcher.search(keyword, finish);
+  }
+}
+
+function focusPoi(index) {
+  const poi = state.poiResults?.[index];
+  if (!poi) return;
+  const coords = poiCoords(poi);
+  const map = amapInstances.get($("#mapViewMap"));
+  if (!coords || !map) return;
+  map.setZoomAndCenter(17, coords);
+  showView("map");
+  showToast(`已定位：${poi.name || ""}`);
 }
 
 function renderRoute() {
@@ -4990,7 +5528,7 @@ function renderRoute() {
     <div><strong>${schedule.stops.length}</strong><span>个地点</span></div>
     <div><strong>${formatMinutes(schedule.total)}</strong><span>总时长</span></div>
     <div><strong>${formatMinutes(schedule.totalTravel)}</strong><span>总车程</span></div>
-    <div><strong>¥${schedule.budget}</strong><span>当日人均</span></div>
+    <div><strong>¥${schedule.budget}</strong><span>当日人均 · 估</span></div>
     ${dayCount > 1 ? `<div><strong>${dayCount}</strong><span>天总行程</span></div>` : ""}
   `;
   $("#replanButton").disabled = schedule.stops.length < 2;
@@ -5002,16 +5540,17 @@ function renderRoute() {
   } else {
     let html = "";
     schedule.stops.forEach((place, index) => {
+      const metrics = placeMetrics(place);
       html += `
         <article class="route-stop">
           <div class="route-time">${place.arrivalLabel}</div>
           <div>
             <h3>${place.name}</h3>
             <div class="route-stop-meta">
-              ${place.subtitle || place.type}<br />
-              <b>点评 ${place.rating}</b> · 人均 ¥${place.avg} · 营业 ${place.hours}<br />
-              ${place.ticket} · ${queueText(place)} 分钟排队<br />
-              <a href="#" data-ticket="${place.id}">官方购票/订座 ↗</a>
+              ${escapeHtml(place.subtitle || place.type)}<br />
+              <b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />
+              参考等候 ${queueText(place)} 分钟 · 非实时<br />
+              <a href="#" data-ticket="${place.id}">购票/订座渠道 ↗</a>
               <button class="route-stop-nav" type="button" data-nav="${place.id}">导航</button>
               ${state.routeReasons[place.id] ? `<span class="route-stop-reason">${escapeHtml(state.routeReasons[place.id])}</span>` : ""}
             </div>
@@ -5032,13 +5571,20 @@ function renderRoute() {
     $("#routeList").innerHTML = html;
   }
 
+  // These three rows used to be hardcoded strings ("14:20", "42 路 · 2 min",
+  // "人民大街 · +8 min") that never changed and reflected nothing real. Live bus
+  // arrival and road conditions need a feed we do not have, so show the panel as
+  // an explicit placeholder instead of numbers that look authoritative.
   const liveOverlay = $("#routeLiveOverlay");
   if (liveOverlay) {
+    const hasTraffic = Boolean(state.trafficVisible);
     liveOverlay.innerHTML = `
-      <div class="map-live-title"><strong>实时信息</strong><span>14:20</span></div>
-      <div class="map-live-row"><span>实时公交</span><strong>42 路 · 2 min</strong></div>
-      <div class="map-live-row"><span>轻轨</span><strong>3 号线 · 正常</strong></div>
-      <div class="map-live-row"><span>路况</span><strong>人民大街 · +8 min</strong></div>
+      <div class="map-live-title"><strong>实时信息</strong><span class="live-tag">未接入</span></div>
+      <div class="map-live-row muted"><span>实时公交</span><strong>未接入</strong></div>
+      <div class="map-live-row muted"><span>轻轨</span><strong>未接入</strong></div>
+      <div class="map-live-row muted"><span>路况</span><strong>${
+        hasTraffic ? "图层已开启 · 无实时数据" : "未接入"
+      }</strong></div>
     `;
   }
   renderReplanBanner();
@@ -5066,18 +5612,23 @@ function renderReplanBanner() {
 }
 
 function renderQueue() {
-  const places = PLACES.filter((place) => place.queueMax >= 10);
-  $("#queueList").innerHTML = places.map((place) => `
+  const places = PLACES.filter((place) => place.queueMax >= 10)
+    .sort((a, b) => b.queueMax - a.queueMax)
+    .slice(0, 12);
+  $("#queueList").innerHTML = places.map((place) => {
+    const metrics = placeMetrics(place);
+    return `
     <article class="queue-card">
-      <div class="queue-card-head"><strong>${place.name}</strong><span>${place.type}</span></div>
-      <div class="queue-card-data"><b>点评 ${place.rating}</b> · 人均 ¥${place.avg} · 营业 ${place.hours}<br />人数估算约 ${estimatedPeople(place)} 人 · ${place.source} · 置信度 ${place.confidence}</div>
-      <div class="queue-range">${queueText(place)} <small>分钟等待</small></div>
+      <div class="queue-card-head"><strong>${escapeHtml(place.name)}</strong><span>${escapeHtml(place.type)}</span></div>
+      <div class="queue-card-data"><b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />${place.source} · 置信度 ${place.confidence}</div>
+      <div class="queue-range">${queueText(place)} <small>分钟参考等候</small></div>
       <div class="queue-actions">
         <button class="button outline" type="button" data-queue="${place.id}">排队管家</button>
-        <a class="text-link" href="#" data-ticket="${place.id}">官方购票/订座 ↗</a>
+        <a class="text-link" href="#" data-ticket="${place.id}">购票/订座渠道 ↗</a>
       </div>
     </article>
-  `).join("");
+  `;
+  }).join("");
 }
 
 async function apiFetch(path, options = {}) {
@@ -5196,33 +5747,17 @@ function queueSnapshot(request, nowMs = Date.now()) {
   if (!request) return null;
   const initialWait = Math.max(1, Number(request.minutes) || 30);
   const createdAtMs = (Number(request.createdAt) || Math.floor(nowMs / 1000)) * 1000;
-  const elapsedSeconds = Math.max(0, (nowMs - createdAtMs) / 1000);
-  // Demo time runs faster so the countdown visibly changes during a short demo.
-  const simulatedElapsed = elapsedSeconds / 6;
-  const remainingMinutes = Math.max(0, initialWait - simulatedElapsed);
-  const ratio = remainingMinutes / initialWait;
   const isFood = request.category === "food";
-  const initialTables =
-    Number(request.tablesAhead) || (isFood ? Math.ceil(initialWait / 4) : 0);
-  const initialPeople =
-    Number(request.peopleAhead) || (isFood ? 0 : Math.max(20, Math.round(initialWait * 12)));
-  const tablesAhead = Math.max(0, Math.ceil(initialTables * ratio));
-  const peopleAhead = Math.max(0, Math.round(initialPeople * ratio));
-  const status =
-    remainingMinutes <= 0 ? "已到号" : remainingMinutes <= 5 ? "即将到号" : "排队中";
+  // No queue feed is connected, so this never counts down. The wait length is the
+  // value the user picked in the sheet, shown once and labelled as an estimate.
   return {
     request,
     isFood,
-    tablesAhead,
-    peopleAhead,
-    remainingMinutes,
-    waitText: formatWaitCn(remainingMinutes),
-    positionText: isFood
-      ? `前面还有 ${tablesAhead} 桌`
-      : `前面约 ${peopleAhead} 人`,
-    status,
-    updatedText:
-      elapsedSeconds < 16 ? "刚刚更新" : `更新于 ${formatHistoryTime(Math.floor(nowMs / 1000))}`
+    remainingMinutes: initialWait,
+    waitText: formatWaitCn(initialWait),
+    positionText: "队列位置未接入",
+    status: "演示请求",
+    updatedText: `提交于 ${formatHistoryTime(Math.floor(createdAtMs / 1000))}`
   };
 }
 
@@ -5282,8 +5817,8 @@ function renderActiveQueue() {
     </div>
     <div class="active-queue-stat"><span>当前位置</span><strong>${snapshot.positionText}</strong></div>
     <div class="active-queue-stat"><span>预计等待</span><strong>${snapshot.waitText}</strong></div>
-    <div class="active-queue-stat"><span>演示动态</span><strong>${snapshot.updatedText}</strong></div>
-    <div class="active-queue-state"><strong>${snapshot.status}</strong><span>可退出页面，置顶信息会继续更新</span></div>
+    <div class="active-queue-stat"><span>提交时间</span><strong>${snapshot.updatedText}</strong></div>
+    <div class="active-queue-state"><strong>${snapshot.status}</strong><span>演示请求不会产生真实排队、订座或支付，也不会到号</span></div>
   `;
 }
 
@@ -5375,8 +5910,7 @@ async function saveQueueRequest(place) {
         placeId: place.id,
         placeName: place.name,
         minutes: state.queueMinutes,
-        category: place.category,
-        peopleAhead: estimatedPeople(place)
+        category: place.category
       })
     });
     state.queueQuota = data.quota;
@@ -5395,8 +5929,6 @@ async function saveQueueRequest(place) {
     price: state.queueMinutes === 60 ? 18 : state.queueMinutes === 90 ? 26 : 10,
     status: "submitted",
     category: place.category,
-    tablesAhead: place.category === "food" ? Math.ceil(state.queueMinutes / 4) : 0,
-    peopleAhead: place.category === "food" ? 0 : estimatedPeople(place),
     createdAt
   };
 }
@@ -5510,7 +6042,7 @@ function setMapType(type) {
   showToast(
     state.mapType === "satellite"
       ? amapReady
-        ? "已切换卫星图；人数仍为演示估算，不是卫星实时计数"
+        ? "已切换高德卫星图"
         : "高德卫星图层尚未加载，当前显示示意底图"
       : "已切换标准地图"
   );
@@ -5654,13 +6186,26 @@ function openPlaceModal(id) {
     place.category === "food" ? "美食 · 本地推荐" : "景点 · 地点详情";
   $("#placeDetailTitle").textContent = place.name;
   $("#placeDetailSubtitle").textContent = place.subtitle || place.type;
-  $("#placeDetailVisual").innerHTML = `${icon(place.icon)}<span>${place.name}</span>`;
-  $("#placeDetailDesc").innerHTML = `${place.description || ""}<br /><span class="detail-source">来源：${place.source} · 价格/评分为演示</span>`;
+  const heroPhoto = place.photo || place.photos?.[0];
+  $("#placeDetailVisual").innerHTML = heroPhoto
+    ? `<img class="place-photo" src="${escapeHtml(heroPhoto)}" alt="${escapeHtml(place.name)}" loading="lazy" referrerpolicy="no-referrer" />`
+    : `${icon(place.icon)}<span>${escapeHtml(place.name)}</span>`;
+  const ratingText = place.rating ? `${place.rating} 高德` : "暂无";
+  const descText = place.description || [place.district, place.address].filter(Boolean).join(" ");
+  // Say only what is actually on the card -- four memorials have a photo but no
+  // Amap score, so the blanket "图片与评分来自高德" was wrong for them.
+  const photoNote = [
+    heroPhoto ? "图片来自高德 POI" : "暂无实景图",
+    place.rating ? "评分来自高德" : "无评分来源"
+  ].join(" · ");
+  const avgNote = typeof place.avg === "number" ? " · 人均为品类估算" : "";
+  $("#placeDetailDesc").innerHTML = `${escapeHtml(descText)}<br /><span class="detail-source">${photoNote}${avgNote}</span>`;
   $("#placeDetailStats").innerHTML = [
-    ["点评", place.rating],
-    ["人均", `¥${place.avg}`],
-    ["排队", `${queueText(place)} 分钟`],
-    ["营业", place.hours]
+    ["评分", ratingText],
+    ["人均", typeof place.avg === "number" ? `约 ¥${place.avg}` : "待接入"],
+    ["排队", `参考 ${queueText(place)} 分钟`],
+    ["营业", place.hours || "待确认"],
+    ...(place.tel ? [["电话", place.tel]] : [])
   ]
     .map(
       ([label, value]) =>
@@ -5683,12 +6228,10 @@ function openPlaceModal(id) {
   $("#placeDouyin").href = externalSearchUrl("douyin", place.name);
 
   const ticketButton = $("#placeTicketButton");
-  ticketButton.textContent =
-    place.category === "food"
-      ? "订座"
-      : place.ticketTypes?.length
-        ? "购票"
-        : "免费预约";
+  // It no longer opens a fake order sheet: it lists the places that actually
+  // sell the ticket, so the label can finally say 购票 rather than promise an
+  // outcome. The ↗ marks it as leaving the app.
+  ticketButton.textContent = place.category === "food" ? "订座 ↗" : "购票 ↗";
   ticketButton.dataset.place = place.id;
 
   const addButton = $("#placeAddButton");
@@ -5702,39 +6245,82 @@ function openPlaceModal(id) {
   openModal("placeModal");
 }
 
-function renderTicketOptions() {
-  const place = placeById(state.ticketPlace);
-  if (!place) return;
-  const types = place.ticketTypes?.length
-    ? place.ticketTypes
-    : [{ name: place.category === "food" ? "订座" : "免费预约", price: 0 }];
-  const selected = types[state.ticketTypeIndex] || types[0];
-  $("#ticketTitle").textContent = `${place.name} · ${
-    place.category === "food" ? "订座" : "门票"
-  }`;
-  $("#ticketDesc").textContent =
-    place.category === "food"
-      ? "演示订座请求，不会真实锁定座位。"
-      : "演示订单不会真实出票，也不会产生支付。";
-  $("#ticketOptions").innerHTML = types
-    .map(
-      (type, index) => `
-        <button class="ticket-option ${index === state.ticketTypeIndex ? "selected" : ""}" type="button" data-ticket-type="${index}">
-          <span>${type.name}</span>
-          <strong>${type.price ? `¥${type.price}` : "免费"}</strong>
-        </button>
-      `
-    )
-    .join("");
-  $("#ticketQuantity").textContent = String(state.ticketQuantity);
-  $("#ticketTotal").textContent = `¥${selected.price * state.ticketQuantity}`;
+// Outbound booking links, not an order. The app has no ticketing API and no
+// payment licence, so the honest thing it can do is hand the user over to
+// whoever does sell the ticket. Every place came from Amap, so its Amap page
+// always exists and always carries the official phone; everything else is a
+// search URL rather than a deep link we could not guarantee resolves.
+function bookingChannels(place) {
+  const channels = [];
+  if (place.website) {
+    const raw = String(place.website).trim();
+    channels.push({
+      label: "官方网站",
+      note: "该机构在高德登记的官网地址",
+      url: /^https?:/i.test(raw) ? raw : `https://${raw}`
+    });
+  }
+  if (place.tel) {
+    channels.push({
+      label: `电话 ${place.tel}`,
+      note: "订票、订座与开放时间以对方答复为准",
+      url: `tel:${place.tel}`
+    });
+  }
+  if (typeof place.lng === "number" && typeof place.lat === "number") {
+    channels.push({
+      label: "高德 POI 详情页",
+      note: "该地点的完整档案：电话、公告与商家入口",
+      url:
+        `https://uri.amap.com/marker?position=${place.lng},${place.lat}` +
+        `&name=${encodeURIComponent(place.name)}&src=SmoothGo&coordinate=gaode&callnative=1`
+    });
+  }
+  channels.push({
+    label: "美团",
+    note: "搜索该名称，门票与团购以美团页面为准",
+    url: externalSearchUrl("meituan", place.name)
+  });
+  channels.push({
+    label: "大众点评",
+    note: "搜索该名称查看评价与套餐",
+    url: externalSearchUrl("dianping", place.name)
+  });
+  channels.push({
+    label: "抖音",
+    note: "搜索该名称查看团购",
+    url: externalSearchUrl("douyin", place.name)
+  });
+  return channels;
 }
 
-function openTicketModal(id) {
-  state.ticketPlace = id;
-  state.ticketTypeIndex = 0;
-  state.ticketQuantity = 1;
-  renderTicketOptions();
+function renderBookingChannels() {
+  const place = placeById(state.bookingPlace);
+  if (!place) return;
+  const isFood = place.category === "food";
+  $("#ticketTitle").textContent = `${place.name} · ${isFood ? "订座渠道" : "购票渠道"}`;
+  $("#ticketDesc").textContent = `以下为第三方渠道，${
+    isFood ? "是否成功订座" : "票价、库存与开放时间"
+  }以对方页面为准。`;
+  $("#bookingOptions").innerHTML = bookingChannels(place)
+    .map((channel) => {
+      const external = /^https?:/i.test(channel.url);
+      return `<a class="booking-channel" href="${escapeHtml(channel.url)}"${
+        external ? ' target="_blank" rel="noreferrer noopener"' : ""
+      }>
+          <span><strong>${escapeHtml(channel.label)}</strong><em>${escapeHtml(channel.note)}</em></span>
+          <b>↗</b>
+        </a>`;
+    })
+    .join("");
+  $("#bookingFootnote").textContent =
+    "多数景区只在其官方微信公众号 / 小程序售票或分时预约，微信内搜索该名称即可抵达。" +
+    "滑雪场多数雪季也是先预约后到场。";
+}
+
+function openBookingModal(id) {
+  state.bookingPlace = id;
+  renderBookingChannels();
   openModal("ticketModal");
 }
 
@@ -5973,7 +6559,7 @@ document.addEventListener("click", (event) => {
   const ticket = event.target.closest("[data-ticket]");
   if (ticket) {
     event.preventDefault();
-    showToast("演示：正式版会打开官方购票/订座页面");
+    openBookingModal(ticket.dataset.ticket);
     return;
   }
 
@@ -6055,6 +6641,27 @@ $("#dayTabs").addEventListener("click", (event) => {
 $("#mapSearch").addEventListener("input", (event) => {
   state.mapSearch = event.target.value;
   renderPlaceList();
+});
+
+$("#poiSearchButton").addEventListener("click", () => searchPoi({ nearby: false }));
+$("#poiNearbyButton").addEventListener("click", () => searchPoi({ nearby: true }));
+$("#poiQuery").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") searchPoi({ nearby: false });
+});
+$("#poiList").addEventListener("click", (event) => {
+  const focus = event.target.closest("[data-poi-focus]");
+  if (focus) {
+    focusPoi(Number(focus.dataset.poiFocus));
+    return;
+  }
+  const nav = event.target.closest("[data-poi-nav]");
+  if (nav) {
+    event.preventDefault();
+    const poi = state.poiResults?.[Number(nav.dataset.poiNav)];
+    const url = poiNavUrl(poi);
+    if (url) window.open(url, "_blank", "noopener");
+    else showToast("这个地点没有坐标，无法导航。");
+  }
 });
 
 $("#extractButton").addEventListener("click", extractKeywords);
@@ -6301,7 +6908,7 @@ $("#placeModal").addEventListener("click", (event) => {
 });
 
 $("#placeTicketButton").addEventListener("click", () => {
-  if (state.modalPlace) openTicketModal(state.modalPlace);
+  if (state.modalPlace) openBookingModal(state.modalPlace);
 });
 
 $("#placeNavButton").addEventListener("click", () => {
@@ -6319,31 +6926,6 @@ $("#placeAddButton").addEventListener("click", () => {
 $("#ticketModalClose").addEventListener("click", () => closeModal("ticketModal"));
 $("#ticketModal").addEventListener("click", (event) => {
   if (event.target.id === "ticketModal") closeModal("ticketModal");
-});
-
-$("#ticketOptions").addEventListener("click", (event) => {
-  const option = event.target.closest("[data-ticket-type]");
-  if (!option) return;
-  state.ticketTypeIndex = Number(option.dataset.ticketType);
-  renderTicketOptions();
-});
-
-$("#ticketMinus").addEventListener("click", () => {
-  state.ticketQuantity = Math.max(1, state.ticketQuantity - 1);
-  renderTicketOptions();
-});
-
-$("#ticketPlus").addEventListener("click", () => {
-  state.ticketQuantity = Math.min(9, state.ticketQuantity + 1);
-  renderTicketOptions();
-});
-
-$("#ticketSubmitButton").addEventListener("click", () => {
-  const place = placeById(state.ticketPlace);
-  if (!place) return;
-  closeModal("ticketModal");
-  closeModal("placeModal");
-  showToast(`${place.name}：演示订单已提交，未产生真实支付`);
 });
 
 $("#rideModalClose").addEventListener("click", () => closeModal("rideModal"));
@@ -6375,7 +6957,6 @@ document.addEventListener("keydown", (event) => {
 $("#timeInput").value = `${todayLabel} · ${state.startTime}`;
 restoreLocalQueue();
 renderActiveQueue();
-queueTicker = setInterval(renderActiveQueue, 15000);
 updateAuthCopy();
 const initialView = window.location.hash.replace("#", "");
 if (["home", "map", "route", "queue"].includes(initialView) && initialView !== "home") {

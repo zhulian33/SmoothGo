@@ -474,19 +474,11 @@
         <button class="modal-close" type="button" id="ticketModalClose" aria-label="关闭">
           <svg class="icon"><use href="#i-close"></use></svg>
         </button>
-        <span class="kicker">内置购票 · 演示</span>
-        <h2 id="ticketTitle">选择门票</h2>
-        <p id="ticketDesc">演示订单不会真实出票，也不会产生支付。</p>
-        <div class="ticket-options" id="ticketOptions"></div>
-        <div class="ticket-quantity">
-          <span>数量</span>
-          <button type="button" id="ticketMinus" aria-label="减少数量">−</button>
-          <strong id="ticketQuantity">1</strong>
-          <button type="button" id="ticketPlus" aria-label="增加数量">＋</button>
-        </div>
-        <div class="ticket-total"><span>合计</span><strong id="ticketTotal">¥0</strong></div>
-        <button class="button dark full" type="button" id="ticketSubmitButton">提交演示订单</button>
-        <p class="modal-footnote">真实购票需接入景区官方票务或 OTA 授权接口。</p>
+        <span class="kicker">购票渠道 · 外链</span>
+        <h2 id="ticketTitle">购票渠道</h2>
+        <p id="ticketDesc">SmoothGo 不出票、不收款。</p>
+        <div class="booking-options" id="bookingOptions"></div>
+        <p class="modal-footnote" id="bookingFootnote"></p>
       </div>
     </div>
 
@@ -520,7 +512,7 @@
           <h3>排队管家</h3>
           <p>当前只模拟请求和状态时间线，不会派单、收款或承诺优先入场。正式服务只应在明确允许的餐厅或非严格排队场地开放，景区第一阶段仅提供信息。</p>
           <h3>票务与地图</h3>
-          <p>购票按钮只做跳转或演示订单，不直接出票。地图和路线能力接入高德后，仍需遵守其服务条款与配额限制。</p>
+          <p>「购票 / 订座」按钮只把用户送到真正售票的地方——景区电话、高德 POI 详情页、美团、点评、抖音——本应用<strong>不出票、不收款、不采集支付信息</strong>，票价与库存以对方页面为准。地图和路线能力接入高德后，仍需遵守其服务条款与配额限制。</p>
           <h3>正式上线前</h3>
           <p>还需要合作协议、隐私政策、数据删除机制、客服与应急流程、支付退款规则，以及排队协助人员的实名、培训、保险和交接规范。</p>
         </div>

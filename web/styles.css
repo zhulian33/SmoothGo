@@ -2058,79 +2058,49 @@ main {
   margin-left: auto;
 }
 
-.ticket-options {
+.booking-options {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 7px;
   margin-top: 14px;
 }
 
-.ticket-option {
+.booking-channel {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px;
+  gap: 10px;
+  padding: 11px 12px;
   border: 1px solid var(--line);
   background: var(--paper);
-  color: var(--ink-soft);
-  font-size: 8px;
-  text-align: left;
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.16s ease, background 0.16s ease;
 }
 
-.ticket-option.selected {
+.booking-channel:hover {
   border-color: var(--ink);
   background: var(--soft);
 }
 
-.ticket-option strong {
+.booking-channel strong {
+  display: block;
+  font-size: 10px;
   font-weight: 600;
 }
 
-.ticket-quantity {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 13px;
+.booking-channel em {
+  display: block;
+  margin-top: 3px;
   color: var(--muted);
   font-size: 8px;
+  font-style: normal;
+  line-height: 1.5;
 }
 
-.ticket-quantity button {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border: 1px solid var(--line-dark);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: 14px;
-}
-
-.ticket-quantity strong {
-  min-width: 18px;
-  color: var(--ink);
-  font-size: 10px;
-  text-align: center;
-}
-
-.ticket-total {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
+.booking-channel b {
+  flex: none;
   color: var(--muted);
-  font-size: 8px;
-}
-
-.ticket-total strong {
-  color: var(--ink);
-  font-family: var(--serif);
-  font-size: 24px;
+  font-size: 12px;
   font-weight: 400;
 }
 
