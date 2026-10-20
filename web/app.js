@@ -263,7 +263,7 @@ const PLACES = [
   {
     id: "louwailou",
     name: "楼外楼",
-    type: "东北菜 · 本地推荐",
+    type: "火锅 · 本地推荐",
     category: "food",
     rating: 4.6,avg: 70,
     distance: 3.4,
@@ -618,140 +618,94 @@ const PLACE_DETAILS = {
   jingyuetan: {
     subtitle: "自然景点 · 《人世间》取景地 · 环潭约17km · 建议5h",
     description: "长春最适合慢走的一片森林与水域，适合把一上午留给步道、湖面和树影。",
-    recommended: [],
-    deal: "",
   },
   "the-hill": {
     subtitle: "室内文旅商业 · 美食/拍照 · 建议1.5h",
     description: "把餐饮、山体空间和城市拍照放在一起的室内街区，适合作为雨天的午餐停留点。",
-    recommended: ["锅包肉", "烤冷面", "东北菜"],
-    deal: "双人小吃组合 ¥98",
   },
   imperial: {
     subtitle: "历史景点 · 《人世间》缉熙楼取景地 · 建议2h",
     description: "末代皇帝溥仪在长春的宫廷旧址，建筑和展览都适合慢慢看。",
-    recommended: [],
-    deal: "",
   },
   film: {
     subtitle: "电影主题公园 · 亲子 · 建议4h",
     description: "以电影工业和特效体验为主的主题公园，适合带孩子或留出完整半天。",
-    recommended: [],
-    deal: "",
   },
   guilin: {
     subtitle: "美食街区 · 小吃 · 建议1.5h",
     description: "长春本地小吃和夜间烟火气比较集中的街区，适合边逛边吃。",
-    recommended: ["烤冷面", "烤串", "冰糖葫芦"],
-    deal: "小吃组合 ¥39",
   },
   southlake: {
     subtitle: "城市公园 · 《人世间》取景地 · 建议1h",
     description: "市区里适合散步和看落日的公园，也是《人世间》的取景地之一。",
-    recommended: [],
-    deal: "",
   },
   "culture-square": {
     subtitle: "城市广场 · 拍照 · 建议0.5h",
     description: "长春的城市公共空间，适合路过时停留拍照，不需要专门安排太久。",
-    recommended: [],
-    deal: "",
   },
   hongqi: {
     subtitle: "商圈美食 · 建议1.5h",
     description: "购物、餐饮和城市生活混在一起的商圈，适合作为路线中的补给点。",
-    recommended: ["东北菜", "烤肉"],
-    deal: "双人餐 ¥128",
   },
   zoo: {
     subtitle: "亲子自然 · 建议3h",
     description: "适合家庭游客的动植物公园，步行距离较长，建议留出完整半天。",
-    recommended: [],
-    deal: "",
   },
   "chongqing-road": {
     subtitle: "商圈小吃 · 建议1h",
     description: "市中心的老牌商圈，适合快速吃饭和补充物资。",
-    recommended: ["小吃", "甜品"],
-    deal: "小吃券 ¥49",
   },
   "changying-old": {
     subtitle: "电影历史 · 《人世间》人民电影院取景地 · 建议1.5h",
     description: "长影旧址博物馆保留了长春电影工业的记忆，也是《人世间》的取景地。",
-    recommended: [],
-    deal: "",
   },
   "people-square": {
     subtitle: "城市广场 · 建议0.5h",
     description: "适合在城市中心短暂停留、换乘和拍照的公共空间。",
-    recommended: [],
-    deal: "",
   },
   louwailou: {
-    subtitle: "东北菜 · 本地推荐 · 建议1.5h",
-    description: "适合想吃一顿正经东北菜的午餐点，建议提前看排队和订座。",
-    recommended: ["锅包肉", "雪衣豆沙", "东北乱炖"],
-    deal: "双人餐 ¥168",
+    subtitle: "火锅 · 大刀肉 · 本地推荐 · 建议1.5h",
+    description: "长春人吃大刀肉的老去处，铜锅涮肉，适合冷天的一顿正餐，建议提前看排队和订座。",
   },
   yuanshengju: {
     subtitle: "火锅 · 本地推荐 · 建议1.5h",
     description: "长春本地人常去的火锅选择，适合晚餐或冷天的一顿热食。",
-    recommended: ["手切羊肉", "麻酱", "糖蒜"],
-    deal: "四人餐 ¥298",
   },
   dasheke: {
     subtitle: "非遗吉菜 · 本地推荐 · 建议1.5h",
     description: "来自长春美食合集的本地吉菜选择，适合想认真吃一顿东北菜的午餐或晚餐。",
-    recommended: ["锅包肉", "吉菜", "东北菜"],
-    deal: "双人吉菜套餐（演示）",
   },
   donglu: {
     subtitle: "烤鸭 · 聚餐 · 建议1.5h",
     description: "适合多人聚餐的烤鸭店，建议先看排队和订座情况。",
-    recommended: ["烤鸭", "京味菜", "凉菜"],
-    deal: "四人烤鸭套餐（演示）",
   },
   qianfeng: {
     subtitle: "炭缸烧烤 · 夜宵 · 建议1.5h",
     description: "适合晚上和朋友一起吃的烧烤，排队通常集中在晚餐后。",
-    recommended: ["炭缸烧烤", "烤串", "东北烧烤"],
-    deal: "双人烧烤套餐（演示）",
   },
   tufengzheng: {
     subtitle: "牛腱面 · 快餐 · 建议45分钟",
     description: "适合路线中快速解决一顿的面馆，排队短、停留时间也短。",
-    recommended: ["牛腱面", "小菜"],
-    deal: "单人面套餐（演示）",
   },
   haihua: {
     subtitle: "鱿鱼蒸饺 · 本地小吃 · 建议45分钟",
     description: "偏本地小吃的一顿，适合想尝试东北特色主食的人。",
-    recommended: ["鱿鱼蒸饺", "蒸饺", "小菜"],
-    deal: "双人小吃套餐（演示）",
   },
   "700cc": {
     subtitle: "饮品 · 奶茶 · 建议20分钟",
     description: "适合路线中补充饮品和休息，不需要专门安排一顿正餐。",
-    recommended: ["奶茶", "果茶"],
-    deal: "双杯饮品券（演示）",
   },
   maquez: {
     subtitle: "小龙虾 · 夜宵 · 建议1.5h",
     description: "适合晚餐或夜宵的小龙虾店，旺季排队时间可能更长。",
-    recommended: ["小龙虾", "夜宵"],
-    deal: "双人小龙虾套餐（演示）",
   },
   jiumi: {
     subtitle: "绵绵冰 · 简餐 · 建议45分钟",
     description: "适合下午休息的甜品和简餐点，适合放在两段景点之间。",
-    recommended: ["绵绵冰", "简餐", "甜品"],
-    deal: "双人甜品套餐（演示）",
   },
   dache: {
     subtitle: "砂锅土豆粉 · 小吃 · 建议45分钟",
     description: "适合快速吃一顿的砂锅小吃，适合作为路线中的轻量补给。",
-    recommended: ["砂锅土豆粉", "砂锅"],
-    deal: "单人砂锅套餐（演示）",
   }
 };
 
@@ -842,6 +796,8 @@ const state = {
   currentPosition: null,
   modalPlace: null,
   bookingPlace: null,
+  gallery: [],
+  galleryIndex: 0,
   routeReasons: {},
   lastReplan: null,
   queueRequests: [],
@@ -1715,7 +1671,13 @@ function renderPlaceList() {
       `${leg.name}${leg.detail}`.toLowerCase().includes(query)
     );
     $("#mapCount").textContent = `交通 · ${transport.length} 段真实路段`;
-    $("#placeList").innerHTML =
+    const transitCard = `
+      <article class="place-card transit-card">
+        <div class="place-card-head"><strong>乘车码</strong><span>地铁 · 公交</span></div>
+        <div class="place-meta">长春轨道交通支持微信 / 支付宝 / 云闪付 / 长春E出行，2 元起步。码由这些平台生成，我们不代扣。</div>
+        <div class="place-actions"><button type="button" data-transit="open">打开乘车码</button></div>
+      </article>`;
+    $("#placeList").innerHTML = transitCard + (
       transport
         .map(
           (leg) => `
@@ -1728,7 +1690,8 @@ function renderPlaceList() {
       `
         )
         .join("") ||
-      `<div class="notice compact">交通图层显示的是当前行程相邻站点之间的真实路段，先去地图把地点加进路线。</div>`;
+      `<div class="notice compact">交通图层显示的是当前行程相邻站点之间的真实路段，先去地图把地点加进路线。</div>`
+    );
     renderMap($("#mapViewMap"), "map");
     return;
   }
@@ -2000,6 +1963,7 @@ function renderRoute() {
       <div class="map-live-title"><strong>路线数据</strong><span class="live-tag">${tag}</span></div>
       <div class="map-live-row${real ? "" : " muted"}"><span>驾车 · 公交</span><strong>${legLabel}</strong></div>
       <div class="map-live-row muted"><span>实时到站</span><strong>未接入</strong></div>
+      <div class="map-live-row"><span>乘车码</span><button type="button" class="live-action" data-transit="open">打开</button></div>
       <div class="map-live-row muted"><span>路况图层</span><strong>${
         state.trafficVisible ? "已开启" : "未开启"
       }</strong></div>
@@ -2608,6 +2572,196 @@ function externalSearchUrl(kind, name) {
   return `https://www.douyin.com/search/${query}`;
 }
 
+// 乘车码：我们不能生成，也不该生成。码由支付平台下发并扣款，第三方既拿不到
+// 密钥也画不出可用的码——上一版的假二维码就是拿线路名做模运算拼出来的。这里
+// 只做"把手机交给能出码的 App"：支付宝乘车码有公开 scheme，可以直接唤起；
+// 微信和云闪付没有对外 scheme，给步骤比给一个点了没反应的按钮诚实。
+const TRANSIT_APPS = [
+  {
+    key: "alipay",
+    name: "支付宝乘车码",
+    note: "直接唤起支付宝的乘车码页，进站前点开",
+    action: "打开支付宝",
+    scheme: "alipays://platformapi/startapp?appId=200011235",
+    steps: "支付宝 → 首页「出行」→ 乘车码"
+  },
+  {
+    key: "wechat",
+    name: "微信乘车码",
+    note: "微信没有对外开放的乘车码 scheme，只能进 App 再点两下",
+    action: "打开微信",
+    scheme: "weixin://",
+    steps: "微信 → 我 → 服务 → 出行服务 → 乘车码"
+  },
+  {
+    key: "unionpay",
+    name: "云闪付",
+    note: "云闪付首页 → 乘车码，同样支持长春轨道交通",
+    action: "复制名称",
+    copy: "云闪付 乘车码"
+  },
+  {
+    key: "echuxing",
+    name: "长春E出行 / 长春市民卡",
+    note: "长春轨道交通官方 App，地铁公交一码通行；市民卡 App 扫码 9 折",
+    action: "复制名称",
+    copy: "长春E出行"
+  }
+];
+
+function renderTransitOptions() {
+  $("#transitOptions").innerHTML = TRANSIT_APPS.map(
+    (app) => `
+      <div class="transit-option">
+        <span><strong>${escapeHtml(app.name)}</strong><em>${escapeHtml(app.note)}</em></span>
+        ${
+          app.scheme
+            ? `<button type="button" class="transit-go" data-scheme="${escapeHtml(
+                app.scheme
+              )}" data-steps="${escapeHtml(app.steps)}">${escapeHtml(app.action)}</button>`
+            : `<button type="button" class="transit-go" data-copy="${escapeHtml(
+                app.copy
+              )}">${escapeHtml(app.action)}</button>`
+        }
+      </div>`
+  ).join("");
+}
+
+function openTransitModal() {
+  renderTransitOptions();
+  openModal("transitModal");
+}
+
+
+// Amap hands back up to three photos per POI and the sheet used to show exactly
+// one of them at 190x128. 97% of the library has at least one and most have
+// three, so a gallery costs no new request and invents nothing.
+function galleryFor(place) {
+  const seen = new Set();
+  const shots = [];
+  [place.photo, ...(place.photos || [])].forEach((url) => {
+    if (!url || typeof url !== "string" || seen.has(url)) return;
+    seen.add(url);
+    shots.push(url);
+  });
+  return shots.slice(0, 5);
+}
+
+function renderGallery(place) {
+  const shots = state.gallery;
+  const host = $("#placeGallery");
+  if (!shots.length) {
+    host.innerHTML = `<div class="gallery-empty">${icon(place.icon)}<span>暂无实景图</span></div>`;
+    return;
+  }
+  const index = Math.max(0, Math.min(state.galleryIndex, shots.length - 1));
+  state.galleryIndex = index;
+  const many = shots.length > 1;
+  host.innerHTML = `
+    <figure class="gallery-main">
+      <img class="place-photo" src="${escapeHtml(shots[index])}" alt="${escapeHtml(place.name)}" loading="lazy" referrerpolicy="no-referrer" />
+      ${
+        many
+          ? `<span class="gallery-count">${index + 1} / ${shots.length}</span>
+             <button class="gallery-arrow prev" type="button" data-shot="${index - 1}" aria-label="上一张">‹</button>
+             <button class="gallery-arrow next" type="button" data-shot="${index + 1}" aria-label="下一张">›</button>`
+          : ""
+      }
+    </figure>
+    ${
+      many
+        ? `<div class="gallery-thumbs">${shots
+            .map(
+              (url, shotIndex) => `
+          <button class="gallery-thumb ${shotIndex === index ? "is-active" : ""}" type="button" data-shot="${shotIndex}" aria-label="第 ${shotIndex + 1} 张">
+            <img src="${escapeHtml(url)}" alt="" referrerpolicy="no-referrer" />
+          </button>`
+            )
+            .join("")}</div>`
+        : ""
+    }
+  `;
+}
+
+// Dish names come from web/place-menus.js, keyed by brand so all 24 老昌春饼
+// branches share one menu. Amap has no dish data and 点评/美团 block logged-out
+// visitors, so an unlisted shop gets an honest empty state instead of a
+// plausible-looking list. No prices anywhere: we have no price source.
+// 桂林路 / 红旗街 / 重庆路 是街区不是店：它们本来就没有"一份菜单"，用
+// "这家店未收录"去说一条街是错的。
+function isStreetFood(place) {
+  return (
+    /(路|街|巷|市场|广场)$/.test(place.name) ||
+    /街区|商圈|夜市|市场/.test(place.type || "")
+  );
+}
+
+function menuFor(place) {
+  if (place.category !== "food") return null;
+  const table = typeof BRAND_MENUS !== "undefined" ? BRAND_MENUS : {};
+  const chain = chainKey(place.name);
+  let entry = table[chain] || table[place.name];
+  if (!entry) {
+    // 华莱士·全鸡汉堡 / 金川烤肉·非遗地标店 / 大食客·非遗吉菜: the brand name is
+    // a prefix of Amap's full shop name. Longest match wins so 老昌 doesn't
+    // swallow 老昌食品.
+    const hit = Object.keys(table)
+      .filter((key) => chain.startsWith(key))
+      .sort((a, b) => b.length - a.length)[0];
+    if (hit) entry = table[hit];
+  }
+  if (entry?.dishes?.length) {
+    return {
+      label: "菜单 · 招牌菜",
+      source: "编辑部整理 · 非门店价目表",
+      note: entry.note || "",
+      dishes: entry.dishes,
+      place
+    };
+  }
+  return {
+    label: "菜单",
+    source: isStreetFood(place) ? "街区 · 按摊位" : "未收录",
+    note: "",
+    dishes: [],
+    place
+  };
+}
+
+function renderMenu(place) {
+  const menu = menuFor(place);
+  $("#placeMenuSection").hidden = !menu;
+  if (!menu) return;
+  $("#placeMenuLabel").textContent = menu.label;
+  $("#placeMenuSource").textContent = menu.source;
+  const list = $("#placeMenu");
+  if (menu.dishes.length) {
+    list.className = "detail-menu";
+    list.innerHTML = menu.dishes
+      .map(
+        ([name, note]) =>
+          `<li><span class="dish-name">${escapeHtml(name)}</span>${
+            note ? `<span class="dish-note">${escapeHtml(note)}</span>` : ""
+          }</li>`
+      )
+      .join("");
+  } else if (isStreetFood(place)) {
+    list.className = "detail-menu is-empty";
+    list.innerHTML = `<li class="dish-empty">
+      <span>${escapeHtml(place.name)}是一条街区，没有统一菜单——吃什么取决于你进哪家店。</span>
+      <button type="button" data-copy="${escapeHtml(place.name)}">复制名称去点评搜</button>
+    </li>`;
+  } else {
+    list.className = "detail-menu is-empty";
+    list.innerHTML = `<li class="dish-empty">
+      <span>这家店的菜单还没有收录。高德只提供店名、地址和照片，不提供菜品；点评与美团的网页版会把未登录访客拦在门外。</span>
+      <button type="button" data-copy="${escapeHtml(place.name)}">复制店名去点评搜</button>
+    </li>`;
+  }
+  $("#placeMenuNote").hidden = !menu.note;
+  $("#placeMenuNote").textContent = menu.note;
+}
+
 function openPlaceModal(id) {
   const place = placeById(id);
   if (!place) return;
@@ -2617,16 +2771,20 @@ function openPlaceModal(id) {
     place.category === "food" ? "美食 · 本地推荐" : "景点 · 地点详情";
   $("#placeDetailTitle").textContent = place.name;
   $("#placeDetailSubtitle").textContent = place.subtitle || place.type;
-  const heroPhoto = place.photo || place.photos?.[0];
-  $("#placeDetailVisual").innerHTML = heroPhoto
-    ? `<img class="place-photo" src="${escapeHtml(heroPhoto)}" alt="${escapeHtml(place.name)}" loading="lazy" referrerpolicy="no-referrer" />`
-    : `${icon(place.icon)}<span>${escapeHtml(place.name)}</span>`;
+  state.gallery = galleryFor(place);
+  state.galleryIndex = 0;
+  renderGallery(place);
+  const heroPhoto = state.gallery[0];
   const ratingText = place.rating ? `${place.rating} 高德` : "暂无";
   const descText = place.description || [place.district, place.address].filter(Boolean).join(" ");
   // Say only what is actually on the card -- four memorials have a photo but no
   // Amap score, so the blanket "图片与评分来自高德" was wrong for them.
   const photoNote = [
-    heroPhoto ? "图片来自高德 POI" : "暂无实景图",
+    heroPhoto
+      ? state.gallery.length > 1
+        ? `${state.gallery.length} 张图 · 来自高德 POI`
+        : "图片来自高德 POI"
+      : "暂无实景图",
     place.rating ? "评分来自高德" : "无评分来源"
   ].join(" · ");
   const avgNote = typeof place.avg === "number" ? " · 人均为品类估算" : "";
@@ -2644,15 +2802,7 @@ function openPlaceModal(id) {
     )
     .join("");
 
-  const dishesSection = $("#placeDishesSection");
-  dishesSection.hidden = !place.recommended?.length;
-  $("#placeDishes").innerHTML = (place.recommended || [])
-    .map((dish) => `<span class="detail-tag">${dish}</span>`)
-    .join("");
-
-  const dealSection = $("#placeDealSection");
-  dealSection.hidden = !place.deal;
-  $("#placeDeal").textContent = place.deal || "";
+  renderMenu(place);
 
   $("#placeDianping").href = externalSearchUrl("dianping", place.name);
   $("#placeMeituan").href = externalSearchUrl("meituan", place.name);
@@ -3086,6 +3236,36 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const shot = event.target.closest("[data-shot]");
+  if (shot) {
+    const total = state.gallery.length;
+    if (!total) return;
+    const wanted = Number(shot.dataset.shot);
+    // Wrap around: the arrows on the first and last photo should keep working.
+    state.galleryIndex = ((wanted % total) + total) % total;
+    const place = placeById(state.modalPlace);
+    if (place) renderGallery(place);
+    return;
+  }
+
+  const transit = event.target.closest("[data-transit]");
+  if (transit) {
+    openTransitModal();
+    return;
+  }
+
+  const scheme = event.target.closest("[data-scheme]");
+  if (scheme) {
+    // No App installed means the browser silently does nothing, so fall back to
+    // the manual path instead of leaving the user on a dead end.
+    const steps = scheme.dataset.steps || "";
+    window.location.href = scheme.dataset.scheme;
+    window.setTimeout(() => {
+      if (!document.hidden) showToast(`没唤起？${steps}`);
+    }, 1400);
+    return;
+  }
+
   const copy = event.target.closest("[data-copy]");
   if (copy) {
     event.preventDefault();
@@ -3468,6 +3648,11 @@ $("#ticketModal").addEventListener("click", (event) => {
   if (event.target.id === "ticketModal") closeModal("ticketModal");
 });
 
+$("#transitModalClose").addEventListener("click", () => closeModal("transitModal"));
+$("#transitModal").addEventListener("click", (event) => {
+  if (event.target.id === "transitModal") closeModal("transitModal");
+});
+
 $("#membershipButton").addEventListener("click", () => {
   showToast("会员权益为演示内容：多日路线、更多排队预测次数");
 });
@@ -3484,6 +3669,7 @@ document.addEventListener("keydown", (event) => {
     closeModal("queueModal");
     closeModal("placeModal");
     closeModal("ticketModal");
+    closeModal("transitModal");
     closeModal("legalModal");
   }
 });

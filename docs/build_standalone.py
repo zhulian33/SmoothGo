@@ -33,16 +33,29 @@ def main() -> None:
     replacements = {
         '<link rel="stylesheet" href="styles.css" />': f"<style>\n{read('styles.css')}\n</style>",
         '<script src="config.js"></script>': f"<script>\n{config}\n</script>",
-        '<script src="planner.js"></script>': f"<script>\n{read('planner.js')}\n</script>",
-        '<script src="app.js"></script>': f"<script>\n{read('app.js')}\n</script>",
     }
     for marker, content in replacements.items():
         if marker not in html:
             raise RuntimeError(f"Missing marker in web/index.html: {marker}")
         html = html.replace(marker, content)
 
+    # Everything else in web/ is data (places.poi.js, place-photos.js,
+    # place-menus.js) plus app.js / planner.js. Inline them all: the split into
+    # separate data files once left the standalone demo pointing at six scripts
+    # it does not ship, so the file opened blank offline.
+    def inline_script(match: re.Match[str]) -> str:
+        src = match.group(1)
+        path = WEB / src
+        if not path.exists():
+            raise RuntimeError(f"Standalone build references missing script: {src}")
+        return f"<script>\n{path.read_text(encoding='utf-8')}\n</script>"
+
+    html = re.sub(r'<script src="([^"/:]+\.js)"></script>', inline_script, html)
+
     if re.search(r'<(?:script|link)[^>]+(?:src|href)="(?:app|planner|styles|config)\.', html):
         raise RuntimeError("Standalone build still references a separate local asset.")
+    if re.search(r'<script src="(?!https?:)', html):
+        raise RuntimeError("Standalone build still references an external local script.")
 
     OUTPUT.write_text(html, encoding="utf-8")
     print(f"Wrote {OUTPUT.relative_to(ROOT)} ({OUTPUT.stat().st_size:,} bytes)")

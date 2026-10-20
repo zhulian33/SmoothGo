@@ -27,8 +27,10 @@ The current web prototype demonstrates:
 4. **Replan** — replace the busiest stop in the selected day with a same-category alternative, explain the trade-off and undo the change.
 5. **Map navigation** — standard or satellite base map, an Amap live-traffic overlay, and one-tap navigation handoff to Amap. No crowd counters: any number of that kind would be invented.
 6. **Booking handoff** — each place links out to whoever actually sells the ticket: the venue's own phone line (426 of 574 places have one), its Amap POI page, 美团, 点评 and 抖音. Links go through our own `/api/go` so a dead one can be fixed server-side; that endpoint never accepts a URL from the caller, so it cannot be turned into an open redirect. SmoothGo issues no order, takes no payment and shows no fare table. 美团 and 点评 are **copy-the-keyword** rows, not links: their web search pages sit behind a login or bot wall (verified — they redirect to `mlogin.dianping.com` and `verify.meituan.com`), so pointing a logged-out visitor at them would be pointing at a door. Official WeChat mini-program links are supported but unlisted: a third party cannot mint a URL Scheme for somebody else's mini program, so that field stays empty until a venue hands us its own link.
-7. **Queue assist demo** — a request pins a card showing the wait length you picked. It does not tick down, because no queue feed is connected.
-8. **Account and queue assist demos** — guest preview, phone login, saved multi-day routes and membership-quota preview.
+7. **Place sheet with a photo gallery and a menu** — every place shows all the photos Amap returned (504 of 574 have two or three) instead of a single thumbnail, with a thumbnail strip and counter. Restaurants also show a 招牌菜 list keyed by brand, so all 24 老昌春饼 branches share one menu. 141 of 360 restaurants are covered; the rest say 未收录 and offer a copy-the-name action rather than a plausible-looking list. No prices: Amap has no dish or price field and 点评/美团 block logged-out visitors, so a price would be invented.
+8. **Transit-code handoff** — 交通 view and route panel open a 乘车码 sheet. 支付宝乘车码 has a public scheme and is opened directly; 微信 and 云闪付 have none, so those rows show the tap path; 长春E出行 / 长春市民卡 are named as the official apps (the 市民卡 app gives 9折 on 长春轨道交通). SmoothGo does not render a code and does not take the fare — an earlier version drew a fake QR out of the line name, which is exactly what this replaces.
+9. **Queue assist demo** — a request pins a card showing the wait length you picked. It does not tick down, because no queue feed is connected.
+10. **Account and queue assist demos** — guest preview, phone login, saved multi-day routes and membership-quota preview.
 
 **Place identity is real.** Names, coordinates, districts, opening hours, scores and photos come from the Amap POI API. Everything else is either derived — average spend from a category band, travel time from a distance estimate or an Amap route — or explicitly labelled 未接入 / 演示. There is no real payment, SMS, ticketing or queue-assistance order in this version.
 
@@ -278,11 +280,16 @@ name before its satellite venues.
 **Everything the app claims but cannot source is labelled.** No live feed is
 connected for weather, bus arrival, road congestion, queue length or ticketing,
 so those panels say **未接入** instead of showing a number that looks
-authoritative. What *is* real: place identity, coordinates, opening hours and
-photos come from Amap; the road-colour layer is Amap's own `TileLayer.Traffic`.
-Queue ranges are estimates (`confidence: "低"`) drawn from two narrow constants,
-which is why they are excluded from the home-page "waiting venues" signal and
-every card that shows one carries the suffix **参考等候 · 非实时**.
+authoritative. Menus are editorial (`web/place-menus.js`): dish names only, no
+prices, no combos — the five 团购 packages the old sheet advertised (双人餐 ¥168,
+四人餐 ¥298 …) were invented and are gone. Ride codes are not ours either; the
+sheet hands the phone to 支付宝/微信/云闪付 and says so, because a code we drew
+ourselves would not open a gate. What *is* real: place identity, coordinates,
+opening hours, photos and scores come from Amap; the road-colour layer is Amap's
+own `TileLayer.Traffic`. Queue ranges are estimates (`confidence: "低"`) drawn
+from two narrow constants, which is why they are excluded from the home-page
+"waiting venues" signal and every card that shows one carries the suffix
+**参考等候 · 非实时**.
 
 **Travel time has two tiers, and the UI says which one it is showing.** The
 planner needs a number hundreds of times per keystroke, and it runs

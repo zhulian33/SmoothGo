@@ -440,23 +440,21 @@
         <button class="modal-close" type="button" id="placeModalClose" aria-label="关闭">
           <svg class="icon"><use href="#i-close"></use></svg>
         </button>
-        <div class="place-detail-hero">
-          <div class="place-detail-visual" id="placeDetailVisual"></div>
-          <div>
-            <span class="kicker" id="placeDetailType">景点</span>
-            <h2 id="placeDetailTitle">地点详情</h2>
-            <p id="placeDetailSubtitle"></p>
-          </div>
+        <div class="place-detail-gallery" id="placeGallery"></div>
+        <div class="place-detail-head">
+          <span class="kicker" id="placeDetailType">景点</span>
+          <h2 id="placeDetailTitle">地点详情</h2>
+          <p id="placeDetailSubtitle"></p>
         </div>
         <div class="place-detail-stats" id="placeDetailStats"></div>
         <p class="place-detail-desc" id="placeDetailDesc"></p>
-        <div class="detail-section" id="placeDishesSection">
-          <span class="detail-label">推荐菜</span>
-          <div class="detail-tags" id="placeDishes"></div>
-        </div>
-        <div class="detail-deal" id="placeDealSection">
-          <span class="detail-label">团购</span>
-          <strong id="placeDeal"></strong>
+        <div class="detail-section" id="placeMenuSection">
+          <div class="detail-menu-head">
+            <span class="detail-label" id="placeMenuLabel">菜单 · 招牌菜</span>
+            <span class="detail-menu-source" id="placeMenuSource">编辑部整理</span>
+          </div>
+          <ul class="detail-menu" id="placeMenu"></ul>
+          <p class="detail-menu-note" id="placeMenuNote"></p>
         </div>
         <div class="detail-actions">
           <a id="placeDianping" href="#" target="_blank" rel="noreferrer">大众点评 ↗</a>
@@ -482,6 +480,24 @@
       </div>
     </div>
 
+    <div class="modal-backdrop" id="transitModal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="transitTitle">
+        <button class="modal-close" type="button" id="transitModalClose" aria-label="关闭">
+          <svg class="icon"><use href="#i-close"></use></svg>
+        </button>
+        <span class="kicker">乘车码 · 长春</span>
+        <h2 id="transitTitle">地铁与公交怎么刷</h2>
+        <p id="transitDesc">长春轨道交通全线网支持微信、支付宝、云闪付乘车码，也支持「长春E出行」「长春市民卡」扫码过闸。乘车码由这些平台生成并扣费。</p>
+        <div class="transit-options" id="transitOptions"></div>
+        <ul class="transit-facts">
+          <li><b>票价</b> 2 元起步（7 公里内），按里程递增</li>
+          <li><b>刷卡</b> 全国交通联合卡可直接过闸；长春轨道交通一卡通有折扣</li>
+          <li><b>刷码</b> 进出站都在闸机上方感应区扫</li>
+        </ul>
+        <p class="modal-footnote">SmoothGo 不生成乘车码、不代扣票款，也不参与票务清算。到站时间与车厢拥挤度需接入运营方数据，当前未接入。</p>
+      </div>
+    </div>
+
     <div class="modal-backdrop" id="legalModal" aria-hidden="true">
       <div class="modal-card legal-modal" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
         <button class="modal-close" type="button" id="legalModalClose" aria-label="关闭">
@@ -496,8 +512,10 @@
           <p>本地演示可创建手机号和密码。真实部署应使用 HTTPS，并以隐私政策说明保存目的、保存期限、删除方式和用户权利。</p>
           <h3>排队管家</h3>
           <p>当前只模拟请求和状态时间线，不会派单、收款或承诺优先入场。正式服务只应在明确允许的餐厅或非严格排队场地开放，景区第一阶段仅提供信息。</p>
-          <h3>票务与地图</h3>
-          <p>「购票 / 订座」按钮只把用户送到真正售票的地方——景区电话、高德 POI 详情页、美团、点评、抖音——本应用<strong>不出票、不收款、不采集支付信息</strong>，票价与库存以对方页面为准。地图和路线能力接入高德后，仍需遵守其服务条款与配额限制。</p>
+          <h3>票务、乘车码与地图</h3>
+          <p>「购票 / 订座」按钮只把用户送到真正售票的地方——景区电话、高德 POI 详情页、美团、点评、抖音——本应用<strong>不出票、不收款、不采集支付信息</strong>，票价与库存以对方页面为准。乘车码同理：码由支付宝、微信、云闪付或长春E出行生成，本应用只负责唤起对应 App，<strong>不生成乘车码、不代扣票款</strong>。地图和路线能力接入高德后，仍需遵守其服务条款与配额限制。</p>
+          <h3>菜单</h3>
+          <p>招牌菜由编辑部按品牌整理（<code>web/place-menus.js</code>），没有价格、没有套餐，也不是门店官方价目表；高德不提供菜品数据，未收录的店会明确标注。</p>
           <h3>正式上线前</h3>
           <p>还需要合作协议、隐私政策、数据删除机制、客服与应急流程、支付退款规则，以及排队协助人员的实名、培训、保险和交接规范。</p>
         </div>
@@ -510,6 +528,7 @@
     <script src="planner.js"></script>
     <script src="places.poi.js"></script>
     <script src="place-photos.js"></script>
+    <script src="place-menus.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
