@@ -29,7 +29,7 @@ The current web prototype demonstrates:
 6. **Booking handoff** — each place links out to whoever actually sells the ticket: the venue's own phone line (426 of 574 places have one), its Amap POI page, 美团, 点评 and 抖音. Links go through our own `/api/go` so a dead one can be fixed server-side; that endpoint never accepts a URL from the caller, so it cannot be turned into an open redirect. SmoothGo issues no order, takes no payment and shows no fare table. 美团 and 点评 are **copy-the-keyword** rows, not links: their web search pages sit behind a login or bot wall (verified — they redirect to `mlogin.dianping.com` and `verify.meituan.com`), so pointing a logged-out visitor at them would be pointing at a door. Official WeChat mini-program links are supported but unlisted: a third party cannot mint a URL Scheme for somebody else's mini program, so that field stays empty until a venue hands us its own link.
 7. **Place sheet with a photo gallery and a menu** — every place shows all the photos Amap returned (504 of 574 have two or three) instead of a single thumbnail, with a thumbnail strip and counter. Restaurants also show a 招牌菜 list keyed by brand, so all 24 老昌春饼 branches share one menu. 141 of 360 restaurants are covered; the rest say 未收录 and offer a copy-the-name action rather than a plausible-looking list. No prices: Amap has no dish or price field and 点评/美团 block logged-out visitors, so a price would be invented.
 8. **Transit-code handoff** — 交通 view and route panel open a 乘车码 sheet. 支付宝乘车码 has a public scheme and is opened directly; 微信 and 云闪付 have none, so those rows show the tap path; 长春E出行 / 长春市民卡 are named as the official apps (the 市民卡 app gives 9折 on 长春轨道交通). SmoothGo does not render a code and does not take the fare — an earlier version drew a fake QR out of the line name, which is exactly what this replaces.
-9. **Queue assist demo** — a request pins a card showing the wait length you picked. It does not tick down, because no queue feed is connected.
+9. **Queue assist demo** — submitting a request adds a bar at the top of the 排队 page (it stays there while you scroll) and a compact strip under the header on the other views. Both repeat the wait length you picked in the sheet; neither counts down, because no queue feed is connected. Guests can submit: the request is stored in the browser and marked 游客演示, and only a signed-in account saves it server-side against the monthly quota.
 10. **Account and queue assist demos** — guest preview, phone login, saved multi-day routes and membership-quota preview.
 
 **Place identity is real.** Names, coordinates, districts, opening hours, scores and photos come from the Amap POI API. Everything else is either derived — average spend from a category band, travel time from a distance estimate or an Amap route — or explicitly labelled 未接入 / 演示. There is no real payment, SMS, ticketing or queue-assistance order in this version.
@@ -98,12 +98,12 @@ The prototype uses a transparent rule-based scorer with illustrative data. It ba
 - Route and home maps show only the selected day’s stops; the discovery map matches the left-hand search and category filters exactly (`全部`, `景点`, `美食`, `交通`).
 - `web/planner.js` — dependency-free route scoring and Replan logic, shared by the browser and unit tests.
 - Amap provides the standard map, satellite imagery and live-traffic tiles; the route line and marker coordinates are illustrative.
-- Satellite imagery cannot count individual people. “Estimated people” values are deterministic demo estimates derived from mock queue data.
+- Satellite imagery cannot count individual people, and the app no longer shows any people count. The queue bar repeats the wait length chosen in the sheet and says 队列位置未接入 rather than inventing a position.
 - “开始导航” and the per-place navigation buttons hand off to Amap navigation; the prototype does not run a custom turn-by-turn engine.
 - Dianping-style rating, average price and review-count fields are demo data; a production version requires an authorized API or partnership.
 - The phone login and queue-assist flows are clearly labelled as demos.
 - The account panel shows a demo membership quota; no payment or subscription is processed.
-- Signed-in queue-assist requests are stored per account, so the monthly quota and the pinned live queue card survive a page refresh. Restaurant cards use “桌”, attraction cards use “人”.
+- Signed-in queue-assist requests are stored per account, so the monthly quota and the queue bar survive a page refresh. A guest request lives in `localStorage` only and is labelled 游客演示.
 - The footer links to a privacy, terms and data-boundary explainer for the prototype.
 
 ## Develop and verify

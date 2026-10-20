@@ -322,6 +322,8 @@
         </section>
 
         <section class="view" id="view-queue" aria-label="排队">
+          <!-- 我的排队：提交排队管家之后，这一栏钉在本页最顶上。 -->
+          <section class="queue-topbar" id="activeQueueCard" aria-live="polite" hidden></section>
           <div class="view-head">
             <div>
               <div class="kicker">现在 · 排队</div>
@@ -330,7 +332,6 @@
             </div>
             <button class="button outline" type="button" id="refreshQueueButton">刷新估算</button>
           </div>
-          <section class="active-queue-card" id="activeQueueCard" hidden></section>
           <div class="queue-list" id="queueList"></div>
           <div class="notice">
             <svg class="icon"><use href="#i-bell"></use></svg>
@@ -402,7 +403,7 @@
         </button>
         <span class="kicker">排队管家 · 演示</span>
         <h2 id="queueTitle">在允许的场地，帮你省下等待</h2>
-        <p id="queueModalText">选择等待时长，提交后会显示模拟的接单流程。</p>
+        <p id="queueModalText">选择等待时长。提交后排队页最顶上会多出一栏，写着地点和这段时长。</p>
         <div class="queue-options" id="queueOptions">
           <button class="queue-option selected" type="button" data-minutes="30">
             <strong>30 分钟</strong><span>¥10</span>
@@ -420,18 +421,6 @@
           <span>只对明确允许的餐厅或非严格排队场地提供；景区第一阶段只做信息监测。</span>
         </div>
         <button class="button dark full" type="button" id="queueSubmitButton">提交演示请求</button>
-        <div class="queue-success" id="queueSuccess" hidden>
-          <div class="queue-success-head">
-            <span class="success-dot"><svg class="icon"><use href="#i-check"></use></svg></span>
-            <span>演示请求已提交，没有产生真实订单。</span>
-            <strong id="queueRequestId">SG-DEMO</strong>
-          </div>
-          <ol class="queue-timeline" id="queueTimeline">
-            <li class="done"><b>请求已提交</b><span>演示订单已记录</span></li>
-            <li class="active"><b>匹配附近助手</b><span>正式版才会真实派单</span></li>
-            <li><b>到场扫码交接</b><span>用户与助手双向确认</span></li>
-          </ol>
-        </div>
       </div>
     </div>
 

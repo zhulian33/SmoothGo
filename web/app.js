@@ -769,7 +769,6 @@ const geolocationRequested = new WeakSet();
 const MAP_CLUSTER_THRESHOLD = 60;
 const amapClusters = new WeakMap();
 const PLANNER = window.SmoothGoPlanner;
-let queueTimers = [];
 
 const state = {
   view: "home",
@@ -803,7 +802,6 @@ const state = {
   queueRequests: [],
   queueQuota: { limit: 2, used: 0, remaining: 2 },
   activeQueue: null,
-  pendingQueuePlace: null,
   poiResults: []
 };
 
@@ -2180,18 +2178,20 @@ function restoreLocalQueue() {
 
 function renderActiveQueue() {
   const pin = $("#queuePin");
-  const card = $("#activeQueueCard");
-  if (!pin || !card) return;
+  const bar = $("#activeQueueCard");
+  if (!pin || !bar) return;
   const snapshot = queueSnapshot(state.activeQueue);
   if (!snapshot) {
     pin.hidden = true;
     pin.innerHTML = "";
-    card.hidden = true;
-    card.innerHTML = "";
+    bar.hidden = true;
+    bar.innerHTML = "";
     return;
   }
 
-  pin.hidden = false;
+  // On the queue page the bar below carries the whole story, so the sticky strip
+  // under the header would just repeat it two centimetres higher.
+  pin.hidden = state.view === "queue";
   pin.innerHTML = `
     <div class="queue-pin-place"><span class="live-dot"></span><strong>${escapeHtml(
       snapshot.request.placeName
@@ -2202,18 +2202,30 @@ function renderActiveQueue() {
     <button class="queue-pin-close" type="button" data-queue-dismiss aria-label="收起置顶排队信息">×</button>
   `;
 
-  card.hidden = false;
-  card.innerHTML = `
-    <div class="active-queue-identity">
-      <span>${snapshot.isFood ? "餐馆排队参考" : "景区排队参考"} · ${
-        snapshot.request.requestId
-      }</span>
+  bar.hidden = false;
+  const guestNote = snapshot.request.guest
+    ? "游客演示 · 这条记录只存在这台浏览器，登录后会保存到账号；"
+    : "";
+  bar.innerHTML = `
+    <div class="queue-topbar-identity">
+      <span class="queue-topbar-kicker"><span class="live-dot"></span>${
+        snapshot.isFood ? "餐馆排队参考" : "景区排队参考"
+      } · ${escapeHtml(String(snapshot.request.requestId || "SG-DEMO"))}</span>
       <strong>${escapeHtml(snapshot.request.placeName)}</strong>
     </div>
-    <div class="active-queue-stat"><span>当前位置</span><strong>${snapshot.positionText}</strong></div>
-    <div class="active-queue-stat"><span>预计等待</span><strong>${snapshot.waitText}</strong></div>
-    <div class="active-queue-stat"><span>提交时间</span><strong>${snapshot.updatedText}</strong></div>
-    <div class="active-queue-state"><strong>${snapshot.status}</strong><span>演示请求不会产生真实排队、订座或支付，也不会到号</span></div>
+    <div class="queue-topbar-metric"><span>预计等待</span><strong>${snapshot.waitText}</strong></div>
+    <div class="queue-topbar-metric is-position"><span>队伍位置</span><strong>未接入</strong></div>
+    <div class="queue-topbar-metric"><span>提交时间</span><strong>${snapshot.updatedText.replace(
+      "提交于 ",
+      ""
+    )}</strong></div>
+    <div class="queue-topbar-actions">
+      <button class="queue-topbar-link" type="button" data-open-place="${escapeHtml(
+        snapshot.request.placeId || ""
+      )}">查看地点</button>
+      <button class="queue-topbar-close" type="button" data-queue-dismiss>收起</button>
+    </div>
+    <p class="queue-topbar-note">${guestNote}等待时长是你提交时选的参考值，队伍位置未接入任何实时数据；不会真实排队、订座或支付。</p>
   `;
 }
 
@@ -2224,7 +2236,7 @@ function dismissActiveQueue() {
   state.activeQueue = null;
   localStorage.removeItem(ACTIVE_QUEUE_KEY);
   renderActiveQueue();
-  showToast("已收起置顶排队信息");
+  showToast("已收起这条排队信息");
 }
 
 function updateMembershipUI() {
@@ -2270,8 +2282,12 @@ async function loadQueueState() {
       state.activeQueue = active;
       localStorage.setItem(ACTIVE_QUEUE_KEY, JSON.stringify(active));
     } else {
+      // A guest request made before logging in is still the newest thing the
+      // user submitted; do not wipe the bar just because the account has no
+      // record of it yet.
       state.activeQueue = null;
-      localStorage.removeItem(ACTIVE_QUEUE_KEY);
+      restoreLocalQueue();
+      if (!state.activeQueue) localStorage.removeItem(ACTIVE_QUEUE_KEY);
     }
   } catch (error) {
     state.queueRequests = [];
@@ -2281,24 +2297,8 @@ async function loadQueueState() {
   updateMembershipUI();
 }
 
-function resumePendingQueue() {
-  if (!state.pendingQueuePlace) return;
-  const placeId = state.pendingQueuePlace;
-  state.pendingQueuePlace = null;
-  openQueueModal(placeId);
-  showToast("已登录，可以继续提交排队管家请求");
-}
-
 async function saveQueueRequest(place) {
-  if (AUTH_MODE === "real") {
-    if (!state.loggedIn) {
-      state.pendingQueuePlace = place.id;
-      closeModal("queueModal");
-      updateAuthPanel();
-      openModal("loginModal");
-      showToast("登录后可保存排队管家请求");
-      return null;
-    }
+  if (AUTH_MODE === "real" && state.loggedIn) {
     const data = await apiFetch("/api/queue-requests", {
       method: "POST",
       body: JSON.stringify({
@@ -2314,6 +2314,11 @@ async function saveQueueRequest(place) {
     return data.request;
   }
 
+  // Guests used to be bounced into the login sheet before anything happened, so
+  // the queue page never showed the bar this feature is about. The request is a
+  // label and a number the user already picked -- nothing is booked, charged or
+  // sent anywhere -- so there is nothing to protect behind a login wall. It is
+  // kept in localStorage and marked guest; logging in is what gets it saved.
   const createdAt = Math.floor(Date.now() / 1000);
   return {
     id: `demo-${Date.now()}`,
@@ -2324,6 +2329,7 @@ async function saveQueueRequest(place) {
     price: state.queueMinutes === 60 ? 18 : state.queueMinutes === 90 ? 26 : 10,
     status: "submitted",
     category: place.category,
+    guest: !state.loggedIn,
     createdAt
   };
 }
@@ -2538,9 +2544,7 @@ function openLegalModal() {
 function openQueueModal(id) {
   state.queuePlace = id || "the-hill";
   const place = placeById(state.queuePlace);
-  $("#queueModalText").textContent = `为 ${place.name} 选择等待时长。提交后会显示模拟接单流程，不会创建真实订单。`;
-  $("#queueSuccess").hidden = true;
-  $("#queueRequestId").textContent = "SG-DEMO";
+  $("#queueModalText").textContent = `为 ${place.name} 选择等待时长。提交后排队页最顶上会多出一栏，写着地点和这段时长，不会创建真实订单。`;
   const quota = queueQuotaCopy();
   $("#queueQuota").textContent = state.loggedIn
     ? `本月剩余 ${quota.remaining} / ${quota.limit} 次排队管家额度`
@@ -2548,11 +2552,6 @@ function openQueueModal(id) {
   const exhausted = AUTH_MODE === "real" && state.loggedIn && quota.remaining <= 0;
   $("#queueSubmitButton").disabled = exhausted;
   $("#queueSubmitButton").textContent = exhausted ? "本月额度已用完" : "提交演示请求";
-  queueTimers.forEach(clearTimeout);
-  queueTimers = [];
-  const steps = $$("#queueTimeline li");
-  steps.forEach((step, index) => step.classList.toggle("done", index === 0));
-  steps.forEach((step) => step.classList.remove("active"));
   $("#queueOptions").innerHTML = `
     <button class="queue-option ${state.queueMinutes === 30 ? "selected" : ""}" type="button" data-minutes="30"><strong>30 分钟</strong><span>¥10</span></button>
     <button class="queue-option ${state.queueMinutes === 60 ? "selected" : ""}" type="button" data-minutes="60"><strong>60 分钟</strong><span>¥18</span></button>
@@ -3215,6 +3214,12 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const openPlace = event.target.closest("[data-open-place]");
+  if (openPlace) {
+    if (openPlace.dataset.openPlace) openPlaceModal(openPlace.dataset.openPlace);
+    return;
+  }
+
   const viewTarget = event.target.closest("[data-view]");
   if (viewTarget) {
     event.preventDefault();
@@ -3426,7 +3431,6 @@ $("#logoutButton").addEventListener("click", async () => {
   state.queueRequests = [];
   state.queueQuota = { limit: 2, used: 0, remaining: 2 };
   state.activeQueue = null;
-  state.pendingQueuePlace = null;
   localStorage.removeItem(ACTIVE_QUEUE_KEY);
   localStorage.removeItem(DISMISSED_QUEUE_KEY);
   updateAuthUI();
@@ -3542,7 +3546,7 @@ $("#doLoginButton").addEventListener("click", async () => {
       closeModal("loginModal");
       showToast(authAction === "register" ? "注册成功，已自动登录" : "登录成功");
       loadSearchHistory();
-      loadQueueState().then(resumePendingQueue);
+      loadQueueState();
     } catch (error) {
       showToast(error.message);
     } finally {
@@ -3570,7 +3574,7 @@ $("#doLoginButton").addEventListener("click", async () => {
       closeModal("loginModal");
       showToast("登录成功");
       loadSearchHistory();
-      loadQueueState().then(resumePendingQueue);
+      loadQueueState();
     } catch (error) {
       showToast(error.message);
     } finally {
@@ -3615,10 +3619,12 @@ $("#queueSubmitButton").addEventListener("click", async () => {
   if (!request) return;
   setActiveQueue(request);
   closeModal("queueModal");
+  // Nothing counts down any more, so the old "置顶信息会持续更新" was a promise
+  // with nothing behind it. Say where the bar is, not that it moves.
   showToast(
-    AUTH_MODE === "real" && state.loggedIn
-      ? `${place.name} 已约排 · 置顶信息会持续更新`
-      : `${place.name} 已模拟约排 · 置顶信息会持续更新`
+    request.guest
+      ? `${place.name} 已生成演示排队 · 排队页顶部可以看到`
+      : `${place.name} 已约排 · 排队页顶部可以看到`
   );
 });
 
