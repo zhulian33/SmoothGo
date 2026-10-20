@@ -4617,6 +4617,31 @@ window.SMOOTHGO_CONFIG = {
     return Math.round((min + Math.max(min, max)) / 2);
   }
 
+  // A chain is one brand. 元盛居(生态大街店) and 元盛居(育民东路店) are two real
+  // Amap POIs at two real addresses, but a five-day trip that eats at the same
+  // brand four times is a broken trip, not a thorough one. Everything before
+  // the first parenthesis is the brand, so 元盛楼(盛元盛居)(万福总店) keeps its
+  // own brand -- 元盛楼 is a different name that happens to contain 元盛居.
+  // Names shorter than two characters are skipped: 原(第五净水车间) would
+  // otherwise collapse unrelated venues into one "brand".
+  function brandKey(place) {
+    const name = String(place?.name || "").split(/[（(]/)[0].trim();
+    return name.length >= 2 ? name : "";
+  }
+
+  // Amap files some 度假区 under 度假疗养场所: somewhere you stay, not somewhere
+  // you visit for an hour. Most still carry opening hours or a phone number,
+  // which is what makes them a real day out -- 天定山旅游度假小镇 has a ski slope
+  // and answers the phone. The ones with neither are usually a plot of land
+  // with no reception to speak of, so they should not win a slot in a day
+  // plan. This test is deliberately narrow: in the shipped library it matches
+  // 鹿鸣谷净月潭休闲度假区 and nothing else.
+  function isPlannable(place) {
+    if (place?.category !== "attraction") return true;
+    if (!/度假村/.test(place.type || "")) return true;
+    return Boolean(place.hours) || Boolean(place.tel);
+  }
+
   function interestMatches(place, interests) {
     const wanted = interests instanceof Set ? interests : new Set(interests || []);
     return (place?.interests || []).filter((interest) => wanted.has(interest));
@@ -4714,7 +4739,12 @@ window.SMOOTHGO_CONFIG = {
   }
 
   function chooseInitialRoute(places, preferences = {}, options = {}) {
-    const available = (places || []).filter(Boolean);
+    const supplied = (places || []).filter(Boolean);
+    // Drop venues that cannot carry a visit before scoring, so they never take
+    // a slot from a place that can. Falls back to the raw list if a fixture
+    // happens to be made entirely of unplannable venues.
+    const plannable = supplied.filter(isPlannable);
+    const available = plannable.length ? plannable : supplied;
     const limit = Math.max(1, Number(options.limit) || DEFAULT_LIMIT);
     if (!available.length) return { route: [], reasons: {} };
 
@@ -4805,26 +4835,47 @@ window.SMOOTHGO_CONFIG = {
       ? options.startMinutes
       : DEFAULT_START_MINUTES;
     const used = new Set();
+    const usedBrands = new Set();
+    const byId = new Map(available.map((place) => [place.id, place]));
     const days = [];
+
+    const fillsADay = (pool) =>
+      pool.length >= limit &&
+      pool.filter((place) => place.category === "attraction").length >= 2 &&
+      pool.filter((place) => place.category === "food").length >= 1;
 
     for (let dayIndex = 0; dayIndex < dayCount; dayIndex += 1) {
       let pool = available.filter((place) => !used.has(place.id));
-      const attractions = pool.filter((place) => place.category === "attraction");
-      const foods = pool.filter((place) => place.category === "food");
 
       // The Changchun seed set is intentionally small. Once a full pass runs
       // out of suitable venues, start a new pass and let later days reuse them.
-      if (pool.length < limit || attractions.length < 2 || foods.length < 1) {
+      // usedBrands has to clear alongside used: on its own it would filter the
+      // second pass down to an empty pool and every later day would come back
+      // blank.
+      if (!fillsADay(pool)) {
         used.clear();
+        usedBrands.clear();
         pool = available;
       }
+
+      // One visit per brand across the whole trip. 老昌春饼 alone has 24
+      // branches in the library and would otherwise fill a week by itself.
+      const brandFresh = pool.filter((place) => {
+        const key = brandKey(place);
+        return !key || !usedBrands.has(key);
+      });
+      if (fillsADay(brandFresh)) pool = brandFresh;
 
       const plan = chooseInitialRoute(pool, preferences, {
         limit,
         startMinutes,
         travelBetween: options.travelBetween
       });
-      plan.route.forEach((id) => used.add(id));
+      plan.route.forEach((id) => {
+        used.add(id);
+        const key = brandKey(byId.get(id));
+        if (key) usedBrands.add(key);
+      });
       days.push(plan);
     }
 
@@ -4932,6 +4983,8 @@ window.SMOOTHGO_CONFIG = {
     DEFAULT_START_MINUTES,
     parseBudget,
     averageQueue,
+    brandKey,
+    isPlannable,
     interestMatches,
     scorePlace,
     summarize,

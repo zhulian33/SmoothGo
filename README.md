@@ -112,6 +112,8 @@ The prototype uses a transparent rule-based scorer with illustrative data. It ba
 - `web/index.html` — full-page prototype with four views: Home, Map, Route and Queue.
 - Natural-language extraction recognizes budget, time, group and interest keywords.
 - Multi-day planning supports 1–21 days with Day tabs and per-day Replan; long trips reuse the limited seed venue pool and mark those days as “复用”.
+- A trip visits each chain once. 元盛居 has four real branches and 老昌春饼 has 24 in the library, so the planner keys on the name before the first parenthesis and drops the rest of a brand once one branch is scheduled — 元盛楼(盛元盛居)(万福总店) keeps its own brand, since it is a different name that merely contains 元盛居. Without this, a five-day plan ate at 元盛居 on four of the five days.
+- Resorts Amap files under 度假疗养场所 are only planned if they carry opening hours or a phone number. 天定山旅游度假小镇 has both and stays; 鹿鸣谷净月潭休闲度假区 has neither, and an address of just 长清公路, so it never wins a slot. This is the only venue the rule removes from the shipped library, and a test guards its width.
 - Route and home maps show only the selected day’s stops; the discovery map matches the left-hand search and category filters exactly (`全部`, `景点`, `美食`, `交通`).
 - `web/planner.js` — dependency-free route scoring and Replan logic, shared by the browser and unit tests.
 - Amap provides the standard map, satellite imagery and live-traffic tiles; the route line and marker coordinates are illustrative.
