@@ -64,7 +64,11 @@ SmoothGo/
 ├── web/                  # Static interactive prototype
 ├── presentation/         # English slide deck, PDF backup and speaker notes
 ├── docs/                 # Team plan, presentation outline, Q&A bank, sources
-├── LICENSE
+├── tests/                # Planner tests (node) and server tests (python, stdlib)
+├── LICENSE               # MIT, code only
+├── NOTICE                # Third-party data attribution (Amap)
+├── PRIVACY.md            # What the prototype does with an account
+├── SECURITY.md           # Controls in place, controls missing
 └── README.md
 ```
 
@@ -321,6 +325,23 @@ agent-browser close
 
 SmoothGo does **not** sell tickets or promise priority entry. Queue assistance is presented as a request-and-handoff service only for venues that explicitly allow it. The pilot prioritizes restaurants and non-strict queue environments; scenic-area queueing remains information-only until local rules are confirmed.
 
+The same points are written out for the code itself in [`SECURITY.md`](SECURITY.md), and what the app does with an account is in [`PRIVACY.md`](PRIVACY.md).
+
+## Data sources and attribution
+
+The code in this repository is MIT licensed. **The place data is not.** See [`NOTICE`](NOTICE) for the full text; in short:
+
+- 574 place records (200 attractions, 374 restaurants) were retrieved from the **Amap** POI API — names, coordinates, addresses, districts, opening hours, ratings and, for 560 of them, the listed phone number. Rights remain with 高德软件有限公司 (Autonavi). They are included for non-commercial teaching demonstration only and are subject to the Amap open-platform terms and quota.
+- Photographs are referenced by URL from Amap hosts (`store.is.autonavi.com`, `aos-comment.amap.com`) — 1,074 references, no image file is stored in this repository. Every photo is fetched from Amap when the page renders.
+- `web/place-menus.js` (招牌菜), the 长春地标 / 长春名吃 badges and all queue estimates are **authored by this project**, not sourced from any platform. Queue figures carry `confidence: "低"` and the 参考等候 · 非实时 suffix.
+- 美团 / 点评 / 抖音 / 支付宝 / 微信 / 云闪付 / 长春E出行 are named for identification; their marks belong to their owners.
+
+Regenerating the library against your own key is the intended path if you want to point it at another city:
+
+```bash
+python3 scripts/fetch_poi.py && python3 scripts/build_places.py
+```
+
 ## Roadmap
 
 - **Now:** Changchun pilot with 5–10 partner venues and a clickable prototype.
@@ -333,4 +354,4 @@ Six-member student team, Computer Science, Changchun Normal University.
 
 ## License
 
-MIT License. See `LICENSE`.
+MIT License. See `LICENSE` — it covers the **source code** only. Place data, photographs and third-party marks are covered by the attribution terms in [`NOTICE`](NOTICE).
