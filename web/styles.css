@@ -2104,24 +2104,28 @@ main {
   font-weight: 400;
 }
 
-.ride-qr {
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  gap: 3px;
-  width: 190px;
-  height: 190px;
-  margin: 15px auto;
-  padding: 9px;
-  border: 1px solid var(--ink);
-  background: var(--paper);
+/* App-only OTA rows: the web page is behind a login or bot wall, so this is a
+   copy-the-keyword button rather than a link that dumps them at the door. */
+.booking-channel.search,
+.booking-channel.missing {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: default;
 }
 
-.ride-qr span {
-  background: transparent;
+.booking-channel.search {
+  cursor: pointer;
 }
 
-.ride-qr span.dark {
-  background: var(--ink);
+.booking-channel.missing strong,
+.booking-channel.missing em {
+  opacity: 0.62;
+}
+
+.booking-channel.missing b {
+  color: var(--line-dark, #b4b4b4);
+  font-size: 8px;
 }
 
 .auth-tabs {

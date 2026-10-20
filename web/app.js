@@ -757,47 +757,46 @@ const PLACE_DETAILS = {
 
 PLACES.forEach((place) => Object.assign(place, PLACE_DETAILS[place.id] || {}));
 
-// Static reference rows, not a live feed. They used to promise "2 分钟后到站"
-// and "人民大街 南向北拥堵 · +8 分钟" -- numbers nothing in this app measures.
-// Kept because the transport layer needs somewhere to put its markers, but the
-// copy now describes the line rather than pretending to know its state.
-// Real arrivals need a 公交/地铁 data agreement; the traffic layer toggle does
-// use AMap's own live tile layer, so that one is genuine.
-const TRANSPORT_STATUS = [
-  {
-    id: "bus-42",
-    name: "42 路",
-    type: "公交线路",
-    detail: "开往净月潭方向 · 到站时间未接入",
-    status: "未接入",
-    lng: 125.315,
-    lat: 43.855,
-    x: 46,
-    y: 44
-  },
-  {
-    id: "metro-3",
-    name: "轻轨 3 号线",
-    type: "轨道交通",
-    detail: "运营时间与班次以官方为准",
-    status: "未接入",
-    lng: 125.330,
-    lat: 43.870,
-    x: 58,
-    y: 53
-  },
-  {
-    id: "people-road",
-    name: "人民大街",
-    type: "主要道路",
-    detail: "打开地图右上角路况图层查看实时拥堵",
-    status: "见路况图层",
-    lng: 125.323,
-    lat: 43.860,
-    x: 51,
-    y: 58
+// The transport layer used to show three made-up rows -- "42 路 · 2 分钟后到站",
+// "人民大街 南向北拥堵 · +8 分钟" -- describing a feed this app never had. It now
+// shows the legs of the current plan, with times Amap actually returned. Live
+// bus arrival still needs a 公交 data agreement we do not have; the traffic
+// tile layer is genuine because it is Amap's own.
+let transportRefreshing = false;
+
+function transportLegs(stops = state.route.map(placeById).filter(Boolean)) {
+  const legs = [];
+  for (let index = 0; index < stops.length - 1; index += 1) {
+    const from = stops[index];
+    const to = stops[index + 1];
+    if (!from || !to) continue;
+    const fact = routeFact(from, to);
+    const km = fact?.drive?.km ?? fact?.bus?.km ?? null;
+    const real = fact?.source === "amap";
+    const parts = [];
+    if (fact?.drive?.minutes) parts.push(`驾车 ${fact.drive.minutes} 分钟`);
+    if (fact?.bus?.minutes) parts.push(`公交 ${fact.bus.minutes} 分钟`);
+    // 23 km on foot is a true number and a useless one, so only surface walking
+    // when it is an option anybody would take.
+    if (fact?.walk?.minutes && fact.walk.minutes <= 30) parts.push(`步行 ${fact.walk.minutes} 分钟`);
+    if (Number.isFinite(km)) parts.push(`${km.toFixed(1)} 公里`);
+    legs.push({
+      id: `${from.id}~${to.id}`,
+      toId: to.id,
+      name: `${from.name} → ${to.name}`,
+      type: real ? "高德路线" : "直线估算",
+      detail: real ? parts.join(" · ") : "高德未返回该段路线，暂按直线距离估算",
+      status: real ? "已接入" : "估算",
+      lng:
+        Number.isFinite(from.lng) && Number.isFinite(to.lng) ? (from.lng + to.lng) / 2 : null,
+      lat:
+        Number.isFinite(from.lat) && Number.isFinite(to.lat) ? (from.lat + to.lat) / 2 : null,
+      x: Number.isFinite(from.x) && Number.isFinite(to.x) ? (from.x + to.x) / 2 : null,
+      y: Number.isFinite(from.y) && Number.isFinite(to.y) ? (from.y + to.y) / 2 : null
+    });
   }
-];
+  return legs;
+}
 
 const CONFIG = window.SMOOTHGO_CONFIG || {};
 const AMAP_KEY = String(CONFIG.amapKey || "").trim();
@@ -955,11 +954,109 @@ function distanceKm(from, to) {
 // day's score.
 const travelCache = new Map();
 
+/* ---------- Real routing ----------
+ *
+ * travelBetween() below is a straight-line estimate: haversine x 1.35 detour
+ * factor at 26 km/h. It is honest about being an estimate and it is all the
+ * planner can use, because planning runs synchronously and hundreds of times.
+ *
+ * The display layer can do better. AMap.Driving / Transfer / Walking are
+ * already loaded with the map, so once a plan exists we ask for the real
+ * leg and cache it. Rendering reads routeFacts first and falls back to the
+ * estimate, and every rendered number says which one it is.
+ */
+const ROUTE_PLUGINS = { drive: "Driving", bus: "Transfer", walk: "Walking" };
+const routeFacts = new Map();
+const routePending = new Set();
+const routeStats = { planned: 0, failed: 0 };
+let routeRefreshing = false;
+
+function pairKey(from, to) {
+  return from.id < to.id ? `${from.id}|${to.id}` : `${to.id}|${from.id}`;
+}
+
+function routeFact(from, to) {
+  return from && to ? routeFacts.get(pairKey(from, to)) || null : null;
+}
+
+function planOnce(mode, from, to) {
+  return new Promise((resolve) => {
+    const Plugin = window.AMap?.[ROUTE_PLUGINS[mode]];
+    if (!Plugin || !window.AMap?.LngLat) return resolve(null);
+    if (!Number.isFinite(from?.lng) || !Number.isFinite(from?.lat)) return resolve(null);
+    if (!Number.isFinite(to?.lng) || !Number.isFinite(to?.lat)) return resolve(null);
+
+    let settled = false;
+    const finish = (value) => {
+      if (!settled) {
+        settled = true;
+        resolve(value);
+      }
+    };
+    // A hanging callback must not pin the panel on "loading" forever.
+    const timer = setTimeout(() => finish(null), 8000);
+    const stopTimer = () => clearTimeout(timer);
+
+    try {
+      const options =
+        mode === "bus"
+          ? { city: "长春市", policy: window.AMap.TransferPolicy?.LEAST_TIME }
+          : mode === "drive"
+            ? { policy: window.AMap.DrivingPolicy?.LEAST_TIME }
+            : {};
+      const planner = new Plugin(options);
+      planner.search(new window.AMap.LngLat(from.lng, from.lat), new window.AMap.LngLat(to.lng, to.lat), (status, result) => {
+        stopTimer();
+        if (status !== "complete" || !result) return finish(null);
+        // Driving/Walking return routes[]; Transfer returns plans[].
+        const first = (result.routes || result.plans || [])[0];
+        if (!first) return finish(null);
+        const meters = Number(first.distance);
+        const seconds = Number(first.time);
+        if (!Number.isFinite(meters) || !Number.isFinite(seconds)) return finish(null);
+        finish({ km: meters / 1000, minutes: Math.max(1, Math.round(seconds / 60)) });
+      });
+    } catch {
+      stopTimer();
+      finish(null);
+    }
+  });
+}
+
+// Serial on purpose: the routing service rate-limits, and a day has 2-3 legs.
+async function ensureRouteFacts(stops) {
+  if (!window.AMap || !Array.isArray(stops)) return false;
+  let changed = false;
+  for (let index = 0; index < stops.length - 1; index += 1) {
+    const from = stops[index];
+    const to = stops[index + 1];
+    if (!from || !to || from.id === to.id) continue;
+    const key = pairKey(from, to);
+    if (routeFacts.has(key) || routePending.has(key)) continue;
+    routePending.add(key);
+    const [drive, bus, walk] = await Promise.all([
+      planOnce("drive", from, to),
+      planOnce("bus", from, to),
+      planOnce("walk", from, to)
+    ]);
+    routePending.delete(key);
+    const usable = drive || bus || walk;
+    routeFacts.set(key, { drive, bus, walk, source: usable ? "amap" : "none" });
+    if (usable) routeStats.planned += 1;
+    else routeStats.failed += 1;
+    changed = true;
+  }
+  return changed;
+}
+
 function travelBetween(from, to) {
   if (!from || !to) return 15;
   if (from.id === to.id) return 0;
   if (!Number.isFinite(from.lat) || !Number.isFinite(to.lat)) return 15;
-  const key = from.id < to.id ? `${from.id}|${to.id}` : `${to.id}|${from.id}`;
+  const key = pairKey(from, to);
+  // A real Amap leg wins over the cached estimate.
+  const fact = routeFacts.get(key);
+  if (fact?.drive?.minutes) return fact.drive.minutes;
   const cached = travelCache.get(key);
   if (cached !== undefined) return cached;
   const km = distanceKm(from, to);
@@ -969,15 +1066,29 @@ function travelBetween(from, to) {
 }
 
 function transportOptions(from, to) {
-  const drive = travelBetween(from, to);
-  const bus = drive + 14 + (drive > 18 ? 4 : 0);
-  const taxi = Math.max(12, Math.round(PLACES.find((p) => p.id === to.id)?.distance * 3.4 || drive * 0.8));
+  const fact = routeFact(from, to);
+  const fallbackDrive = travelBetween(from, to);
+  const km = fact?.drive?.km || fact?.bus?.km || distanceKm(from, to);
+  const distLabel = Number.isFinite(km) ? `${km.toFixed(1)} 公里` : "距离待接入";
+
+  if (fact?.source === "amap") {
+    const drive = fact.drive?.minutes || null;
+    const bus = fact.bus?.minutes || null;
+    const rows = [];
+    if (drive) rows.push({ mode: "car", label: `驾车 ${drive} 分钟`, active: !bus });
+    if (bus) rows.push({ mode: "bus", label: `公交 ${bus} 分钟`, active: !drive });
+    if (!drive && !bus) rows.push({ mode: "car", label: `驾车约 ${fallbackDrive} 分钟`, active: true });
+    rows.push({ mode: "taxi", label: `打车 ${distLabel}`, active: false });
+    return rows;
+  }
+
   return [
-    { mode: "car", label: `驾车 ${drive} 分钟`, active: true },
-    { mode: "bus", label: `公交 ${bus} 分钟`, active: false },
-    { mode: "taxi", label: `打车 ¥${taxi}`, active: false }
+    { mode: "car", label: `驾车约 ${fallbackDrive} 分钟`, active: true },
+    { mode: "bus", label: "公交未接入", active: false },
+    { mode: "taxi", label: `打车 ${distLabel}`, active: false }
   ];
 }
+
 
 function buildSchedule(route = state.route) {
   const summary = PLANNER.summarize(
@@ -1236,17 +1347,19 @@ function renderAmap(element, mode = "map") {
     let markers = [];
     let fitBounds = null;
     if (mode === "map" && state.mapLayer === "transport") {
-      markers = TRANSPORT_STATUS.map((status) => {
-        const content = document.createElement("div");
-        content.className = "amap-transport-marker";
-        content.innerHTML = `<strong>${status.name}</strong><span>${status.detail}</span>`;
-        return new AMap.Marker({
-          position: [status.lng, status.lat],
-          content,
-          anchor: "center",
-          zIndex: 140
+      markers = transportLegs()
+        .filter((leg) => Number.isFinite(leg.lng) && Number.isFinite(leg.lat))
+        .map((leg) => {
+          const content = document.createElement("div");
+          content.className = "amap-transport-marker";
+          content.innerHTML = `<strong>${escapeHtml(leg.name)}</strong><span>${escapeHtml(leg.detail)}</span>`;
+          return new AMap.Marker({
+            position: [leg.lng, leg.lat],
+            content,
+            anchor: "center",
+            zIndex: 140
+          });
         });
-      });
     } else {
       const visiblePlaces =
         mode === "map"
@@ -1372,14 +1485,17 @@ function renderSchematicMap(element, mode = "map") {
 
   let markers = "";
   if (mode === "map" && state.mapLayer === "transport") {
-    markers = TRANSPORT_STATUS.map(
-      (status) => `
-        <span class="map-transport-marker" style="left:${status.x}%;top:${status.y}%">
-          <strong>${status.name}</strong>
-          <span>${status.detail}</span>
+    markers = transportLegs()
+      .filter((leg) => Number.isFinite(leg.x) && Number.isFinite(leg.y))
+      .map(
+        (leg) => `
+        <span class="map-transport-marker" style="left:${leg.x}%;top:${leg.y}%">
+          <strong>${escapeHtml(leg.name)}</strong>
+          <span>${escapeHtml(leg.detail)}</span>
         </span>
       `
-    ).join("");
+      )
+      .join("");
   } else {
     const visiblePlaces =
       mode === "map"
@@ -1581,21 +1697,38 @@ function renderPlaceList() {
   ).length;
 
   if (state.mapLayer === "transport") {
+    const stops = state.route.map(placeById).filter(Boolean);
+    // Real legs arrive asynchronously; repaint once they do.
+    if (stops.length > 1 && !transportRefreshing) {
+      transportRefreshing = true;
+      ensureRouteFacts(stops)
+        .then((changed) => {
+          transportRefreshing = false;
+          if (changed && state.mapLayer === "transport") renderPlaceList();
+        })
+        .catch(() => {
+          transportRefreshing = false;
+        });
+    }
     const query = state.mapSearch.trim().toLowerCase();
-    const transport = TRANSPORT_STATUS.filter((status) =>
-      `${status.name}${status.type}${status.detail}`.toLowerCase().includes(query)
+    const transport = transportLegs(stops).filter((leg) =>
+      `${leg.name}${leg.detail}`.toLowerCase().includes(query)
     );
-    $("#mapCount").textContent = `交通 · ${transport.length} 条线路`;
-    $("#placeList").innerHTML = transport.map(
-      (status) => `
+    $("#mapCount").textContent = `交通 · ${transport.length} 段真实路段`;
+    $("#placeList").innerHTML =
+      transport
+        .map(
+          (leg) => `
         <article class="place-card transport-card">
-          <div class="place-card-head"><strong>${status.name}</strong><span>${status.type}</span></div>
-          <div class="place-meta">${status.detail}</div>
-          <div class="place-queue">${status.status}</div>
-          <div class="place-actions"><button type="button" data-ride-code="${status.id}">乘车码</button></div>
+          <div class="place-card-head"><strong>${escapeHtml(leg.name)}</strong><span>${leg.type}</span></div>
+          <div class="place-meta">${escapeHtml(leg.detail)}</div>
+          <div class="place-queue">${leg.status}</div>
+          <div class="place-actions"><button type="button" data-nav="${leg.toId}">导航</button></div>
         </article>
       `
-    ).join("") || `<div class="notice compact">没有匹配的交通状态。</div>`;
+        )
+        .join("") ||
+      `<div class="notice compact">交通图层显示的是当前行程相邻站点之间的真实路段，先去地图把地点加进路线。</div>`;
     renderMap($("#mapViewMap"), "map");
     return;
   }
@@ -1845,24 +1978,48 @@ function renderRoute() {
     $("#routeList").innerHTML = html;
   }
 
-  // These three rows used to be hardcoded strings ("14:20", "42 路 · 2 min",
-  // "人民大街 · +8 min") that never changed and reflected nothing real. Live bus
-  // arrival and road conditions need a feed we do not have, so show the panel as
-  // an explicit placeholder instead of numbers that look authoritative.
+  // This panel used to print hardcoded strings ("14:20", "42 路 · 2 min",
+  // "人民大街 · +8 min") that never changed and reflected nothing real. It now
+  // reports where the leg times actually came from. Live bus arrival still has
+  // no feed, so that row stays an explicit placeholder.
   const liveOverlay = $("#routeLiveOverlay");
   if (liveOverlay) {
-    const hasTraffic = Boolean(state.trafficVisible);
+    const legs = [];
+    for (let index = 0; index < schedule.stops.length - 1; index += 1) {
+      legs.push(routeFact(schedule.stops[index], schedule.stops[index + 1]));
+    }
+    const real = legs.filter((fact) => fact?.source === "amap").length;
+    const pending = legs.filter((fact) => !fact).length;
+    const tag = real ? "高德" : pending ? "规划中" : "估算";
+    const legLabel = real
+      ? `${real}/${legs.length} 段真实`
+      : pending
+        ? "正在向高德请求…"
+        : "按直线距离估算";
     liveOverlay.innerHTML = `
-      <div class="map-live-title"><strong>实时信息</strong><span class="live-tag">未接入</span></div>
-      <div class="map-live-row muted"><span>实时公交</span><strong>未接入</strong></div>
-      <div class="map-live-row muted"><span>轻轨</span><strong>未接入</strong></div>
-      <div class="map-live-row muted"><span>路况</span><strong>${
-        hasTraffic ? "图层已开启 · 无实时数据" : "未接入"
+      <div class="map-live-title"><strong>路线数据</strong><span class="live-tag">${tag}</span></div>
+      <div class="map-live-row${real ? "" : " muted"}"><span>驾车 · 公交</span><strong>${legLabel}</strong></div>
+      <div class="map-live-row muted"><span>实时到站</span><strong>未接入</strong></div>
+      <div class="map-live-row muted"><span>路况图层</span><strong>${
+        state.trafficVisible ? "已开启" : "未开启"
       }</strong></div>
     `;
   }
   renderReplanBanner();
   renderMap($("#routeMap"), "route");
+
+  // Fetch the real legs once the panel is on screen, then repaint with them.
+  if (schedule.stops.length > 1 && !routeRefreshing) {
+    routeRefreshing = true;
+    ensureRouteFacts(schedule.stops)
+      .then((changed) => {
+        routeRefreshing = false;
+        if (changed && schedule.stops.length > 1) renderRoute();
+      })
+      .catch(() => {
+        routeRefreshing = false;
+      });
+  }
 }
 
 function renderReplanBanner() {
@@ -2524,97 +2681,189 @@ function openPlaceModal(id) {
 // whoever does sell the ticket. Every place came from Amap, so its Amap page
 // always exists and always carries the official phone; everything else is a
 // search URL rather than a deep link we could not guarantee resolves.
-function bookingChannels(place) {
-  const channels = [];
-  if (place.website) {
-    const raw = String(place.website).trim();
-    channels.push({
+// 美团 / 点评的网页搜索页对未登录访客不可用：实测会跳 mlogin.dianping.com
+// 登录墙或 verify.meituan.com 风控页。把它们当可用链接列出来是假的，所以这
+// 两个只给关键词，让用户在已登录的本机 App 里搜。
+const OTA_APP_ONLY = new Set(["meituan", "dianping"]);
+
+// Set once /api/booking/channels answers. Until then links point straight at
+// the destination, which is what the standalone build has to do anyway.
+let bookingServerOk = false;
+
+function bookingQuery(place) {
+  const tel = place.tel ? String(place.tel).replace(/[^0-9+\-(),;]/g, "").slice(0, 32) : "";
+  return {
+    place: place.id || "",
+    name: place.name || "",
+    lng: Number.isFinite(place.lng) ? String(place.lng) : "",
+    lat: Number.isFinite(place.lat) ? String(place.lat) : "",
+    tel
+  };
+}
+
+function amapPoiUrl(place) {
+  if (!Number.isFinite(place.lng) || !Number.isFinite(place.lat)) return null;
+  return (
+    `https://uri.amap.com/marker?position=${place.lng},${place.lat}` +
+    `&name=${encodeURIComponent(place.name)}&src=SmoothGo&coordinate=gaode&callnative=1`
+  );
+}
+
+// Mirrors server/app.py:booking_channels_for so the static build behaves the
+// same when no API is running.
+function localBookingChannels(place) {
+  const name = place.name || "";
+  const tel = bookingQuery(place).tel;
+  const amap = amapPoiUrl(place);
+  const channels = [
+    {
+      key: "official_miniprogram",
+      label: "官方小程序",
+      note: "未收录链接 —— 复制名称，到微信搜索官方小程序",
+      available: false,
+      url: null,
+      kind: "search",
+      searchHint: name
+    },
+    {
+      key: "official_site",
       label: "官方网站",
-      note: "该机构在高德登记的官网地址",
-      url: /^https?:/i.test(raw) ? raw : `https://${raw}`
-    });
-  }
-  if (place.tel) {
-    channels.push({
-      label: `电话 ${place.tel}`,
-      note: "订票、订座与开放时间以对方答复为准",
-      url: `tel:${place.tel}`
-    });
-  }
-  if (typeof place.lng === "number" && typeof place.lat === "number") {
-    channels.push({
+      note: place.website ? "该机构在高德登记的官网地址" : "未收录官方站点",
+      available: Boolean(place.website),
+      url: place.website
+        ? /^https?:/i.test(String(place.website).trim())
+          ? String(place.website).trim()
+          : `https://${String(place.website).trim()}`
+        : null,
+      kind: place.website ? "link" : "none"
+    },
+    {
+      key: "phone",
+      label: tel ? `电话 ${tel}` : "场馆电话",
+      note: tel ? "订票、订座与开放时间以对方答复为准" : "该地点暂无登记电话",
+      available: Boolean(tel),
+      url: tel ? `tel:${tel}` : null,
+      kind: tel ? "tel" : "none"
+    },
+    {
+      key: "amap",
       label: "高德 POI 详情页",
-      note: "该地点的完整档案：电话、公告与商家入口",
-      url:
-        `https://uri.amap.com/marker?position=${place.lng},${place.lat}` +
-        `&name=${encodeURIComponent(place.name)}&src=SmoothGo&coordinate=gaode&callnative=1`
-    });
-  }
-  channels.push({
-    label: "美团",
-    note: "搜索该名称，门票与团购以美团页面为准",
-    url: externalSearchUrl("meituan", place.name)
-  });
-  channels.push({
-    label: "大众点评",
-    note: "搜索该名称查看评价与套餐",
-    url: externalSearchUrl("dianping", place.name)
-  });
-  channels.push({
-    label: "抖音",
-    note: "搜索该名称查看团购",
-    url: externalSearchUrl("douyin", place.name)
-  });
+      note: "完整档案：电话、公告与商家入口",
+      available: Boolean(amap),
+      url: amap,
+      kind: amap ? "link" : "none"
+    },
+    {
+      key: "meituan",
+      label: "美团",
+      note: `在本机美团 App 内搜索「${name}」`,
+      available: false,
+      url: externalSearchUrl("meituan", name),
+      kind: "search",
+      searchHint: name
+    },
+    {
+      key: "dianping",
+      label: "大众点评",
+      note: `在本机大众点评 App 内搜索「${name}」`,
+      available: false,
+      url: externalSearchUrl("dianping", name),
+      kind: "search",
+      searchHint: name
+    },
+    {
+      key: "douyin",
+      label: "抖音",
+      note: `搜索「${name}」查看团购`,
+      available: Boolean(name),
+      url: externalSearchUrl("douyin", name),
+      kind: "link"
+    }
+  ];
   return channels;
 }
 
-function renderBookingChannels() {
-  const place = placeById(state.bookingPlace);
-  if (!place) return;
-  const isFood = place.category === "food";
-  $("#ticketTitle").textContent = `${place.name} · ${isFood ? "订座渠道" : "购票渠道"}`;
-  $("#ticketDesc").textContent = `以下为第三方渠道，${
-    isFood ? "是否成功订座" : "票价、库存与开放时间"
-  }以对方页面为准。`;
-  $("#bookingOptions").innerHTML = bookingChannels(place)
+function bookingChannelHref(place, channel) {
+  if (!channel.url) return null;
+  // Route through our own /api/go so a dead link can be fixed server-side.
+  // It never takes a URL from the caller, so ?url= cannot turn it into an
+  // open redirect.
+  if (bookingServerOk && channel.available && !OTA_APP_ONLY.has(channel.key)) {
+    const params = new URLSearchParams({ ...bookingQuery(place), ch: channel.key });
+    return `${API_BASE}/api/go?${params.toString()}`;
+  }
+  return channel.url;
+}
+
+function renderBookingRows(place, channels) {
+  $("#bookingOptions").innerHTML = channels
     .map((channel) => {
-      const external = /^https?:/i.test(channel.url);
-      return `<a class="booking-channel" href="${escapeHtml(channel.url)}"${
+      const label = escapeHtml(channel.label);
+      const note = escapeHtml(channel.note);
+      if (channel.kind === "search") {
+        return `<button class="booking-channel search" type="button" data-copy="${escapeHtml(
+          channel.searchHint || place.name
+        )}">
+          <span><strong>${label}</strong><em>${note}</em></span>
+          <b>复制</b>
+        </button>`;
+      }
+      if (!channel.available || !channel.url) {
+        return `<div class="booking-channel missing">
+          <span><strong>${label}</strong><em>${note}</em></span>
+          <b>未收录</b>
+        </div>`;
+      }
+      const href = bookingChannelHref(place, channel);
+      const external = /^https?:/i.test(href);
+      return `<a class="booking-channel" href="${escapeHtml(href)}"${
         external ? ' target="_blank" rel="noreferrer noopener"' : ""
       }>
-          <span><strong>${escapeHtml(channel.label)}</strong><em>${escapeHtml(channel.note)}</em></span>
+          <span><strong>${label}</strong><em>${note}</em></span>
           <b>↗</b>
         </a>`;
     })
     .join("");
+}
+
+async function renderBookingChannels() {
+  const place = placeById(state.bookingPlace);
+  if (!place) return;
+  const isFood = place.category === "food";
+  $("#ticketTitle").textContent = `${place.name} · ${isFood ? "订座渠道" : "购票渠道"}`;
+  $("#ticketDesc").textContent = `SmoothGo 不出票、不收款。以下为第三方渠道，${
+    isFood ? "是否成功订座" : "票价、库存与开放时间"
+  }以对方页面为准。`;
+  // Paint local rows first so the panel is never empty while the API answers.
+  renderBookingRows(place, localBookingChannels(place));
   $("#bookingFootnote").textContent =
-    "多数景区只在其官方微信公众号 / 小程序售票或分时预约，微信内搜索该名称即可抵达。" +
+    "多数景区只在其官方微信公众号 / 小程序售票或分时预约；官方小程序链接需由景区自己提供，收录后可直跳。" +
     "滑雪场多数雪季也是先预约后到场。";
+
+  try {
+    const params = new URLSearchParams(bookingQuery(place));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    const response = await fetch(`${API_BASE}/api/booking/channels?${params.toString()}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (!response.ok) throw new Error(String(response.status));
+    const data = await response.json();
+    if (Array.isArray(data.channels) && data.channels.length) {
+      bookingServerOk = true;
+      renderBookingRows(place, data.channels);
+    }
+  } catch {
+    // No API (static file, offline, or file://) -- local rows stay.
+    bookingServerOk = false;
+  }
 }
 
 function openBookingModal(id) {
   state.bookingPlace = id;
   renderBookingChannels();
   openModal("ticketModal");
-}
-
-function openRideModal(id) {
-  const status = TRANSPORT_STATUS.find((item) => item.id === id);
-  if (!status) return;
-  $("#rideTitle").textContent = `${status.name} 乘车码`;
-  $("#rideDesc").textContent = `${status.detail}。演示环境不会真实扣费。`;
-  const seed = [...status.name].reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  $("#rideQr").innerHTML = Array.from({ length: 81 }, (_, index) => {
-    const row = Math.floor(index / 9);
-    const col = index % 9;
-    const finder =
-      (row < 3 && col < 3) ||
-      (row < 3 && col > 5) ||
-      (row > 5 && col < 3);
-    const dark = finder || (index * 7 + seed) % 7 < 3;
-    return `<span class="${dark ? "dark" : ""}"></span>`;
-  }).join("");
-  openModal("rideModal");
 }
 
 function extractKeywords() {
@@ -2837,6 +3086,29 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const copy = event.target.closest("[data-copy]");
+  if (copy) {
+    event.preventDefault();
+    const text = copy.dataset.copy || "";
+    const done = () => showToast(`已复制「${text}」，到 App 里粘贴搜索`);
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(done, done);
+    } else {
+      const field = document.createElement("textarea");
+      field.value = text;
+      document.body.appendChild(field);
+      field.select();
+      try {
+        document.execCommand("copy");
+      } catch {
+        /* clipboard blocked -- the toast still tells them what to search */
+      }
+      field.remove();
+      done();
+    }
+    return;
+  }
+
   const remove = event.target.closest("[data-remove]");
   if (remove) {
     toggleRoute(remove.dataset.remove);
@@ -2865,12 +3137,6 @@ document.addEventListener("click", (event) => {
   if (nav) {
     event.stopPropagation();
     openNavigation(placeById(nav.dataset.nav));
-    return;
-  }
-
-  const ride = event.target.closest("[data-ride-code]");
-  if (ride) {
-    openRideModal(ride.dataset.rideCode);
     return;
   }
 
@@ -3202,11 +3468,6 @@ $("#ticketModal").addEventListener("click", (event) => {
   if (event.target.id === "ticketModal") closeModal("ticketModal");
 });
 
-$("#rideModalClose").addEventListener("click", () => closeModal("rideModal"));
-$("#rideModal").addEventListener("click", (event) => {
-  if (event.target.id === "rideModal") closeModal("rideModal");
-});
-
 $("#membershipButton").addEventListener("click", () => {
   showToast("会员权益为演示内容：多日路线、更多排队预测次数");
 });
@@ -3223,7 +3484,6 @@ document.addEventListener("keydown", (event) => {
     closeModal("queueModal");
     closeModal("placeModal");
     closeModal("ticketModal");
-    closeModal("rideModal");
     closeModal("legalModal");
   }
 });

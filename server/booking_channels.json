@@ -1,0 +1,22 @@
+{
+  "_readme": [
+    "Per-place booking channels. This file is the single place to edit when a",
+    "venue publishes a real ticketing link. Anything absent here is reported as",
+    "未收录 rather than guessed -- a wrong appid or a made-up link is worse than",
+    "no link, because it fails silently for the user.",
+    "",
+    "miniprogram.appid / miniprogram.urlLink -- WeChat does NOT let a third",
+    "party mint a URL Scheme or URL Link for somebody else's mini program; only",
+    "the mini program's own AppSecret can do that. So these two fields can only",
+    "be filled with a link the venue itself published (often obtainable from the",
+    "mini program's own share menu, or handed over by the merchant).",
+    "  appid   -> renders <wx-open-launch-weapp> and opens the mini program",
+    "             in-app. Needs CONFIG.wxAppId (a verified 服务号) set in",
+    "             web/config.js and the page served inside WeChat.",
+    "  urlLink -> a https://wxaurl.cn/... link, works in any browser.",
+    "",
+    "site -- the venue's own booking page, if it has one.",
+    "note -- shown verbatim under the channel row."
+  ],
+  "places": {}
+}

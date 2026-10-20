@@ -26,11 +26,11 @@ The current web prototype demonstrates:
 3. **Multi-day route planning** — Day tabs, one meal per day, budget-aware choices, and a map that only shows the currently selected day.
 4. **Replan** — replace the busiest stop in the selected day with a same-category alternative, explain the trade-off and undo the change.
 5. **Map navigation** — standard or satellite base map, an Amap live-traffic overlay, and one-tap navigation handoff to Amap. No crowd counters: any number of that kind would be invented.
-6. **Booking handoff** — each place links out to whoever actually sells the ticket: the venue's own phone line (426 of 574 places have one), its Amap POI page, 美团, 点评 and 抖音. SmoothGo issues no order, takes no payment and shows no fare table.
+6. **Booking handoff** — each place links out to whoever actually sells the ticket: the venue's own phone line (426 of 574 places have one), its Amap POI page, 美团, 点评 and 抖音. Links go through our own `/api/go` so a dead one can be fixed server-side; that endpoint never accepts a URL from the caller, so it cannot be turned into an open redirect. SmoothGo issues no order, takes no payment and shows no fare table. 美团 and 点评 are **copy-the-keyword** rows, not links: their web search pages sit behind a login or bot wall (verified — they redirect to `mlogin.dianping.com` and `verify.meituan.com`), so pointing a logged-out visitor at them would be pointing at a door. Official WeChat mini-program links are supported but unlisted: a third party cannot mint a URL Scheme for somebody else's mini program, so that field stays empty until a venue hands us its own link.
 7. **Queue assist demo** — a request pins a card showing the wait length you picked. It does not tick down, because no queue feed is connected.
 8. **Account and queue assist demos** — guest preview, phone login, saved multi-day routes and membership-quota preview.
 
-**Place identity is real.** Names, coordinates, districts, opening hours, scores and photos come from the Amap POI API. Everything else is either derived — travel time from a haversine distance, average spend from a category band — or explicitly labelled 未接入 / 演示. There is no real payment, SMS, ticketing or queue-assistance order in this version.
+**Place identity is real.** Names, coordinates, districts, opening hours, scores and photos come from the Amap POI API. Everything else is either derived — average spend from a category band, travel time from a distance estimate or an Amap route — or explicitly labelled 未接入 / 演示. There is no real payment, SMS, ticketing or queue-assistance order in this version.
 
 ## Live demo
 
@@ -279,12 +279,19 @@ name before its satellite venues.
 connected for weather, bus arrival, road congestion, queue length or ticketing,
 so those panels say **未接入** instead of showing a number that looks
 authoritative. What *is* real: place identity, coordinates, opening hours and
-photos come from Amap; route travel time is a haversine distance estimate at 26
-km/h, clamped to 8–90 minutes; the road-colour layer is Amap's own
-`TileLayer.Traffic`. Queue ranges are estimates (`confidence: "低"`) drawn from
-two narrow constants, which is why they are excluded from the home-page
-"waiting venues" signal and every card that shows one carries the suffix
-**参考等候 · 非实时**.
+photos come from Amap; the road-colour layer is Amap's own `TileLayer.Traffic`.
+Queue ranges are estimates (`confidence: "低"`) drawn from two narrow constants,
+which is why they are excluded from the home-page "waiting venues" signal and
+every card that shows one carries the suffix **参考等候 · 非实时**.
+
+**Travel time has two tiers, and the UI says which one it is showing.** The
+planner needs a number hundreds of times per keystroke, and it runs
+synchronously, so it uses haversine x 1.35 at 26 km/h clamped to 8–90 minutes.
+Once a plan is on screen the display layer asks `AMap.Driving` / `Transfer` /
+`Walking` for the real leg and repaints; the route panel carries a 高德 / 估算
+tag and the transport layer lists the real legs it got. Where Amap returns
+nothing (no transit option, request refused, offline) the estimate stays and is
+labelled as one.
 
 With 574 places on the map, pins overlap badly at city zoom, so the map view
 switches to `AMap.MarkerCluster` above 60 visible places. Clusters render as

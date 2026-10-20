@@ -118,6 +118,27 @@ SMS_WEBHOOK_TOKEN=...
 调整。请求会保存地点类型、前方桌数/人数和初始等待时间，供网页端展示置顶动态；
 但只写入演示记录，不派单、不收款、不出票。
 
+## 4b. 购票渠道中转（无需登录）
+
+- `GET /api/booking/channels?place=<id>&name=&lng=&lat=&tel=`
+  返回该地点全部渠道，不可用的也返回，只是 `available: false` 并说明原因。
+- `GET /api/go?place=<id>&ch=<渠道>&name=&lng=&lat=&tel=` 302 跳转到目标。
+
+渠道取自 `server/booking_channels.json`，也可以只靠查询参数拼装：
+
+| ch | 来源 | 说明 |
+|---|---|---|
+| `official_miniprogram` | 注册表 | 只有场馆自己提供的 URL Link 才能填；第三方无权生成别人的小程序 Scheme |
+| `official_site` | 注册表 | 场馆官网 |
+| `phone` | `tel` 参数 | `tel:` 直拨 |
+| `amap` | `lng` / `lat` | 高德 POI 详情页，全库保底可用 |
+| `meituan` / `dianping` | — | 返回 409 并要求在 App 内搜索，网页版有登录墙/风控 |
+| `douyin` | `name` | 搜索页 |
+
+`/api/go` **不接受任何 URL 参数**，只接受数据，目标地址一律由服务端拼装，
+因此无法被当作开放重定向使用。网页端拿不到接口时（静态部署、离线）会自动
+退回本地拼装的直链，行为一致。
+
 ## 5. POI 门店搜索（可选）
 
 网页端默认用浏览器里的 `AMap.PlaceSearch` 直接查门店，用的是 JS API Key，

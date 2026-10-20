@@ -38,6 +38,7 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parent
 WEB_DIR = ROOT.parent / "web"
 DATA_DIR = ROOT / "data"
+BOOKING_CHANNELS_FILE = ROOT / "booking_channels.json"
 
 
 def load_env(path: Path) -> None:
@@ -539,6 +540,197 @@ def split_list(value: str) -> list[str]:
     return [item for item in str(value or "").split("|") if item]
 
 
+# --- Booking handoff -------------------------------------------------------
+#
+# SmoothGo does not sell anything. Every channel below is somewhere else's
+# checkout, and this layer exists for two reasons: the links live in one file
+# that can be corrected without redeploying the front end, and nothing here
+# accepts a URL from the caller -- an open redirect would let anybody mint
+# https://oursite/api/go?url=phish.tld with our domain on it.
+
+CHANNEL_KEYS = (
+    "official_miniprogram",
+    "official_site",
+    "phone",
+    "amap",
+    "meituan",
+    "dianping",
+    "douyin",
+)
+
+# Measured, not assumed. Both of these were checked with a mobile UA and a
+# follow-redirects request; the web search pages are not reachable by a logged
+# out visitor, so linking to them as if they were is a lie.
+#   点评 m.dianping.com/search/keyword/... -> 302 to mlogin.dianping.com (login wall)
+#   美团 i.meituan.com/s/...              -> 302 to verify.meituan.com (bot wall)
+# What does work is the native app: a keyword they can paste into it.
+OTA_SEARCH_ONLY = {"meituan", "dianping"}
+
+
+def load_booking_channels() -> dict:
+    if not BOOKING_CHANNELS_FILE.exists():
+        return {}
+    try:
+        with BOOKING_CHANNELS_FILE.open(encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return {}
+    places = data.get("places")
+    return places if isinstance(places, dict) else {}
+
+
+def safe_lnglat(lng: str, lat: str):
+    try:
+        lng_val = float(lng)
+        lat_val = float(lat)
+    except (TypeError, ValueError):
+        return None
+    if not (-180 <= lng_val <= 180 and -90 <= lat_val <= 90):
+        return None
+    return lng_val, lat_val
+
+
+def clean_tel(value: str) -> str:
+    """Keep only characters a phone scheme can carry."""
+    tel = re.sub(r"[^0-9+\-(),;]", "", str(value or "").strip())
+    return tel[:32]
+
+
+def amap_poi_url(lng: float, lat: float, name: str) -> str:
+    return (
+        f"https://uri.amap.com/marker?position={lng},{lat}"
+        f"&name={quote(str(name)[:40])}&src=SmoothGo&coordinate=gaode&callnative=1"
+    )
+
+
+def channel_url(key: str, query: dict, entry: dict):
+    """Resolve one channel to a URL, or None when it is not available.
+
+    `query` carries only data, never a URL: name, lng, lat, tel.
+    """
+    name = str(query.get("name") or "")[:60].strip()
+    tel = clean_tel(query.get("tel") or "")
+    coords = safe_lnglat(query.get("lng") or "", query.get("lat") or "")
+
+    if key == "official_miniprogram":
+        mini = (entry or {}).get("miniprogram") or {}
+        return mini.get("urlLink") or None
+    if key == "official_site":
+        site = str((entry or {}).get("site") or "").strip()
+        if not site:
+            return None
+        return site if site.startswith(("http://", "https://")) else f"https://{site}"
+    if key == "phone":
+        return f"tel:{tel}" if tel else None
+    if key == "amap":
+        return amap_poi_url(*coords, name) if coords else None
+    if key == "meituan":
+        return f"https://i.meituan.com/search/keyword?q={quote(name)}" if name else None
+    if key == "dianping":
+        return f"https://m.dianping.com/search/keyword/0/0_{quote(name)}" if name else None
+    if key == "douyin":
+        return f"https://www.douyin.com/search/{quote(name)}" if name else None
+    return None
+
+
+def booking_channels_for(query: dict) -> list[dict]:
+    """Describe every channel for one place, including the missing ones.
+
+    A channel that is not available is still returned with `available: false`
+    so the panel can say why instead of silently dropping the row.
+    """
+    entry = load_booking_channels().get(str(query.get("place") or ""), {}) or {}
+    name = str(query.get("name") or "").strip()
+    tel = clean_tel(query.get("tel") or "")
+    mini = entry.get("miniprogram") or {}
+    channels = []
+
+    for key in CHANNEL_KEYS:
+        url = channel_url(key, query, entry)
+        if key == "official_miniprogram":
+            state = "ok" if url or mini.get("appid") else "missing"
+            note = (
+                "微信内直接打开该景区小程序"
+                if state == "ok"
+                else "未收录链接 —— 复制名称，到微信搜索官方小程序"
+            )
+            channels.append(
+                {
+                    "key": key,
+                    "label": mini.get("name") or "官方小程序",
+                    "note": note,
+                    "available": state == "ok",
+                    "url": url,
+                    "kind": (
+                        "miniprogram"
+                        if mini.get("appid")
+                        else "link"
+                        if url
+                        else "search"
+                    ),
+                    "appid": mini.get("appid") or "",
+                    "path": mini.get("path") or "",
+                    "searchHint": name,
+                }
+            )
+            continue
+        if key == "phone":
+            channels.append(
+                {
+                    "key": key,
+                    "label": f"电话 {tel}" if tel else "场馆电话",
+                    "note": "订票、订座与开放时间以对方答复为准" if tel else "该地点暂无登记电话",
+                    "available": bool(tel),
+                    "url": url,
+                    "kind": "tel" if url else "none",
+                }
+            )
+            continue
+        if key == "official_site":
+            site = str(entry.get("site") or "").strip()
+            channels.append(
+                {
+                    "key": key,
+                    "label": "官方网站",
+                    "note": "该机构登记的官网地址" if site else "未收录官方站点",
+                    "available": bool(site),
+                    "url": url,
+                    "kind": "link" if site else "none",
+                }
+            )
+            continue
+        if key == "amap":
+            channels.append(
+                {
+                    "key": key,
+                    "label": "高德 POI 详情页",
+                    "note": "完整档案：电话、公告与商家入口",
+                    "available": bool(url),
+                    "url": url,
+                    "kind": "link" if url else "none",
+                }
+            )
+            continue
+        # OTA rows: reachable only inside the native app.
+        label = {"meituan": "美团", "dianping": "大众点评", "douyin": "抖音"}[key]
+        channels.append(
+            {
+                "key": key,
+                "label": label,
+                "note": (
+                    f"在本机 {label} App 内搜索「{name}」"
+                    if key in OTA_SEARCH_ONLY
+                    else f"搜索「{name}」查看团购"
+                ),
+                "available": bool(url) and key not in OTA_SEARCH_ONLY,
+                "url": url,
+                "kind": "search" if key in OTA_SEARCH_ONLY else "link",
+                "searchHint": name,
+            }
+        )
+    return channels
+
+
 def join_list(values) -> str:
     """Encode a list into a pipe-separated column.
 
@@ -644,10 +836,60 @@ class Handler(SimpleHTTPRequestHandler):
         value = self.headers.get("Authorization", "")
         return value[7:].strip() if value.startswith("Bearer ") else ""
 
+    def redirect_response(self, location: str):
+        self.send_response(302)
+        self.send_header("Location", location)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def booking_params(self) -> dict:
+        query = parse_qs(urlparse(self.path).query)
+        return {
+            "place": (query.get("place") or [""])[0][:64],
+            "name": (query.get("name") or [""])[0][:60],
+            "lng": (query.get("lng") or [""])[0][:16],
+            "lat": (query.get("lat") or [""])[0][:16],
+            "tel": (query.get("tel") or [""])[0][:48],
+        }
+
+    def handle_booking(self, path: str):
+        params = self.booking_params()
+        if path == "/api/booking/channels":
+            self.json_response(
+                200,
+                {
+                    "place": params["place"],
+                    "name": params["name"],
+                    "channels": booking_channels_for(params),
+                },
+            )
+            return
+
+        key = parse_qs(urlparse(self.path).query).get("ch", [""])[0]
+        if key not in CHANNEL_KEYS:
+            self.json_response(400, {"error": "未知渠道"})
+            return
+        entry = load_booking_channels().get(params["place"], {}) or {}
+        url = channel_url(key, params, entry)
+        if not url:
+            self.json_response(404, {"error": "该渠道未收录"})
+            return
+        # 美团/点评网页版会跳登录页或风控页，跳过去等于把用户丢在门口。
+        if key in OTA_SEARCH_ONLY:
+            self.json_response(
+                409,
+                {"error": "网页版需登录或被风控拦截，请在本机 App 内搜索", "searchHint": params["name"]},
+            )
+            return
+        self.redirect_response(url)
+
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/api/health":
             self.json_response(200, {"ok": True, "provider": SMS_PROVIDER})
+            return
+        if path in ("/api/booking/channels", "/api/go"):
+            self.handle_booking(path)
             return
         if path == "/api/poi/search":
             query = parse_qs(urlparse(self.path).query)
