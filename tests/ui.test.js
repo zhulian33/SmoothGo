@@ -190,3 +190,28 @@ test("adding a place from its modal grows the route", () => {
   assert.notEqual(after, before, "adding a place did not change the route size");
   click("#placeModalClose");
 });
+
+test("every input has an accessible name", () => {
+  /* Screen readers do not read placeholder text as an accessible name, and
+     WebAIM/WCAG explicitly says not to rely on it. So an <input> needs either
+     aria-label, aria-labelledby, title, or a wrapping <label> with text --
+     otherwise a screen-reader user has no idea what the field collects.
+
+     Bare visual labels (the bare <span> + <input> pair inside the planner
+     fields) usually DO wrap with <label class="field">, so the closest-label
+     check is what catches the ones that don't. */
+  const named = (input) => {
+    if (input.getAttribute("aria-label")) return true;
+    if (input.getAttribute("aria-labelledby")) return true;
+    if (input.getAttribute("title")) return true;
+    const label = input.closest("label");
+    if (label && label.textContent.trim().length > 0) return true;
+    return false;
+  };
+  const bad = $$("input").filter((input) => !named(input));
+  assert.deepEqual(
+    bad.map((input) => input.id || input.name || input.outerHTML.slice(0, 60)),
+    [],
+    "inputs without a label, aria-label, or visible label"
+  );
+});
