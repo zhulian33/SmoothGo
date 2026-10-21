@@ -309,9 +309,7 @@ prices, no combos — the five 团购 packages the old sheet advertised (双人�
 sheet hands the phone to 支付宝/微信/云闪付 and says so, because a code we drew
 ourselves would not open a gate. What *is* real: place identity, coordinates,
 opening hours, photos and scores come from Amap; the road-colour layer is Amap's
-own `TileLayer.Traffic`. Queue ranges are estimates (`confidence: "低"`) drawn
-from two narrow constants, which is why they are excluded from the home-page
-"waiting venues" signal and every card that shows one carries the suffix
+own `TileLayer.Traffic`. Queue ranges come from `web/queue-model.js` and carry `confidence: "推算"` with a visible basis string (e.g. `推算等候 32–66 分钟 · 周三 12:25 · 午市高峰`). The per-row `confidence: "低"` on Amap harvest rows is the data-quality flag — no operator-vetted queue feed — and a venue the model pegs at the upper end now appears in the home "waiting venues" signal. Every card that shows a number still carries the suffix
 **参考等候 · 非实时**.
 
 **Travel time has two tiers, and the UI says which one it is showing.** The
@@ -352,7 +350,7 @@ The code in this repository is MIT licensed. **The place data is not.** See [`NO
 
 - 574 place records (200 attractions, 374 restaurants) were retrieved from the **Amap** POI API — names, coordinates, addresses, districts, opening hours, ratings and, for 560 of them, the listed phone number. Rights remain with 高德软件有限公司 (Autonavi). They are included for non-commercial teaching demonstration only and are subject to the Amap open-platform terms and quota.
 - Photographs are referenced by URL from Amap hosts (`store.is.autonavi.com`, `aos-comment.amap.com`) — 1,074 references, no image file is stored in this repository. Every photo is fetched from Amap when the page renders.
-- `web/place-menus.js` (招牌菜), the 长春地标 / 长春名吃 badges and all queue estimates are **authored by this project**, not sourced from any platform. Queue figures carry `confidence: "低"` and the 参考等候 · 非实时 suffix.
+- `web/place-menus.js` (招牌菜), the 长春地标 / 长春名吃 badges and all queue estimates are **authored by this project**, not sourced from any platform. Queue figures carry `confidence: "推算"` and show their basis (sub-category × time × day × venue hotness) in the UI; the per-row `confidence: "低"` is the separate data-quality flag for Amap harvest rows.
 - 美团 / 点评 / 抖音 / 支付宝 / 微信 / 云闪付 / 长春E出行 are named for identification; their marks belong to their owners.
 
 Regenerating the library against your own key is the intended path if you want to point it at another city:
