@@ -1839,6 +1839,14 @@ main {
   font-size: 8px;
 }
 
+/* Why the number is what it is: "周五 12:10 · 午市高峰". */
+.queue-basis {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+
 .queue-actions {
   display: flex;
   align-items: center;

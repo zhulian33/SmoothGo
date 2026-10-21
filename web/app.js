@@ -11,6 +11,10 @@ const t = I18N.t;
 const tv = I18N.tv;
 const th = I18N.th;
 
+/* Queue estimate model. Falls back to the library's static range if
+   queue-model.js is missing, so the page still renders. */
+const QUEUE_MODEL = window.SmoothGoQueue || null;
+
 const PLACES = [
   {
     id: "jingyuetan",
@@ -862,7 +866,7 @@ function placeMetrics(place) {
 
 function markerPopover(place) {
   const metrics = placeMetrics(place);
-  return `<span class="marker-popover"><strong>${place.name}</strong><span>${place.subtitle || localizeType(place.type)}</span><em>${metrics.rating} · ${metrics.avg}<br />${t("参考等候 {v0} 分钟 · 非实时", { v0: queueText(place) })}</em></span>`;
+  return `<span class="marker-popover"><strong>${place.name}</strong><span>${place.subtitle || localizeType(place.type)}</span><em>${metrics.rating} · ${metrics.avg}<br />${t("推算等候 {v0} 分钟 · {v1}", { v0: queueText(place), v1: queueBasisText(place) })}</em></span>`;
 }
 
 function formatMinutes(total) {
@@ -885,8 +889,48 @@ function timeLabel(minutes) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-function queueText(place) {
-  return `${place.queueMin}–${place.queueMax}`;
+function currentWeekday() {
+  return new Date().getDay();
+}
+
+function currentMinutes() {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+/**
+ * Wait estimate for arriving at `place` at `atMinutes` (defaults to now).
+ * Returns null when the model is unavailable, and callers fall back to the
+ * static range carried in the library.
+ */
+function queueEstimate(place, atMinutes) {
+  if (!QUEUE_MODEL || !place) return null;
+  const at = Number.isFinite(atMinutes) ? atMinutes : currentMinutes();
+  return QUEUE_MODEL.estimate(place, at, { weekday: currentWeekday() });
+}
+
+function queueText(place, atMinutes) {
+  const result = queueEstimate(place, atMinutes);
+  if (!result) return `${place?.queueMin ?? 0}–${place?.queueMax ?? 0}`;
+  return `${result.min}–${result.max}`;
+}
+
+/**
+ * The reason behind the number: "周五 12:10 · 餐厅午市高峰". A wait shown with
+ * its basis can be argued with; one shown alone cannot.
+ */
+function queueBasisText(place, atMinutes) {
+  const result = queueEstimate(place, atMinutes);
+  if (!result) return "";
+  const parts = QUEUE_MODEL.basisParts(result);
+  if (!parts) return "";
+  // The period name already says which kind of place it is -- 午市高峰 is a
+  // meal, 上午高峰 is a visit -- so the venue type is left out of the string.
+  return t("{v0} {v1} · {v2}", {
+    v0: t(parts.weekday),
+    v1: parts.clock,
+    v2: t(parts.period)
+  });
 }
 
 function navigationUrl(place) {
@@ -1066,11 +1110,22 @@ function transportOptions(from, to) {
 }
 
 
+/**
+ * Queue minutes for the planner's timeline. Without this the summary books the
+ * library's flat constant while the card on screen shows the model's number,
+ * and the day quietly adds up to two different totals.
+ */
+function queueFor(place, atMinutes) {
+  const result = queueEstimate(place, atMinutes);
+  return result ? result.average : (Number(place?.queueMin) + Number(place?.queueMax || 0)) / 2;
+}
+
 function buildSchedule(route = state.route) {
   const summary = PLANNER.summarize(
     route.map(placeById).filter(Boolean),
     parseTime(state.startTime),
-    travelBetween
+    travelBetween,
+    { queueFor }
   );
   return { ...summary, total: summary.totalDuration };
 }
@@ -1600,7 +1655,17 @@ function renderHome() {
   if (mapCount) mapCount.textContent = state.route.length;
   if (savedCount) savedCount.textContent = t("{v0} 个", { v0: totalItineraryStops() });
   if (queueCount) {
-    queueCount.textContent = t("{v0} 个", { v0: PLACES.filter((place) => place.queueMax >= 20 && place.confidence !== "低").length });
+    // Was PLACES.filter(queueMax >= 20 && confidence !== "低"): the harvested
+    // rows are all confidence "低", so the second test threw away 560 of 583
+    // and left a number that never moved. Count how many venues the model
+    // currently expects a real wait at -- that rises into the lunch peak and
+    // empties out mid-afternoon, which is what a queue signal should do.
+    queueCount.textContent = t("{v0} 个", {
+      v0: PLACES.filter((place) => {
+        const result = queueEstimate(place);
+        return result && result.max >= 20;
+      }).length
+    });
   }
   const dayCopy =
     state.itinerary.length > 1
@@ -1618,7 +1683,7 @@ function renderHome() {
     <div class="route-preview-stop">
       <time>${place.arrivalLabel}</time>
       <strong>${escapeHtml(place.name)}</strong>
-      <span>${escapeHtml(place.subtitle || localizeType(place.type))}<br />${metrics.rating} · ${metrics.hours}<br />${t("参考等候")} ${queueText(place)} ${t("分钟 · 非实时")}</span>
+      <span>${escapeHtml(place.subtitle || localizeType(place.type))}<br />${metrics.rating} · ${metrics.hours}<br />${t("推算等候")} ${queueText(place, place.arrival)} ${t("分钟")} · ${queueBasisText(place, place.arrival)}</span>
       ${state.routeReasons[place.id] ? `<em class="route-preview-reason">${escapeHtml(state.routeReasons[place.id])}</em>` : ""}
     </div>
   `;
@@ -1740,7 +1805,7 @@ function renderPlaceList() {
         <div class="place-card-head"><strong>${escapeHtml(place.name)}</strong>${place.featured ? `<em class="featured-badge">${escapeHtml(tv(place.badge || "长春特色"))}</em>` : ""}<span>${escapeHtml(localizeType(place.type))}</span></div>
         <div class="place-meta"><b>${escapeHtml(place.subtitle || localizeType(place.type))}</b><br />${ratingText} · ${avgText} · ${place.distance} km<br />${hoursText}</div>
         ${tel ? `<div class="poi-tel">${icon("i-bell")} <a href="tel:${escapeHtml(tel)}">${escapeHtml(tel)}</a></div>` : ""}
-        <div class="place-queue">${icon("i-clock")} ${t("参考等候")} ${queueText(place)} ${t("分钟 · 非实时")}</div>
+        <div class="place-queue">${icon("i-clock")} ${t("推算等候")} ${queueText(place)} ${t("分钟")} · ${queueBasisText(place)}</div>
         <div class="place-actions">
           <button type="button" data-add="${place.id}" class="${inRoute ? "added" : ""}">${inRoute ? t("已加入路线") : t("加入路线")}</button>
           <button type="button" data-nav="${place.id}">${t("导航")}</button>
@@ -1950,14 +2015,14 @@ function renderRoute() {
             <div class="route-stop-meta">
               ${escapeHtml(place.subtitle || localizeType(place.type))}<br />
               <b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />
-              ${t("参考等候")} ${queueText(place)} ${t("分钟 · 非实时")}<br />
+              ${t("推算等候")} ${queueText(place, place.arrival)} ${t("分钟")} · ${queueBasisText(place, place.arrival)}<br />
               <a href="#" data-ticket="${place.id}">${t("购票")}/${t("订座渠道")} ↗</a>
               <button class="route-stop-nav" type="button" data-nav="${place.id}">${t("导航")}</button>
               ${state.routeReasons[place.id] ? `<span class="route-stop-reason">${escapeHtml(state.routeReasons[place.id])}</span>` : ""}
             </div>
             <button class="route-stop-remove" type="button" data-remove="${place.id}">${t("移除")}</button>
           </div>
-          <div class="route-stop-queue">${queueText(place)}<br />${t("分钟")}</div>
+          <div class="route-stop-queue">${queueText(place, place.arrival)}<br />${t("分钟")}</div>
         </article>
       `;
       if (index < schedule.stops.length - 1) {
@@ -2046,8 +2111,9 @@ function renderQueue() {
     return `
     <article class="queue-card">
       <div class="queue-card-head"><strong>${escapeHtml(place.name)}</strong><span>${escapeHtml(localizeType(place.type))}</span></div>
-      <div class="queue-card-data"><b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />${tv(place.source)} · ${t("置信度")} ${tv(place.confidence)}</div>
-      <div class="queue-range">${queueText(place)} <small>${t("分钟参考等候")}</small></div>
+      <div class="queue-card-data"><b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />${tv(place.source)} · ${t("置信度")} ${tv(queueEstimate(place)?.confidence || place.confidence)}</div>
+      <div class="queue-range">${queueText(place)} <small>${t("分钟推算等候")}</small></div>
+      <div class="queue-basis">${queueBasisText(place)}</div>
       <div class="queue-actions">
         <button class="button outline" type="button" data-queue="${place.id}">${t("排队管家")}</button>
         <a class="text-link" href="#" data-ticket="${place.id}">${t("购票")}/${t("订座渠道")} ↗</a>
@@ -2824,7 +2890,7 @@ function openPlaceModal(id) {
   $("#placeDetailStats").innerHTML = [
     [t("评分"), ratingText],
     [t("人均"), typeof place.avg === "number" ? t("约 ¥{v0}", { v0: place.avg }) : t("待接入")],
-    [t("排队"), t("参考 {v0} 分钟", { v0: queueText(place) })],
+    [t("排队"), t("推算 {v0} 分钟", { v0: queueText(place) })],
     [t("营业"), th(place.hours) || t("待确认")],
     ...(place.tel ? [[t("电话"), place.tel]] : [])
   ]
@@ -3132,7 +3198,8 @@ function generateRoute() {
     days: requestedDays,
     limit: 3,
     startMinutes: parseTime(state.startTime),
-    travelBetween
+    travelBetween,
+    queueFor
   });
   state.itinerary = plans.map((plan) => ({
     route: plan.route.slice(),
@@ -3167,7 +3234,8 @@ function replanRoute() {
   }
   const result = PLANNER.chooseReplan(PLACES, state.route, currentPreferences(), {
     startMinutes: parseTime(state.startTime),
-    travelBetween
+    travelBetween,
+    queueFor
   });
   if (!result) {
     showToast(t("当前路线已经是较优的排队组合"));

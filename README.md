@@ -35,6 +35,8 @@ The current web prototype demonstrates:
 
 **Place identity is real.** Names, coordinates, districts, opening hours, scores and photos come from the Amap POI API. Everything else is either derived — average spend from a category band, travel time from a distance estimate or an Amap route — or explicitly labelled 未接入 / 演示. There is no real payment, SMS, ticketing or queue-assistance order in this version.
 
+**Queue times are modelled, not observed.** No venue feed is connected, so nothing here watches a queue. `web/queue-model.js` estimates a wait from three things the app already knows — what kind of place it is and how popular (sub-category, rating, 长春地标 / 长春名吃 badge), what time the visit lands at, and what day of the week it is — and shows its reasoning next to the number: `推算等候 32–66 分钟 · 周三 12:25 · 午市高峰`. Every coefficient is a named constant in that file. A Tuesday lunch lands within a few minutes of the old flat 12–28 band, so ordinary plans barely move; the model earns its keep at the peaks, where a popular hotpot at Saturday dinner reaches the 75-minute ceiling while the same venue at 15:00 on a Monday is 11–22. Confidence reads 推算 rather than 低, and the UI never says “current”.
+
 ## Live demo
 
 Open `web/index.html` directly, or serve the folder:

@@ -1850,6 +1850,14 @@ main {
   font-size: 8px;
 }
 
+/* Why the number is what it is: "周五 12:10 · 午市高峰". */
+.queue-basis {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+
 .queue-actions {
   display: flex;
   align-items: center;
@@ -3207,7 +3215,7 @@ main {
 
           <div class="signal-strip">
             <div class="signal-item"><span>天气</span><strong>—</strong><em>未接入数据源</em></div>
-            <div class="signal-item"><span>排队</span><strong id="queueSignalCount">2 个</strong><em>参考等候 · 非实时</em></div>
+            <div class="signal-item"><span>排队</span><strong id="queueSignalCount">2 个</strong><em>推算等候 · 非实时</em></div>
             <div class="signal-item"><span>公交</span><strong>—</strong><em>未接入数据源</em></div>
             <div class="signal-item"><span>已保存</span><strong id="savedSignalCount">3 个</strong><em>路线中的地点</em></div>
           </div>
@@ -3975,6 +3983,31 @@ window.SMOOTHGO_CONFIG = {
     "天气": "Weather",
     "未接入数据源": "No data source connected",
     "参考等候": "Reference wait",
+    /* Queue estimate model. See web/queue-model.js: nothing observes a queue,
+       so the English keeps saying so -- "estimated", never "current". */
+    "推算等候": "Est. wait",
+    "推算等候 {v0} 分钟 · {v1}": "Est. wait {v0} min · {v1}",
+    "分钟推算等候": "min estimated wait",
+    "推算 {v0} 分钟": "Est. {v0} min",
+    "推算": "modelled",
+    "{v0} {v1} · {v2}": "{v0} {v1} · {v2}",
+    /* Time-of-day periods, shared by restaurants and attractions. */
+    "非正餐时段": "off-peak",
+    "午市前": "pre-lunch",
+    "午市高峰": "lunch peak",
+    "午市回落": "post-lunch",
+    "下午平峰": "afternoon lull",
+    "晚市前": "pre-dinner",
+    "晚市高峰": "dinner peak",
+    "晚市回落": "post-dinner",
+    "夜宵时段": "late night",
+    "未开园": "before opening",
+    "开园": "at opening",
+    "上午高峰": "morning peak",
+    "午间回落": "midday lull",
+    "午后高峰": "afternoon peak",
+    "临近闭园": "near closing",
+    "闭园后": "after closing",
     "已保存": "Saved",
     "路线中的地点": "Places on the route",
     "今日路线": "Today's route",
@@ -4364,7 +4397,9 @@ window.SMOOTHGO_CONFIG = {
     "SmoothGo 主页": "SmoothGo home",
     "主导航": "Main navigation",
     "公交到站时间需要对接公交集团数据源，目前未接入；请以站牌或官方 App 为准。":
-      "Bus arrival times need the transit operator's feed, which is not connected yet. Trust the stop sign or the official app."
+      "Bus arrival times need the transit operator's feed, which is not connected yet. Trust the stop sign or the official app.",
+    "参考等候 · 非实时": "Reference wait · not live",
+    "推算等候 · 非实时": "Estimated wait · not live"
   };
 
   function fill(text, vars) {
@@ -4660,7 +4695,7 @@ window.SMOOTHGO_CONFIG = {
     );
   }
 
-  function summarize(route, startMinutes, travelBetween) {
+  function summarize(route, startMinutes, travelBetween, options = {}) {
     const places = (route || []).filter(Boolean);
     let cursor = Number.isFinite(startMinutes) ? startMinutes : DEFAULT_START_MINUTES;
     let totalTravel = 0;
@@ -4674,7 +4709,12 @@ window.SMOOTHGO_CONFIG = {
         totalTravel += travel;
       }
       const arrival = cursor;
-      const queue = averageQueue(place);
+      // The library's queueMin/queueMax is a flat constant per category. When
+      // the caller has a real estimate model, use it -- otherwise the timeline
+      // books a flat 20 minutes for a venue the card says is waiting 45.
+      const queue = typeof options.queueFor === "function"
+        ? Math.max(0, Math.round(Number(options.queueFor(place, arrival)) || 0))
+        : averageQueue(place);
       cursor += queue + (Number(place.visit) || 60);
       queueMinutes += queue;
       budget += Number(place.avg) || 0;
@@ -4730,7 +4770,7 @@ window.SMOOTHGO_CONFIG = {
     let best = null;
 
     permutations(places).forEach((order) => {
-      const summary = summarize(order, startMinutes, travelBetween);
+      const summary = summarize(order, startMinutes, travelBetween, options);
       const score = summary.totalDuration + mealTimingPenalty(summary.stops) * 1.4;
       if (!best || score < best.score) best = { order, score };
     });
@@ -4896,7 +4936,7 @@ window.SMOOTHGO_CONFIG = {
       ? options.startMinutes
       : DEFAULT_START_MINUTES;
     const travelBetween = options.travelBetween;
-    const current = summarize(currentPlaces, startMinutes, travelBetween);
+    const current = summarize(currentPlaces, startMinutes, travelBetween, options);
     const target = current.stops.reduce((busiest, stop) => {
       if (!busiest) return stop;
       return stop.queueAverage > busiest.queueAverage ? stop : busiest;
@@ -4925,7 +4965,7 @@ window.SMOOTHGO_CONFIG = {
       const nextPlaces = currentPlaces.map((place) =>
         place.id === target.id ? candidate : place
       );
-      const next = summarize(nextPlaces, startMinutes, travelBetween);
+      const next = summarize(nextPlaces, startMinutes, travelBetween, options);
       const queueSaved = current.queueMinutes - next.queueMinutes;
       const durationSaved = current.totalDuration - next.totalDuration;
       if (queueSaved < 3) return;
@@ -4992,6 +5032,254 @@ window.SMOOTHGO_CONFIG = {
     chooseInitialRoute,
     chooseMultiDayRoute,
     chooseReplan
+  };
+});
+
+</script>
+    <script>
+/**
+ * Queue estimate model.
+ *
+ * The shipped library carries a hard-coded pair -- 12-28 minutes for food,
+ * 10-35 for attractions -- applied to all 560 venues alike. That makes 净月潭
+ * and an unvisited sculpture share one wait, and makes 12:00 the same as 15:00.
+ * It is the core claim of the product resting on two constants.
+ *
+ * This module replaces the constants with a model instead of with invented
+ * live data. Nothing here observes a queue. It combines three things the app
+ * already knows:
+ *
+ *   1. what kind of place it is, and how popular (rating, 长春地标/长春名吃)
+ *   2. what time the visit lands at
+ *   3. what day of the week it is
+ *
+ * Every coefficient is a named constant in this file, and the caller is
+ * expected to show the basis ("周五 12:10 · 餐厅午市高峰") next to the number.
+ * A number with a stated reason is defensible; a bare "参考等候 12–28 分钟"
+ * is not.
+ *
+ * The 23 hand-written venues (source: "本地整理") already carry a considered
+ * queue range, so their own midpoint is used as the baseline and only the
+ * time-of-day and weekday factors are applied on top.
+ */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === "object" && module.exports) {
+    module.exports = api;
+  }
+  root.SmoothGoQueue = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  const MINUTES_IN_DAY = 24 * 60;
+
+  // --- 1. Baseline: how long this kind of place tends to make people wait ---
+
+  // Keyed on the Amap sub-category, the second half of "美食 · 火锅店".
+  const BASE_BY_KIND = [
+    [["火锅店", "清真菜馆", "中餐厅", "烧烤", "海鲜", "自助餐", "东北菜", "韩国料理", "湘菜", "川菜"], 12],
+    [["快餐", "小吃", "饮品", "甜品", "冰品", "面包", "蛋糕", "熟食"], 4],
+    [["咖啡厅", "茶座", "茶艺馆"], 6],
+    [["国家级景点", "风景名胜", "旅游景点"], 12],
+    [["公园", "城市广场", "植物园", "动物园", "海滩"], 7],
+    [["博物馆", "纪念馆", "展览馆", "美术馆", "培训机构"], 10],
+    [["剧场", "娱乐场所", "游戏厅", "体育休闲服务场所", "综合体育馆"], 14],
+    [["购物中心", "步行街"], 8],
+    [["寺庙道观"], 5],
+    [["度假村"], 10],
+    [["公司"], 3]
+  ];
+
+  const BASE_FALLBACK = { food: 10, attraction: 8 };
+
+  // Popularity, from fields the app already has. A 4.8 venue that the city
+  // calls 长春地标 draws a longer line than a 3.9 one at the same hour.
+  //
+  // Deliberately gentle. These multiply with the service-peak and weekend
+  // factors, and at 1.35 / 1.25 a popular hotpot at Saturday dinner came out
+  // at 103 minutes -- the model compounding its own enthusiasm. A venue that
+  // is busy anyway does not get 2.5x busier because it is also 18:00.
+  const RATING_FACTOR = [
+    [4.5, 1.2],
+    [4.0, 1.05],
+    [0, 0.9]
+  ];
+  const BADGE_FACTOR = 1.15;
+
+  // --- 2. Time of day ---
+
+  // Restaurants live and die by the two services.
+  const FOOD_PERIODS = [
+    { from: 0, to: 10 * 60 + 30, key: "quiet", label: "非正餐时段", factor: 0.35 },
+    { from: 10 * 60 + 30, to: 11 * 60 + 30, key: "pre-lunch", label: "午市前", factor: 1.15 },
+    { from: 11 * 60 + 30, to: 13 * 60 + 30, key: "lunch-peak", label: "午市高峰", factor: 1.7 },
+    { from: 13 * 60 + 30, to: 14 * 60 + 30, key: "post-lunch", label: "午市回落", factor: 0.95 },
+    { from: 14 * 60 + 30, to: 17 * 60, key: "afternoon", label: "下午平峰", factor: 0.6 },
+    { from: 17 * 60, to: 17 * 60 + 30, key: "pre-dinner", label: "晚市前", factor: 1.3 },
+    { from: 17 * 60 + 30, to: 20 * 60, key: "dinner-peak", label: "晚市高峰", factor: 1.9 },
+    { from: 20 * 60, to: 21 * 60 + 30, key: "post-dinner", label: "晚市回落", factor: 1.1 },
+    { from: 21 * 60 + 30, to: MINUTES_IN_DAY, key: "late", label: "夜宵时段", factor: 0.5 }
+  ];
+
+  // Attractions build through the morning, dip at lunch, peak again mid-afternoon.
+  const SIGHT_PERIODS = [
+    { from: 0, to: 9 * 60, key: "closed", label: "未开园", factor: 0.2 },
+    { from: 9 * 60, to: 10 * 60, key: "opening", label: "开园", factor: 0.8 },
+    { from: 10 * 60, to: 12 * 60, key: "morning-peak", label: "上午高峰", factor: 1.4 },
+    { from: 12 * 60, to: 14 * 60, key: "midday", label: "午间回落", factor: 1.0 },
+    { from: 14 * 60, to: 16 * 60, key: "afternoon-peak", label: "午后高峰", factor: 1.3 },
+    { from: 16 * 60, to: 18 * 60, key: "closing", label: "临近闭园", factor: 0.75 },
+    { from: 18 * 60, to: MINUTES_IN_DAY, key: "closed", label: "闭园后", factor: 0.2 }
+  ];
+
+  // --- 3. Day of week ---
+
+  const WEEKDAY_FACTOR = {
+    0: { key: "weekend", label: "周日", factor: 1.3 },
+    1: { key: "weekday", label: "周一", factor: 1.0 },
+    2: { key: "weekday", label: "周二", factor: 1.0 },
+    3: { key: "weekday", label: "周三", factor: 1.0 },
+    4: { key: "weekday", label: "周四", factor: 1.0 },
+    5: { key: "friday", label: "周五", factor: 1.15 },
+    6: { key: "weekend", label: "周六", factor: 1.3 }
+  };
+
+  // The range spread around the baseline. Deliberately wide: this is a model,
+  // not a measurement, and a narrow band would overstate what it knows.
+  const LOW_SPREAD = 0.75;
+  const HIGH_SPREAD = 1.55;
+  const MIN_SPAN = 3;
+
+  // Ceilings. Rating, badge, service peak and weekend all multiply, and stacked
+  // they ran a Changchun hotpot branch to 103 minutes -- long enough to swallow
+  // half a day plan and to make the planner route around every popular venue.
+  // An hour is already a serious wait for a meal in this city; anything past
+  // that is the model extrapolating, not a queue anyone would stand in.
+  const MAX_BY_CATEGORY = { food: 75, attraction: 60 };
+
+  function clampMinutes(value) {
+    const minutes = Number(value);
+    if (!Number.isFinite(minutes)) return 0;
+    const wrapped = ((Math.round(minutes) % MINUTES_IN_DAY) + MINUTES_IN_DAY) % MINUTES_IN_DAY;
+    return wrapped;
+  }
+
+  function subCategory(place) {
+    const type = String(place?.type || "");
+    const parts = type.split(" · ");
+    return (parts.length > 1 ? parts[parts.length - 1] : "").trim();
+  }
+
+  function baselineFor(place) {
+    // The 23 curated venues carry a hand-judged range; trust it over the model.
+    if (place?.source === "本地整理") {
+      const low = Number(place.queueMin);
+      const high = Number(place.queueMax);
+      if (Number.isFinite(low) && Number.isFinite(high) && high >= low) {
+        return (low + high) / 2;
+      }
+    }
+
+    const kind = subCategory(place);
+    let base = BASE_FALLBACK[place?.category] || BASE_FALLBACK.attraction;
+    for (const entry of BASE_BY_KIND) {
+      if (entry[0].some((key) => kind.includes(key))) {
+        base = entry[1];
+        break;
+      }
+    }
+
+    const rating = Number(place?.rating);
+    if (Number.isFinite(rating) && rating > 0) {
+      for (const [threshold, factor] of RATING_FACTOR) {
+        if (rating >= threshold) {
+          base *= factor;
+          break;
+        }
+      }
+    }
+    if (place?.badge) base *= BADGE_FACTOR;
+    return base;
+  }
+
+  function periodFor(place, atMinutes) {
+    const table = place?.category === "food" ? FOOD_PERIODS : SIGHT_PERIODS;
+    const minutes = clampMinutes(atMinutes);
+    return table.find((slot) => minutes >= slot.from && minutes < slot.to) ||
+      table[table.length - 1];
+  }
+
+  function dayFor(weekday) {
+    return WEEKDAY_FACTOR[weekday] || WEEKDAY_FACTOR[1];
+  }
+
+  /**
+   * Estimate the wait at a place when a visit lands at `atMinutes`.
+   *
+   * @param {object} place      a venue from the library
+   * @param {number} atMinutes  minutes past midnight of the arrival
+   * @param {object} [options]  { weekday: 0-6 } where 0 is Sunday
+   * @returns {{min:number,max:number,average:number,period:object,day:object,
+   *            confidence:string,clock:string}}
+   */
+  function estimate(place, atMinutes, options = {}) {
+    if (!place) {
+      return { min: 0, max: 0, average: 0, period: null, day: null, confidence: "推算", clock: "" };
+    }
+
+    const minutes = clampMinutes(atMinutes);
+    const period = periodFor(place, minutes);
+    const day = dayFor(options.weekday);
+    const kind = place.category === "food" ? "food" : "attraction";
+    const base = baselineFor(place) * period.factor * day.factor;
+
+    const ceiling = MAX_BY_CATEGORY[kind] || MAX_BY_CATEGORY.attraction;
+    const min = Math.min(ceiling, Math.max(0, Math.round(base * LOW_SPREAD)));
+    const max = Math.min(
+      ceiling,
+      Math.max(min + MIN_SPAN, Math.round(base * HIGH_SPREAD))
+    );
+    const clock = `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(
+      minutes % 60
+    ).padStart(2, "0")}`;
+
+    return {
+      min,
+      max,
+      average: Math.round((min + max) / 2),
+      period,
+      day,
+      kind,
+      clock,
+      confidence: "推算"
+    };
+  }
+
+  /**
+   * One-line reason a reader can check, e.g. "周五 12:10 · 餐厅午市高峰".
+   * Kept separate from rendering so the caller can translate the pieces.
+   */
+  function basisParts(result) {
+    if (!result || !result.period) return null;
+    const kind = result.kind === "food" ? "餐厅" : "景点";
+    return {
+      weekday: result.day.label,
+      clock: result.clock,
+      kind,
+      period: result.period.label
+    };
+  }
+
+  return {
+    estimate,
+    basisParts,
+    baselineFor,
+    periodFor,
+    dayFor,
+    FOOD_PERIODS,
+    SIGHT_PERIODS,
+    WEEKDAY_FACTOR,
+    BASE_BY_KIND
   };
 });
 
@@ -22909,6 +23197,10 @@ const t = I18N.t;
 const tv = I18N.tv;
 const th = I18N.th;
 
+/* Queue estimate model. Falls back to the library's static range if
+   queue-model.js is missing, so the page still renders. */
+const QUEUE_MODEL = window.SmoothGoQueue || null;
+
 const PLACES = [
   {
     id: "jingyuetan",
@@ -23760,7 +24052,7 @@ function placeMetrics(place) {
 
 function markerPopover(place) {
   const metrics = placeMetrics(place);
-  return `<span class="marker-popover"><strong>${place.name}</strong><span>${place.subtitle || localizeType(place.type)}</span><em>${metrics.rating} · ${metrics.avg}<br />${t("参考等候 {v0} 分钟 · 非实时", { v0: queueText(place) })}</em></span>`;
+  return `<span class="marker-popover"><strong>${place.name}</strong><span>${place.subtitle || localizeType(place.type)}</span><em>${metrics.rating} · ${metrics.avg}<br />${t("推算等候 {v0} 分钟 · {v1}", { v0: queueText(place), v1: queueBasisText(place) })}</em></span>`;
 }
 
 function formatMinutes(total) {
@@ -23783,8 +24075,48 @@ function timeLabel(minutes) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-function queueText(place) {
-  return `${place.queueMin}–${place.queueMax}`;
+function currentWeekday() {
+  return new Date().getDay();
+}
+
+function currentMinutes() {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+/**
+ * Wait estimate for arriving at `place` at `atMinutes` (defaults to now).
+ * Returns null when the model is unavailable, and callers fall back to the
+ * static range carried in the library.
+ */
+function queueEstimate(place, atMinutes) {
+  if (!QUEUE_MODEL || !place) return null;
+  const at = Number.isFinite(atMinutes) ? atMinutes : currentMinutes();
+  return QUEUE_MODEL.estimate(place, at, { weekday: currentWeekday() });
+}
+
+function queueText(place, atMinutes) {
+  const result = queueEstimate(place, atMinutes);
+  if (!result) return `${place?.queueMin ?? 0}–${place?.queueMax ?? 0}`;
+  return `${result.min}–${result.max}`;
+}
+
+/**
+ * The reason behind the number: "周五 12:10 · 餐厅午市高峰". A wait shown with
+ * its basis can be argued with; one shown alone cannot.
+ */
+function queueBasisText(place, atMinutes) {
+  const result = queueEstimate(place, atMinutes);
+  if (!result) return "";
+  const parts = QUEUE_MODEL.basisParts(result);
+  if (!parts) return "";
+  // The period name already says which kind of place it is -- 午市高峰 is a
+  // meal, 上午高峰 is a visit -- so the venue type is left out of the string.
+  return t("{v0} {v1} · {v2}", {
+    v0: t(parts.weekday),
+    v1: parts.clock,
+    v2: t(parts.period)
+  });
 }
 
 function navigationUrl(place) {
@@ -23964,11 +24296,22 @@ function transportOptions(from, to) {
 }
 
 
+/**
+ * Queue minutes for the planner's timeline. Without this the summary books the
+ * library's flat constant while the card on screen shows the model's number,
+ * and the day quietly adds up to two different totals.
+ */
+function queueFor(place, atMinutes) {
+  const result = queueEstimate(place, atMinutes);
+  return result ? result.average : (Number(place?.queueMin) + Number(place?.queueMax || 0)) / 2;
+}
+
 function buildSchedule(route = state.route) {
   const summary = PLANNER.summarize(
     route.map(placeById).filter(Boolean),
     parseTime(state.startTime),
-    travelBetween
+    travelBetween,
+    { queueFor }
   );
   return { ...summary, total: summary.totalDuration };
 }
@@ -24498,7 +24841,17 @@ function renderHome() {
   if (mapCount) mapCount.textContent = state.route.length;
   if (savedCount) savedCount.textContent = t("{v0} 个", { v0: totalItineraryStops() });
   if (queueCount) {
-    queueCount.textContent = t("{v0} 个", { v0: PLACES.filter((place) => place.queueMax >= 20 && place.confidence !== "低").length });
+    // Was PLACES.filter(queueMax >= 20 && confidence !== "低"): the harvested
+    // rows are all confidence "低", so the second test threw away 560 of 583
+    // and left a number that never moved. Count how many venues the model
+    // currently expects a real wait at -- that rises into the lunch peak and
+    // empties out mid-afternoon, which is what a queue signal should do.
+    queueCount.textContent = t("{v0} 个", {
+      v0: PLACES.filter((place) => {
+        const result = queueEstimate(place);
+        return result && result.max >= 20;
+      }).length
+    });
   }
   const dayCopy =
     state.itinerary.length > 1
@@ -24516,7 +24869,7 @@ function renderHome() {
     <div class="route-preview-stop">
       <time>${place.arrivalLabel}</time>
       <strong>${escapeHtml(place.name)}</strong>
-      <span>${escapeHtml(place.subtitle || localizeType(place.type))}<br />${metrics.rating} · ${metrics.hours}<br />${t("参考等候")} ${queueText(place)} ${t("分钟 · 非实时")}</span>
+      <span>${escapeHtml(place.subtitle || localizeType(place.type))}<br />${metrics.rating} · ${metrics.hours}<br />${t("推算等候")} ${queueText(place, place.arrival)} ${t("分钟")} · ${queueBasisText(place, place.arrival)}</span>
       ${state.routeReasons[place.id] ? `<em class="route-preview-reason">${escapeHtml(state.routeReasons[place.id])}</em>` : ""}
     </div>
   `;
@@ -24638,7 +24991,7 @@ function renderPlaceList() {
         <div class="place-card-head"><strong>${escapeHtml(place.name)}</strong>${place.featured ? `<em class="featured-badge">${escapeHtml(tv(place.badge || "长春特色"))}</em>` : ""}<span>${escapeHtml(localizeType(place.type))}</span></div>
         <div class="place-meta"><b>${escapeHtml(place.subtitle || localizeType(place.type))}</b><br />${ratingText} · ${avgText} · ${place.distance} km<br />${hoursText}</div>
         ${tel ? `<div class="poi-tel">${icon("i-bell")} <a href="tel:${escapeHtml(tel)}">${escapeHtml(tel)}</a></div>` : ""}
-        <div class="place-queue">${icon("i-clock")} ${t("参考等候")} ${queueText(place)} ${t("分钟 · 非实时")}</div>
+        <div class="place-queue">${icon("i-clock")} ${t("推算等候")} ${queueText(place)} ${t("分钟")} · ${queueBasisText(place)}</div>
         <div class="place-actions">
           <button type="button" data-add="${place.id}" class="${inRoute ? "added" : ""}">${inRoute ? t("已加入路线") : t("加入路线")}</button>
           <button type="button" data-nav="${place.id}">${t("导航")}</button>
@@ -24848,14 +25201,14 @@ function renderRoute() {
             <div class="route-stop-meta">
               ${escapeHtml(place.subtitle || localizeType(place.type))}<br />
               <b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />
-              ${t("参考等候")} ${queueText(place)} ${t("分钟 · 非实时")}<br />
+              ${t("推算等候")} ${queueText(place, place.arrival)} ${t("分钟")} · ${queueBasisText(place, place.arrival)}<br />
               <a href="#" data-ticket="${place.id}">${t("购票")}/${t("订座渠道")} ↗</a>
               <button class="route-stop-nav" type="button" data-nav="${place.id}">${t("导航")}</button>
               ${state.routeReasons[place.id] ? `<span class="route-stop-reason">${escapeHtml(state.routeReasons[place.id])}</span>` : ""}
             </div>
             <button class="route-stop-remove" type="button" data-remove="${place.id}">${t("移除")}</button>
           </div>
-          <div class="route-stop-queue">${queueText(place)}<br />${t("分钟")}</div>
+          <div class="route-stop-queue">${queueText(place, place.arrival)}<br />${t("分钟")}</div>
         </article>
       `;
       if (index < schedule.stops.length - 1) {
@@ -24944,8 +25297,9 @@ function renderQueue() {
     return `
     <article class="queue-card">
       <div class="queue-card-head"><strong>${escapeHtml(place.name)}</strong><span>${escapeHtml(localizeType(place.type))}</span></div>
-      <div class="queue-card-data"><b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />${tv(place.source)} · ${t("置信度")} ${tv(place.confidence)}</div>
-      <div class="queue-range">${queueText(place)} <small>${t("分钟参考等候")}</small></div>
+      <div class="queue-card-data"><b>${metrics.rating}</b> · ${metrics.avg} · ${metrics.hours}<br />${tv(place.source)} · ${t("置信度")} ${tv(queueEstimate(place)?.confidence || place.confidence)}</div>
+      <div class="queue-range">${queueText(place)} <small>${t("分钟推算等候")}</small></div>
+      <div class="queue-basis">${queueBasisText(place)}</div>
       <div class="queue-actions">
         <button class="button outline" type="button" data-queue="${place.id}">${t("排队管家")}</button>
         <a class="text-link" href="#" data-ticket="${place.id}">${t("购票")}/${t("订座渠道")} ↗</a>
@@ -25722,7 +26076,7 @@ function openPlaceModal(id) {
   $("#placeDetailStats").innerHTML = [
     [t("评分"), ratingText],
     [t("人均"), typeof place.avg === "number" ? t("约 ¥{v0}", { v0: place.avg }) : t("待接入")],
-    [t("排队"), t("参考 {v0} 分钟", { v0: queueText(place) })],
+    [t("排队"), t("推算 {v0} 分钟", { v0: queueText(place) })],
     [t("营业"), th(place.hours) || t("待确认")],
     ...(place.tel ? [[t("电话"), place.tel]] : [])
   ]
@@ -26030,7 +26384,8 @@ function generateRoute() {
     days: requestedDays,
     limit: 3,
     startMinutes: parseTime(state.startTime),
-    travelBetween
+    travelBetween,
+    queueFor
   });
   state.itinerary = plans.map((plan) => ({
     route: plan.route.slice(),
@@ -26065,7 +26420,8 @@ function replanRoute() {
   }
   const result = PLANNER.chooseReplan(PLACES, state.route, currentPreferences(), {
     startMinutes: parseTime(state.startTime),
-    travelBetween
+    travelBetween,
+    queueFor
   });
   if (!result) {
     showToast(t("当前路线已经是较优的排队组合"));

@@ -416,6 +416,31 @@
     "天气": "Weather",
     "未接入数据源": "No data source connected",
     "参考等候": "Reference wait",
+    /* Queue estimate model. See web/queue-model.js: nothing observes a queue,
+       so the English keeps saying so -- "estimated", never "current". */
+    "推算等候": "Est. wait",
+    "推算等候 {v0} 分钟 · {v1}": "Est. wait {v0} min · {v1}",
+    "分钟推算等候": "min estimated wait",
+    "推算 {v0} 分钟": "Est. {v0} min",
+    "推算": "modelled",
+    "{v0} {v1} · {v2}": "{v0} {v1} · {v2}",
+    /* Time-of-day periods, shared by restaurants and attractions. */
+    "非正餐时段": "off-peak",
+    "午市前": "pre-lunch",
+    "午市高峰": "lunch peak",
+    "午市回落": "post-lunch",
+    "下午平峰": "afternoon lull",
+    "晚市前": "pre-dinner",
+    "晚市高峰": "dinner peak",
+    "晚市回落": "post-dinner",
+    "夜宵时段": "late night",
+    "未开园": "before opening",
+    "开园": "at opening",
+    "上午高峰": "morning peak",
+    "午间回落": "midday lull",
+    "午后高峰": "afternoon peak",
+    "临近闭园": "near closing",
+    "闭园后": "after closing",
     "已保存": "Saved",
     "路线中的地点": "Places on the route",
     "今日路线": "Today's route",
@@ -805,7 +830,9 @@
     "SmoothGo 主页": "SmoothGo home",
     "主导航": "Main navigation",
     "公交到站时间需要对接公交集团数据源，目前未接入；请以站牌或官方 App 为准。":
-      "Bus arrival times need the transit operator's feed, which is not connected yet. Trust the stop sign or the official app."
+      "Bus arrival times need the transit operator's feed, which is not connected yet. Trust the stop sign or the official app.",
+    "参考等候 · 非实时": "Reference wait · not live",
+    "推算等候 · 非实时": "Estimated wait · not live"
   };
 
   function fill(text, vars) {

@@ -80,7 +80,7 @@
     );
   }
 
-  function summarize(route, startMinutes, travelBetween) {
+  function summarize(route, startMinutes, travelBetween, options = {}) {
     const places = (route || []).filter(Boolean);
     let cursor = Number.isFinite(startMinutes) ? startMinutes : DEFAULT_START_MINUTES;
     let totalTravel = 0;
@@ -94,7 +94,12 @@
         totalTravel += travel;
       }
       const arrival = cursor;
-      const queue = averageQueue(place);
+      // The library's queueMin/queueMax is a flat constant per category. When
+      // the caller has a real estimate model, use it -- otherwise the timeline
+      // books a flat 20 minutes for a venue the card says is waiting 45.
+      const queue = typeof options.queueFor === "function"
+        ? Math.max(0, Math.round(Number(options.queueFor(place, arrival)) || 0))
+        : averageQueue(place);
       cursor += queue + (Number(place.visit) || 60);
       queueMinutes += queue;
       budget += Number(place.avg) || 0;
@@ -150,7 +155,7 @@
     let best = null;
 
     permutations(places).forEach((order) => {
-      const summary = summarize(order, startMinutes, travelBetween);
+      const summary = summarize(order, startMinutes, travelBetween, options);
       const score = summary.totalDuration + mealTimingPenalty(summary.stops) * 1.4;
       if (!best || score < best.score) best = { order, score };
     });
@@ -316,7 +321,7 @@
       ? options.startMinutes
       : DEFAULT_START_MINUTES;
     const travelBetween = options.travelBetween;
-    const current = summarize(currentPlaces, startMinutes, travelBetween);
+    const current = summarize(currentPlaces, startMinutes, travelBetween, options);
     const target = current.stops.reduce((busiest, stop) => {
       if (!busiest) return stop;
       return stop.queueAverage > busiest.queueAverage ? stop : busiest;
@@ -345,7 +350,7 @@
       const nextPlaces = currentPlaces.map((place) =>
         place.id === target.id ? candidate : place
       );
-      const next = summarize(nextPlaces, startMinutes, travelBetween);
+      const next = summarize(nextPlaces, startMinutes, travelBetween, options);
       const queueSaved = current.queueMinutes - next.queueMinutes;
       const durationSaved = current.totalDuration - next.totalDuration;
       if (queueSaved < 3) return;
