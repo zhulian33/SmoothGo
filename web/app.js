@@ -586,6 +586,14 @@ if (typeof POI_GENERATED_PLACES !== "undefined") {
       return stripped === place.name || !curatedNames.has(placeNameKey(stripped));
     })
   );
+  // POI_GENERATED_PLACES ships only the photos[] array now; back-fill the
+  // lead photo from photos[0] so downstream readers (the carousel, the
+  // cover thumbnail) keep working unchanged. Curated rows already set
+  // place.photo above when an Amap match exists, so this only fills the
+  // gap for Amap-only rows.
+  PLACES.forEach((place) => {
+    if (!place.photo && place.photos?.length) place.photo = place.photos[0];
+  });
 }
 
 // Shopping streets are typed 地名地址信息 by Amap and get filtered out of the

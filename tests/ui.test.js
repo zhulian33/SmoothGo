@@ -231,6 +231,38 @@ test("places.poi.js stays under the bytes budget", () => {
   );
 });
 
+test("places.poi.js no longer ships a per-row photo field", () => {
+  // The POI file used to duplicate photos[0] as `photo` on every row (~55 kB
+  // of redundancy). App.js back-fills place.photo from photos[0] at load,
+  // so we save the bytes and keep every reader working.
+  const { readFileSync } = require("node:fs");
+  const { resolve } = require("node:path");
+  const text = readFileSync(resolve("web/places.poi.js"), "utf8");
+  // A bare regex false-positive risk is `,\"photo\":` in unrelated text; the
+  // POI lines always start with a leading space then `{`. Match that shape
+  // specifically so the assert is honest.
+  const photoKeys = text.match(/(^|\n)  \{[^\n]*"photo":/g) || [];
+  assert.deepEqual(
+    photoKeys,
+    [],
+    "POI rows should now store `photos[]` only; open this up only if you " +
+      "really need a per-row photo override and update ui.test.js."
+  );
+});
+
+test("PLACES back-fills place.photo from photos[0] after load", () => {
+  // Sanity check on the load-time helper added when the redundant `photo`
+  // field was dropped. Amap rows now arrive without a `photo` field; the
+  // loader is the single place that restores it.
+  const withPhotos = window.eval(
+    "PLACES.filter((p) => Array.isArray(p.photos) && p.photos.length > 0)"
+  );
+  assert.ok(withPhotos.length > 500, "expected the Amap harvest to dominate");
+  let orphans = 0;
+  for (const p of withPhotos) if (!p.photo) orphans += 1;
+  assert.equal(orphans, 0, "every place with photos[] should back-fill place.photo");
+});
+
 test("index.html defers the frontend bundles", () => {
   const { readFileSync } = require("node:fs");
   const { resolve } = require("node:path");

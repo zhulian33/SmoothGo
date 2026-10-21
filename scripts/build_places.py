@@ -468,7 +468,9 @@ def main():
                     "queueMin": 12 if is_food else 10,
                     "queueMax": 28 if is_food else 35,
                     "hours": short_hours(poi.get("openTime")),
-                    "photo": photos[0] if photos else None,
+                    # Note: no standalone "photo" field. The lead photo is
+                    # always photos[0]; every reader of place.photo in app.js
+                    # back-fills from photos[0] when the field is absent.
                     "photos": photos,
                     "ticket": None,
                     "visit": 75 if is_food else 90,
