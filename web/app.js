@@ -1504,7 +1504,14 @@ function renderMapTopOverlay(element, mode = "map") {
     );
     return;
   }
+  /* label.innerHTML wipes any id on the existing <strong> -- #homeMapCount and
+     #mapCount are written into the markup and referenced again from renderHome
+     and the transport view to update the count in place. Preserve the id
+     across the rewrite so those callers keep landing instead of silently
+     no-op-ing on a regenerated node. */
+  const strongId = (label.querySelector("strong") || {}).id || null;
   label.innerHTML = t("{v0} · <strong>{v1}</strong> 个地点", { v0: mapBaseLabel(mode), v1: mapCountForMode(mode) });
+  if (strongId) label.querySelector("strong").id = strongId;
   live.innerHTML = `<span class="live-dot"></span>${liveCopy}`;
 }
 

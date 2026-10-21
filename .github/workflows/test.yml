@@ -30,6 +30,18 @@ jobs:
           node-version: '20'
       - run: node tests/queue.test.js
 
+  ui:
+    name: UI regression tests (node + jsdom)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: node tests/ui.test.js
+
   server:
     name: Server tests (python)
     runs-on: ubuntu-latest

@@ -29,3 +29,6 @@ docs/build_division_pdf.py
 docs/build_mvp_checklist.py
 docs/build_role_docs.py
 docs/build_simple_role_docs.py
+
+# devDependency install (only package.json + package-lock.json are committed)
+node_modules/

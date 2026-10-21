@@ -79,7 +79,7 @@ SmoothGo/
 ├── web/                  # Static interactive prototype
 ├── presentation/         # English slide deck, PDF backup and speaker notes
 ├── docs/                 # Team plan, presentation outline, Q&A bank, sources
-├── tests/                # Planner tests (node) and server tests (python, stdlib)
+├── tests/                # Planner, queue and UI tests (node:test + jsdom) + server tests (python)
 ├── LICENSE               # MIT, code only
 ├── NOTICE                # Third-party data attribution (Amap)
 ├── PRIVACY.md            # What the prototype does with an account
@@ -129,10 +129,12 @@ The prototype uses a transparent rule-based scorer with illustrative data. It ba
 
 ## Develop and verify
 
-The maintained source lives in `web/`. Run the planner tests and rebuild the offline single-file backup after changing the web app:
+The maintained source lives in `web/`. Three test suites cover the code: the planner algorithm, the queue-estimate model, and the rendered page itself (boots `web/index.html` in jsdom, drops the real `web/places.poi.js` and the other scripts into it, and exercises language switching, view routing, the modals and the route panel). Install the dev dependency once, then run:
 
 ```bash
-node --test tests/planner.test.js
+npm install        # only needed for the UI suite -- jsdom pulls in here
+npm test           # planner + queue + UI suites
+node tests/queue.test.js
 python3 -m unittest tests.test_server -v
 python3 docs/build_standalone.py
 ```
