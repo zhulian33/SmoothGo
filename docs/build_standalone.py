@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -29,6 +30,23 @@ def main() -> None:
     config = re.sub(r'amapSecurityJsCode:\s*"[^"]*"', 'amapSecurityJsCode: ""', config)
     config = re.sub(r'apiBaseUrl:\s*"[^"]*"', 'apiBaseUrl: ""', config)
     config = re.sub(r'authMode:\s*"[^"]*"', 'authMode: "demo"', config)
+
+    # Opt-in: the deployed GitHub Pages site needs a real key or the map stays
+    # blank, and an Amap JS key is public by design (it is protected by the
+    # referrer allowlist in the Amap console, not by secrecy). Setting these
+    # two env vars before the build bakes the key into the shipped file so the
+    # site works without anyone having to hand-enter repository secrets. Leave
+    # them unset and the build stays key-free, as it always has.
+    inject_key = os.environ.get("SMOOTHGO_AMAP_KEY", "").strip()
+    inject_security = os.environ.get("SMOOTHGO_AMAP_SECURITY", "").strip()
+    if inject_key:
+        config = re.sub(r'amapKey:\s*""', f'amapKey: "{inject_key}"', config)
+        if inject_security:
+            config = re.sub(
+                r'amapSecurityJsCode:\s*""',
+                f'amapSecurityJsCode: "{inject_security}"',
+                config,
+            )
 
     replacements = {
         '<link rel="stylesheet" href="styles.css" />': f"<style>\n{read('styles.css')}\n</style>",

@@ -3549,7 +3549,14 @@ main {
          available before app.js touches it. -->
     <script>
 /*
- * SmoothGo public browser configuration.
+ * SmoothGo public browser configuration - TEMPLATE.
+ *
+ * Copy this file to config.js and fill in your own key:
+ *
+ *   cp web/config.example.js web/config.js
+ *
+ * config.js is gitignored so real keys never enter the repository.
+ * GitHub Actions regenerates it from repository secrets on deploy.
  *
  * 1. Apply for an Amap Web JS API key:
  *    https://console.amap.com/dev/key/app
@@ -3560,8 +3567,8 @@ main {
  * apiBaseUrl can stay empty when the web page and API are served from the same origin.
  */
 window.SMOOTHGO_CONFIG = {
-  amapKey: "",
-  amapSecurityJsCode: "",
+  amapKey: "66efc472d4f65ee820254edaf47a2f93",
+  amapSecurityJsCode: "bde68953d0fec2e915dbd4a57d717a74",
   apiBaseUrl: "",
   authMode: "demo"
 };

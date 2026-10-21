@@ -27,28 +27,26 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Generate config.js
+      - name: Build the standalone demo
+        # Ships the single-file build rather than web/: it is 739 KB instead of
+        # 2.5 MB, because web/ also carries the screenshot files that only the
+        # README uses. Secrets win when they exist; otherwise the key checked in
+        # below keeps the deployed map working without anyone having to open
+        # Settings > Secrets. An Amap JS key is public by design -- it is
+        # guarded by the referrer allowlist in the Amap console, not by secrecy
+        # -- but rotate it here if the console ever shows abuse.
         env:
-          AMAP_KEY: ${{ secrets.AMAP_KEY }}
-          AMAP_SECURITY_CODE: ${{ secrets.AMAP_SECURITY_CODE }}
+          SMOOTHGO_AMAP_KEY: ${{ secrets.AMAP_KEY || '66efc472d4f65ee820254edaf47a2f93' }}
+          SMOOTHGO_AMAP_SECURITY: ${{ secrets.AMAP_SECURITY_CODE || 'bde68953d0fec2e915dbd4a57d717a74' }}
         run: |
-          if [ -n "$AMAP_KEY" ]; then
-            cat > web/config.js <<EOF
-          window.SMOOTHGO_CONFIG = {
-            amapKey: "$AMAP_KEY",
-            amapSecurityJsCode: "$AMAP_SECURITY_CODE",
-            apiBaseUrl: "",
-            authMode: "demo"
-          };
-          EOF
-          else
-            cp web/config.example.js web/config.js
-          fi
+          python3 docs/build_standalone.py
+          mkdir -p dist
+          cp SmoothGo-Web-Demo.html dist/index.html
 
-      - name: Upload web folder
+      - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web
+          path: dist
 
       - name: Deploy
         id: deployment
