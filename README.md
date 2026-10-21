@@ -80,6 +80,8 @@ SmoothGo/
 ├── presentation/         # English slide deck, PDF backup and speaker notes
 ├── docs/                 # Team plan, presentation outline, Q&A bank, sources
 ├── tests/                # Planner, queue and UI tests (node:test + jsdom) + server tests (python)
+├── server/               # Stdlib-only Python API (SMS login, booking handoff, Amap proxy)
+├── STATUS.md             # Session hand-off: HEAD, test totals, what's not done and why, deploy checklist
 ├── LICENSE               # MIT, code only
 ├── NOTICE                # Third-party data attribution (Amap)
 ├── PRIVACY.md            # What the prototype does with an account
