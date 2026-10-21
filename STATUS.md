@@ -1,6 +1,6 @@
 # SmoothGo — session status
 
-> Latest in-progress: **HEAD `c55c15e`**, 13 commits, no remote / no push.
+> Latest in-progress: **HEAD `11e281e`**, 16 commits, no remote / no push.
 > Last update: 2026-10-21 (China time).
 
 This file is the entry point for the next session. It is intentionally short;
@@ -54,6 +54,9 @@ a regression test.
 ## What changed in this session (commits in order, newest first)
 
 ```
+11e281e  List STATUS.md and server/ in the repository structure tree
+9fb95f5  Refresh queue-model description in README
+5783a42  Add STATUS.md as the session hand-off
 c55c15e  Drop the redundant per-row photo field from places.poi.js
 e7703aa  Defer the frontend bundles and minify the POI data
 327ccd7  Label the map and POI search inputs for screen readers
