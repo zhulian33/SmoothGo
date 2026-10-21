@@ -36,6 +36,18 @@ def main() -> None:
     }
     for marker, content in replacements.items():
         if marker not in html:
+            # `defer` on every <script src> means the strict marker no
+            # longer matches; fall back to a tolerant regex replace.
+            if marker == '<script src="config.js"></script>':
+                replaced = re.sub(
+                    r'<script src="config\.js"[^>]*></script>',
+                    f"<script>\n{config}\n</script>",
+                    html,
+                    count=1,
+                )
+                if replaced != html:
+                    html = replaced
+                    continue
             raise RuntimeError(f"Missing marker in web/index.html: {marker}")
         html = html.replace(marker, content)
 
@@ -50,7 +62,10 @@ def main() -> None:
             raise RuntimeError(f"Standalone build references missing script: {src}")
         return f"<script>\n{path.read_text(encoding='utf-8')}\n</script>"
 
-    html = re.sub(r'<script src="([^"/:]+\.js)"></script>', inline_script, html)
+    # `[^>]*` lets index.html keep its defer / async attributes; the
+    # standalone build inlines everything so the attributes are dropped
+    # along with the external reference.
+    html = re.sub(r'<script src="([^"/:]+\.js)"[^>]*></script>', inline_script, html)
 
     if re.search(r'<(?:script|link)[^>]+(?:src|href)="(?:app|planner|styles|config)\.', html):
         raise RuntimeError("Standalone build still references a separate local asset.")

@@ -215,3 +215,37 @@ test("every input has an accessible name", () => {
     "inputs without a label, aria-label, or visible label"
   );
 });
+
+test("places.poi.js stays under the bytes budget", () => {
+  // Baseline on 327ccd7 (one-field-per-line): 558 163 B. The compact JSON
+  // emitted by build_places.py drops whitespace only; we keep ~70 kB of head
+  // room so a future field or two can land without busting the threshold.
+  const { readFileSync } = require("node:fs");
+  const { resolve } = require("node:path");
+  const bytes = readFileSync(resolve("web/places.poi.js")).length;
+  const MAX_BYTES = 500_000;
+  assert.ok(
+    bytes < MAX_BYTES,
+    `places.poi.js is ${bytes} B; regression budget is ${MAX_BYTES} B. ` +
+      "Check build_places.py output formatting before raising the cap."
+  );
+});
+
+test("index.html defers the frontend bundles", () => {
+  const { readFileSync } = require("node:fs");
+  const { resolve } = require("node:path");
+  const html = readFileSync(resolve("web/index.html"), "utf8");
+  const tags = [...html.matchAll(/<script\s+src="([^"]+)"([^>]*)>/g)];
+  // config.js loads SMOOTHGO_CONFIG which the rest of the bundle reads at
+  // boot. The other seven scripts do not need DOM access during execution,
+  // so a missing `defer` is always a regression.
+  const offenders = tags.filter(([, src, attrs]) => {
+    if (src === "config.js") return false;
+    return !/\bdefer\b/.test(attrs);
+  });
+  assert.deepEqual(
+    offenders.map(([, src]) => src),
+    [],
+    "frontend bundles must use defer so first paint isn't blocked"
+  );
+});

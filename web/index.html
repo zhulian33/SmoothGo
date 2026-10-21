@@ -513,13 +513,16 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="config.js"></script>
-    <script src="i18n.js"></script>
-    <script src="planner.js"></script>
-    <script src="queue-model.js"></script>
-    <script src="places.poi.js"></script>
-    <script src="place-photos.js"></script>
-    <script src="place-menus.js"></script>
-    <script src="app.js"></script>
+    <!-- defer keeps parsing going while the eight web/*.js scripts download in
+         parallel; they still execute in document order so config.js is still
+         available before app.js touches it. -->
+    <script src="config.js" defer></script>
+    <script src="i18n.js" defer></script>
+    <script src="planner.js" defer></script>
+    <script src="queue-model.js" defer></script>
+    <script src="places.poi.js" defer></script>
+    <script src="place-photos.js" defer></script>
+    <script src="place-menus.js" defer></script>
+    <script src="app.js" defer></script>
   </body>
 </html>
