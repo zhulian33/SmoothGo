@@ -71,6 +71,44 @@ function bootApp(wx) {
   return definition;
 }
 
+/* ---------- reading a WXML template ---------- */
+
+const RESERVED = new Set([
+  "true", "false", "null", "undefined",
+  "Math", "Number", "String", "Boolean", "Object", "Array", "JSON", "Date",
+]);
+
+/**
+ * Every identifier a WXML template reads straight off the page data.
+ *
+ * WXML fails silently: a field the page never set renders as nothing, with no
+ * console error and no red squiggle. Rename `activeMode` in the page and the
+ * mode chips just stop highlighting. So this has to find *every* root, not
+ * only the one right after `{{` -- in `{{item.key === activeMode ? 'on' : ''}}`
+ * the second one is the data field and the first is a loop variable.
+ */
+function rootIdentifiers(markup) {
+  // wx:for-item / wx:for-index can rename the loop variables; the defaults are
+  // item and index.
+  const loops = new Set(["item", "index"]);
+  for (const m of markup.matchAll(/wx:for-(?:item|index)="([A-Za-z_][A-Za-z0-9_]*)"/g)) {
+    loops.add(m[1]);
+  }
+
+  const found = new Set();
+  for (const m of markup.matchAll(/\{\{([\s\S]*?)\}\}/g)) {
+    // Drop string literals before scanning: 'on' is a class name, not a field.
+    const expression = m[1].replace(/'[^']*'|"[^"]*"/g, " ");
+    for (const id of expression.matchAll(/[A-Za-z_$][A-Za-z0-9_$]*/g)) {
+      // Anything after a dot is a property of something already collected.
+      if (expression.slice(0, id.index).trimEnd().endsWith(".")) continue;
+      if (loops.has(id[0]) || RESERVED.has(id[0])) continue;
+      found.add(id[0]);
+    }
+  }
+  return [...found];
+}
+
 /* ---------- the checks ---------- */
 
 test("app.json points at pages and icons that exist", () => {
@@ -262,9 +300,9 @@ test("every event handler named in a WXML file exists on its page", () => {
 
     // And every data field the template reads has to survive a refresh.
     instance.onShow();
-    for (const match of markup.matchAll(/\{\{\s*([A-Za-z_][A-Za-z0-9_]*)/g)) {
-      const field = match[1];
-      if (["item", "index", "true", "false"].includes(field)) continue;
+    const fields = rootIdentifiers(markup);
+    assert.ok(fields.length >= 5, `${page}.wxml was read as having no fields`);
+    for (const field of fields) {
       assert.ok(
         Object.prototype.hasOwnProperty.call(instance.data, field),
         `${page}.wxml reads {{${field}}}, which the page never sets`
