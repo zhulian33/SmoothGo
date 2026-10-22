@@ -1,7 +1,9 @@
 # SmoothGo — session status
 
-> Latest in-progress: **HEAD `11e281e`**, 16 commits, no remote / no push.
-> Last update: 2026-10-21 (China time).
+> Latest: run `git log -1` — this line deliberately does not pin a hash.
+> Published 2026-10-21 as a public repository: <https://github.com/zhulian33/SmoothGo>
+> (branch `main`, pushed over SSH on port 443).
+> Last update: 2026-10-22 (China time).
 
 This file is the entry point for the next session. It is intentionally short;
 the per-commit history, test coverage and design notes live in the git log,
@@ -18,8 +20,9 @@ SmoothGo is a single-page web app for planning a one-to-three-day Changchun
 itinerary. The whole frontend lives under `web/`; `server/` is a Python
 stdlib-only API that serves the static bundle, handles SMS login, and
 proxies booking handoffs to third parties (美团 / 携程). The repo is the
-source of truth for a build I intend to publish on GitHub Pages once the
-remote is wired up — see **Deployment** below.
+public source of truth at <https://github.com/zhulian33/SmoothGo>; the Pages
+build is still blocked on the owner-only switch — see **Deployment status**
+below.
 
 ### What works, end to end
 
@@ -51,7 +54,10 @@ a regression test.
 
 ---
 
-## What changed in this session (commits in order, newest first)
+## Commits from the 2026-10-21 session (newest first)
+
+For everything after that session, use `git log --oneline`. The list below is a
+historical slice, not the full history.
 
 ```
 11e281e  List STATUS.md and server/ in the repository structure tree
@@ -111,22 +117,38 @@ AAA, English-only audience vs bilingual).
 
 ---
 
-## Deployment checklist (when the remote is wired up)
+## Deployment status
 
-The repo currently has no `origin`. The intended setup:
+Remote is wired up and every commit is published:
 
-- [ ] `git remote add origin <your-repo-url>` (do not run automatically — never push without confirmation)
-- [ ] `git push -u origin main`
-- [ ] GitHub Pages: source = GitHub Actions (this repo's `ci.yml` uses `actions/checkout@v4` + `actions/setup-node@v4`)
-- [ ] Repository Secrets: `AMAP_KEY`, `AMAP_SECURITY_CODE`
-- [ ] Confirm `web/config.js` is the local-only file (gitignored). The shipped
-      config goes through GitHub Secrets and is injected at deploy time —
-      **not** committed in this repo. (The demo is offline-only with empty
-      keys.)
+- [x] `origin` = `git@github.com:zhulian33/SmoothGo.git` (SSH over port 443 —
+      outbound 22 is blocked on this network, see `~/.ssh/config`)
+- [x] `git push -u origin main` — done 2026-10-21
+- [x] Tests workflow: green on every push
+- [ ] GitHub Pages: **blocked** — `configure-pages` fails with
+      `Resource not accessible by integration`. Only the repository owner can
+      create the Pages site: Settings → Pages → Source → **GitHub Actions**.
+      A workflow token cannot do this, and `enablement: true` was tried and
+      reverted in `e8da63d`.
+- [x] The Amap key ships inside `pages.yml` and `SmoothGo-Web-Demo.html`, so
+      the deployed site needs no Repository Secrets. Secrets still win if set.
+      An Amap JS key is public by design (referrer allowlist, not secrecy).
+- [x] `web/config.js` stays local (gitignored) for `localhost` development.
 
 `docs/build_standalone.py` regenerates `SmoothGo-Web-Demo.html` from the
 seven `web/*.js` files plus `web/index.html`. Keep that in sync if you
 change any frontend bundle.
+
+## Presentation snapshot
+
+`presentation/SmoothGo_Presentation.pptx` is current. `presentation/SmoothGo_Presentation.pdf`
+and everything in `presentation/rendered/` are **older than the deck**: they
+predate the slide 5/6 wording changes and the presenter-label correction.
+Re-export both from PowerPoint before submitting, or treat them as stale.
+
+The build script `presentation/_build/build-deck.mjs` needs `@oai/artifact-tool`,
+which is not installable here, so the deck can only be edited through
+`python-pptx` or PowerPoint itself — not rebuilt from source.
 
 ---
 
