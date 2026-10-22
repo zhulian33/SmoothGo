@@ -4,10 +4,11 @@
   "private": true,
   "description": "SmoothGo - 长春行程规划 Web 应用（纯静态前端 + 可选 Python 后端）",
   "scripts": {
-    "test": "node tests/planner.test.js && node tests/queue.test.js && node tests/ui.test.js",
+    "test": "node tests/planner.test.js && node tests/queue.test.js && node tests/ui.test.js && node tests/miniprogram.test.js",
     "test:planner": "node tests/planner.test.js",
     "test:queue": "node tests/queue.test.js",
     "test:ui": "node tests/ui.test.js",
+    "test:mini": "node tests/miniprogram.test.js",
     "test:server": "python3 -m unittest tests.test_server"
   },
   "devDependencies": {

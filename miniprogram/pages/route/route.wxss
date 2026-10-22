@@ -1,0 +1,164 @@
+.daybar {
+  background: #fff;
+  padding: 20rpx 0 12rpx;
+}
+
+.daybar-scroll {
+  white-space: nowrap;
+}
+
+.daybar-row {
+  display: inline-flex;
+  padding: 0 28rpx;
+  gap: 16rpx;
+}
+
+.day {
+  padding: 12rpx 28rpx;
+  border-radius: 999rpx;
+  background: #eef2f0;
+  color: var(--muted);
+  font-size: 26rpx;
+}
+
+.day.on {
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+.tiles {
+  display: flex;
+  margin: 20rpx 28rpx 0;
+  background: #fff;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 18rpx rgba(11, 42, 35, 0.05);
+}
+
+.tile {
+  flex: 1;
+  padding: 24rpx 16rpx;
+  text-align: center;
+  border-right: 1rpx solid var(--line);
+}
+
+.tile:last-child {
+  border-right: none;
+}
+
+.tile-label {
+  font-size: 21rpx;
+  color: var(--muted);
+}
+
+.tile-value {
+  font-size: 28rpx;
+  font-weight: 700;
+  margin-top: 6rpx;
+}
+
+.timeline {
+  margin: 0 28rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 8rpx 28rpx 18rpx;
+  box-shadow: 0 4rpx 18rpx rgba(11, 42, 35, 0.05);
+}
+
+.stop {
+  display: flex;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.stop:last-child {
+  border-bottom: none;
+}
+
+.stop-rail {
+  width: 60rpx;
+  flex: none;
+}
+
+.stop-dot {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 700;
+  text-align: center;
+  line-height: 44rpx;
+}
+
+.stop-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.stop-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.stop-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  margin-right: 12rpx;
+}
+
+.stop-type {
+  font-size: 23rpx;
+  color: var(--muted);
+  margin-top: 4rpx;
+}
+
+.stop-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+
+.stop-chip {
+  font-size: 22rpx;
+  background: var(--paper);
+  border-radius: 8rpx;
+  padding: 6rpx 14rpx;
+  color: var(--ink-soft);
+}
+
+.stop-chip.warn {
+  background: rgba(127, 224, 188, 0.22);
+}
+
+.stop-basis {
+  font-size: 21rpx;
+  color: var(--muted);
+  margin-top: 10rpx;
+}
+
+.actions {
+  display: flex;
+  gap: 20rpx;
+  margin: 32rpx 28rpx 0;
+}
+
+.btn.wide {
+  flex: 1;
+}
+
+.btn.inline {
+  display: inline-block;
+  padding: 20rpx 60rpx;
+}
+
+.note {
+  margin: 24rpx 40rpx 0;
+  font-size: 22rpx;
+  color: var(--muted);
+  line-height: 1.6;
+}

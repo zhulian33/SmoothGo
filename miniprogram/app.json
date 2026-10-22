@@ -1,0 +1,49 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/route/route",
+    "pages/map/map",
+    "pages/queue/queue"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#0B2A23",
+    "navigationBarTitleText": "SmoothGo 畅游通",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F4F6F5"
+  },
+  "tabBar": {
+    "color": "#8CA49D",
+    "selectedColor": "#0B2A23",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "行程",
+        "iconPath": "images/tab-plan.png",
+        "selectedIconPath": "images/tab-plan-on.png"
+      },
+      {
+        "pagePath": "pages/route/route",
+        "text": "路线",
+        "iconPath": "images/tab-route.png",
+        "selectedIconPath": "images/tab-route-on.png"
+      },
+      {
+        "pagePath": "pages/map/map",
+        "text": "地图",
+        "iconPath": "images/tab-map.png",
+        "selectedIconPath": "images/tab-map-on.png"
+      },
+      {
+        "pagePath": "pages/queue/queue",
+        "text": "排队",
+        "iconPath": "images/tab-queue.png",
+        "selectedIconPath": "images/tab-queue-on.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

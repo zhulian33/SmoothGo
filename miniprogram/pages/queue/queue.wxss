@@ -1,0 +1,73 @@
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 32rpx 40rpx 8rpx;
+}
+
+.head-title {
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.refresh {
+  font-size: 24rpx;
+  color: var(--ink);
+  border: 2rpx solid var(--ink);
+  border-radius: 999rpx;
+  padding: 10rpx 24rpx;
+}
+
+.refresh:active {
+  opacity: 0.6;
+}
+
+.queue-card {
+  margin: 0 28rpx 20rpx;
+}
+
+.q-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.q-left {
+  flex: 1;
+  min-width: 0;
+  padding-right: 20rpx;
+}
+
+.q-name {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.q-right {
+  flex: none;
+  text-align: right;
+}
+
+.q-wait {
+  font-size: 46rpx;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.unit {
+  font-size: 26rpx;
+  color: var(--muted);
+  margin-left: 4rpx;
+}
+
+.q-arrival {
+  margin-top: 2rpx;
+}
+
+.q-basis {
+  margin-top: 18rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--line);
+  font-size: 22rpx;
+  color: var(--muted);
+}

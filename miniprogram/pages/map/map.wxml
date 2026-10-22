@@ -1,0 +1,47 @@
+<view class="page">
+  <view class="modes">
+    <view
+      wx:for="{{modes}}"
+      wx:key="key"
+      class="mode {{item.key === activeMode ? 'on' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onMode"
+    >{{item.label}}</view>
+  </view>
+
+  <view class="map-wrap">
+    <map
+      wx:if="{{hasRoute}}"
+      id="placeMap"
+      class="map"
+      latitude="{{latitude}}"
+      longitude="{{longitude}}"
+      scale="{{scale}}"
+      markers="{{markers}}"
+      polyline="{{polyline}}"
+      include-points="{{points}}"
+      bindmarkertap="onMarkerTap"
+      show-location="{{false}}"
+    ></map>
+    <view wx:else class="map-empty">
+      <view class="empty-title">{{emptyLabel}}</view>
+    </view>
+  </view>
+
+  <view class="card selected" wx:if="{{selected}}">
+    <view class="sel-head">
+      <text class="sel-name">{{selected.name}}</text>
+      <text class="tag">{{selected.modelled}}</text>
+    </view>
+    <view class="muted">{{selected.type}}</view>
+    <view class="sel-row">
+      <text class="sel-wait">{{selected.wait}}′</text>
+      <text class="muted">{{selected.basis}}</text>
+    </view>
+  </view>
+
+  <view class="footnote">
+    <view wx:if="{{countLabel}}">{{countLabel}}</view>
+    <view>{{footnote}}</view>
+  </view>
+</view>

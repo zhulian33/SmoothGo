@@ -43,7 +43,13 @@ below.
   site can be pinned to a home screen and opens without browser chrome. The
   single-file build inlines the manifest and icons as data URIs, so it stays
   one file. `docs/make_app_icons.py` regenerates the icons.
-- **Tests**: planner 12, queue 10, ui 19, server 3 = **44/44 green**.
+- **Tests**: planner 12, queue 10, ui 19, mini 10, server 3 = **54/54 green**.
+- **WeChat mini program**: `miniprogram/` now exists — 574 venues bundled,
+  planner and queue model copied verbatim from `web/`, native `<map>`, zero
+  network requests. Runs in WeChat DevTools on a **测试号**, no AppID needed.
+  Rebuild the data with `python3 docs/build_miniprogram.py`; verify with
+  `npm run test:mini`. Not tested on a physical handset — DevTools is a GUI and
+  cannot be driven from here.
 
 ### What broke and is fixed
 

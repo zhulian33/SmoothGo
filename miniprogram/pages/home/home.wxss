@@ -1,0 +1,12 @@
+.cell {
+  width: 50%;
+}
+
+.cell:active {
+  opacity: 0.6;
+}
+
+textarea.input {
+  min-height: 140rpx;
+  line-height: 1.6;
+}

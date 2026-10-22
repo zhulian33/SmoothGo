@@ -1,0 +1,66 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-bar">
+      <text class="wordmark">{{brand}}</text>
+      <view class="lang-btn" bindtap="onLang">{{langLabel}}</view>
+    </view>
+    <view class="hero-title">{{title}}</view>
+    <view class="hero-sub">{{sub}}</view>
+    <view class="stat-row">
+      <view class="stat" wx:for="{{stats}}" wx:key="key">
+        <view class="stat-value">{{item.value}}</view>
+        <view class="stat-label">{{item.label}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="sheet">
+    <view class="field-label">{{placeholder}}</view>
+    <textarea
+      class="input"
+      value="{{sentence}}"
+      bindinput="onSentence"
+      bindblur="onSentenceBlur"
+      maxlength="140"
+      auto-height
+      placeholder="{{placeholder}}"
+    />
+
+    <view class="row">
+      <view class="btn ghost" bindtap="onExtract">{{extractLabel}}</view>
+      <view class="btn solid" bindtap="onGenerate">{{generateLabel}}</view>
+    </view>
+
+    <view class="extract-status" wx:if="{{extractVisible}}">{{extractStatus}}</view>
+
+    <view class="grid">
+      <picker mode="time" value="{{startTime}}" bindchange="onStart">
+        <view class="cell">
+          <text class="cell-label">{{labels.start}}</text>
+          <text class="cell-value">{{startTime}}</text>
+        </view>
+      </picker>
+
+      <picker range="{{dayRange}}" bindchange="onDays">
+        <view class="cell">
+          <text class="cell-label">{{labels.days}}</text>
+          <text class="cell-value">{{dayLabel}}</text>
+        </view>
+      </picker>
+
+      <picker range="{{peopleRange}}" bindchange="onPeople">
+        <view class="cell">
+          <text class="cell-label">{{labels.people}}</text>
+          <text class="cell-value">{{peopleLabel}}</text>
+        </view>
+      </picker>
+
+      <view class="cell">
+        <text class="cell-label">{{labels.budget}}</text>
+        <input class="cell-input" value="{{budget}}" bindblur="onBudget" />
+      </view>
+    </view>
+  </view>
+
+  <view class="footnote">{{note}}</view>
+</view>

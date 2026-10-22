@@ -91,11 +91,34 @@ What stays in Chinese, on purpose — the same way a maps app shows a local busi
 
 ![SmoothGo pinned queue-assist status](web/preview-queue.png)
 
+## WeChat mini program
+
+`miniprogram/` is a native WeChat mini program built on the same library and
+the same scoring code as the web demo: one sentence in, a day plan with stated
+waiting times out, plus a map and a queue tab.
+
+It runs **without an AppID and without a single network request**, which is what
+makes it possible at all. The 574 venues ship inside the package, the planner
+and the queue model are copied byte for byte from `web/`, and the map is the
+native `<map>` component — Amap POIs are already gcj02, the same coordinate
+system WeChat Maps uses, so no conversion and no key are needed. That sidesteps
+both things that would otherwise block a course demo: AppID registration and
+the ICP-filed request domains a mini program normally requires.
+
+The trade-off is photographs: they live on Amap CDN hosts, which would need to
+be whitelisted as download domains, so `docs/mp_extract_places.mjs` strips them.
+
+Open `miniprogram/` in WeChat DevTools, choose **测试号** when it asks for an
+AppID, and the simulator runs. `npm run test:mini` exercises all four pages in
+Node against a fake `wx`; see [`miniprogram/README.md`](miniprogram/README.md)
+for the limits and for what real publication would still require.
+
 ## Repository structure
 
 ```text
 SmoothGo/
 ├── web/                  # Static interactive prototype
+├── miniprogram/          # Native WeChat mini program (offline, runs on a test AppID)
 ├── presentation/         # English slide deck, PDF backup and speaker notes
 ├── docs/                 # Team plan, presentation outline, Q&A bank, sources
 ├── tests/                # Planner, queue and UI tests (node:test + jsdom) + server tests (python)

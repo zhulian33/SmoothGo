@@ -1,0 +1,63 @@
+<view class="page">
+  <view wx:if="{{!hasPlan}}" class="empty">
+    <view class="empty-title">{{emptyTitle}}</view>
+    <view class="empty-body">{{emptyBody}}</view>
+    <view class="btn solid inline" bindtap="onEmpty">{{emptyCta}}</view>
+  </view>
+
+  <block wx:if="{{hasPlan}}">
+    <view class="daybar" wx:if="{{showDays}}">
+      <scroll-view scroll-x class="daybar-scroll">
+        <view class="daybar-row">
+          <view
+            wx:for="{{days}}"
+            wx:key="index"
+            class="day {{item.active ? 'on' : ''}}"
+            data-index="{{item.index}}"
+            bindtap="onDay"
+          >{{item.label}}</view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view class="tiles">
+      <view class="tile" wx:for="{{tiles}}" wx:key="key">
+        <view class="tile-label">{{item.label}}</view>
+        <view class="tile-value">{{item.value}}</view>
+      </view>
+    </view>
+
+    <view class="section-title">{{title}}</view>
+
+    <view class="timeline">
+      <view class="stop" wx:for="{{stops}}" wx:key="id">
+        <view class="stop-rail">
+          <view class="stop-dot">{{item.index}}</view>
+        </view>
+        <view class="stop-body">
+          <view class="stop-head">
+            <text class="stop-name">{{item.name}}</text>
+            <text class="tag" wx:if="{{item.badge}}">{{item.badge}}</text>
+          </view>
+          <view class="stop-type">{{item.type}}</view>
+
+          <view class="stop-meta">
+            <text class="stop-chip">{{labels.arrives}} {{item.arrival}}</text>
+            <text class="stop-chip">{{labels.visit}} {{item.visitLabel}}</text>
+            <text class="stop-chip warn">{{labels.queue}} {{item.queueRange}}′</text>
+          </view>
+
+          <view class="stop-basis" wx:if="{{item.travelLabel}}">↑ {{item.travelLabel}}</view>
+          <view class="stop-basis muted">{{item.queueBasis}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="actions">
+      <view class="btn ghost wide" bindtap="onReplan">{{replanLabel}}</view>
+      <view class="btn solid wide" bindtap="onMap">{{mapLabel}}</view>
+    </view>
+
+    <view class="note" wx:if="{{replanNote}}">{{replanNote}}</view>
+  </block>
+</view>

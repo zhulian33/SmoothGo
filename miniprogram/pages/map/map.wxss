@@ -1,0 +1,70 @@
+.modes {
+  display: flex;
+  gap: 16rpx;
+  padding: 24rpx 28rpx 0;
+}
+
+.mode {
+  padding: 12rpx 32rpx;
+  border-radius: 999rpx;
+  background: #eef2f0;
+  color: var(--muted);
+  font-size: 26rpx;
+}
+
+.mode.on {
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+.map-wrap {
+  margin: 20rpx 28rpx 0;
+  height: 62vh;
+  border-radius: 20rpx;
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow: 0 4rpx 18rpx rgba(11, 42, 35, 0.05);
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+.map-empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.card.selected {
+  margin-top: 20rpx;
+}
+
+.sel-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sel-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  margin-right: 14rpx;
+}
+
+.sel-row {
+  display: flex;
+  align-items: baseline;
+  gap: 18rpx;
+  margin-top: 14rpx;
+}
+
+.sel-wait {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
