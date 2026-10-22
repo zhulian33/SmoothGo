@@ -1,0 +1,33 @@
+{
+  "name": "SmoothGo 畅游通",
+  "short_name": "SmoothGo",
+  "description": "A day plan for Changchun that replans itself when the queues change.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B2A23",
+  "theme_color": "#0B2A23",
+  "categories": ["travel", "navigation"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

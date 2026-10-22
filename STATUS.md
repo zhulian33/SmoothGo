@@ -39,7 +39,11 @@ below.
   hand-curated entries ride a real Amap branch lookup.
 - **Queue request**: bar at the top with status, fetch queue via the
   pluggable SMS Webhook (mock / Alibaba / generic).
-- **Tests**: planner 12, queue 10, ui 18, server 3 = **43/43 green**.
+- **Installable**: `web/manifest.webmanifest` + maskable icon, so the deployed
+  site can be pinned to a home screen and opens without browser chrome. The
+  single-file build inlines the manifest and icons as data URIs, so it stays
+  one file. `docs/make_app_icons.py` regenerates the icons.
+- **Tests**: planner 12, queue 10, ui 19, server 3 = **44/44 green**.
 
 ### What broke and is fixed
 
@@ -135,16 +139,39 @@ Remote is wired up and every commit is published:
       An Amap JS key is public by design (referrer allowlist, not secrecy).
 - [x] `web/config.js` stays local (gitignored) for `localhost` development.
 
+Turning Pages on is four taps on a phone, no keyboard work needed:
+
+1. Open the repo in the GitHub app or in mobile Safari → **Settings**.
+2. Scroll to **Pages**.
+3. Under **Build and deployment → Source**, pick **GitHub Actions**.
+4. Nothing else. The `Deploy` workflow re-runs on the next push, or open
+   **Actions → Deploy SmoothGo demo → Run workflow** to fire it now.
+
+`GET /repos/zhulian33/SmoothGo/pages` returns `404` until that switch is
+flipped, so that call is the fastest way to check whether it took.
+
 `docs/build_standalone.py` regenerates `SmoothGo-Web-Demo.html` from the
 seven `web/*.js` files plus `web/index.html`. Keep that in sync if you
 change any frontend bundle.
 
+Once Pages is on, the site is `https://zhulian33.github.io/SmoothGo/`. That
+URL appears exactly once in the repo — `SITE_URL` in
+`docs/build_standalone.py` — and `docs/make_qr_assets.py` bakes it into
+`docs/assets/qr-demo.png` and `docs/assets/scan-card.png`. If the repo is ever
+renamed, change `SITE_URL` and re-run both scripts; otherwise the QR code and
+the installed-app manifest will both point at a dead host.
+
 ## Presentation snapshot
 
-`presentation/SmoothGo_Presentation.pptx` is current. `presentation/SmoothGo_Presentation.pdf`
-and everything in `presentation/rendered/` are **older than the deck**: they
-predate the slide 5/6 wording changes and the presenter-label correction.
-Re-export both from PowerPoint before submitting, or treat them as stale.
+`presentation/SmoothGo_Presentation.pptx` is current at **15 slides**.
+`presentation/SmoothGo_Presentation.pdf` and everything in
+`presentation/rendered/` are **older than the deck**: they predate the slide
+5/6 wording changes, the presenter-label correction and the closing scan
+slide. Re-export both from PowerPoint before submitting, or treat them as stale.
+
+Slide 15 is a full-bleed `docs/assets/scan-card.png` with the demo QR code. It
+is appended, not inserted, so slides 1–14 keep their indices and Member F still
+owns exactly 5–6. Deleting it costs nothing but the in-room demo link.
 
 The build script `presentation/_build/build-deck.mjs` needs `@oai/artifact-tool`,
 which is not installable here, so the deck can only be edited through

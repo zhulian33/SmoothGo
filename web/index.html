@@ -8,6 +8,16 @@
       content="SmoothGo 畅游通 — 用天气、路线、排队和购票信息，帮你安排更顺路的一天。"
     />
     <title>SmoothGo 畅游通</title>
+    <!-- Installable: on the deployed site this gives "Add to Home Screen" a real
+         icon and a chrome-free window. build_standalone.py swaps the manifest
+         for a data: URI so the single-file build keeps working. -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta name="theme-color" content="#0B2A23" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SmoothGo" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>

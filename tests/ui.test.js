@@ -281,3 +281,39 @@ test("index.html defers the frontend bundles", () => {
     "frontend bundles must use defer so first paint isn't blocked"
   );
 });
+
+test("the installable manifest points at icons that exist", () => {
+  const { readFileSync, existsSync } = require("node:fs");
+  const { resolve } = require("node:path");
+
+  const webDir = resolve("web");
+  const manifest = JSON.parse(
+    readFileSync(resolve(webDir, "manifest.webmanifest"), "utf8")
+  );
+
+  // Relative so the same file works on localhost, Pages and any fork.
+  assert.equal(manifest.start_url, "./");
+  assert.equal(manifest.scope, "./");
+  assert.equal(manifest.display, "standalone");
+
+  // A maskable icon is what stops Android from drawing the glyph on a white
+  // disc, so its absence is a visible regression on every Android phone.
+  const purposes = manifest.icons.map((i) => i.purpose);
+  assert.ok(purposes.includes("any"), "manifest needs a normal icon");
+  assert.ok(purposes.includes("maskable"), "manifest needs a maskable icon");
+
+  for (const icon of manifest.icons) {
+    const file = resolve(webDir, icon["src"]);
+    assert.ok(existsSync(file), `manifest icon is missing: ${icon["src"]}`);
+    const [w, h] = icon.sizes.split("x").map(Number);
+    assert.equal(w, h, `${icon["src"]} must be square`);
+  }
+
+  const html = readFileSync(resolve(webDir, "index.html"), "utf8");
+  assert.match(html, /<link rel="manifest" href="manifest\.webmanifest" \/>/);
+  assert.match(html, /<link rel="apple-touch-icon" href="apple-touch-icon\.png" \/>/);
+  assert.ok(
+    existsSync(resolve(webDir, "apple-touch-icon.png")),
+    "iOS Add to Home Screen needs apple-touch-icon.png"
+  );
+});

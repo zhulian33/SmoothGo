@@ -52,6 +52,23 @@ Then visit `http://localhost:8080`.
 
 The web demo is intentionally dependency-free so it can run from GitHub Pages or a USB stick without a build step.
 
+### Try it on your phone
+
+[![Scan to open the SmoothGo live demo](docs/assets/scan-card.png)](https://zhulian33.github.io/SmoothGo/)
+
+`https://zhulian33.github.io/SmoothGo/` — no build step, no install, no account.
+
+The deployed site also carries a Web App Manifest and a maskable icon, so it can be pinned like an app instead of bookmarked: on iOS **Share → Add to Home Screen**, on Android **⋮ → Install app** (or *Add to Home screen*). The installed window opens without browser chrome, uses the brand colour for the status bar and remembers the language you picked. This is the closest thing to a mini program that works today — a real WeChat mini program needs a registered AppID, a mainland-hosted, ICP-filed HTTPS domain for every request, and 1–7 days of review, none of which a course deadline allows.
+
+![SmoothGo at a 390 px phone viewport](docs/assets/app-mobile.png)
+
+The two QR codes and the closing slide are generated from source, not hand-drawn, so the URL only lives in one place:
+
+```bash
+python3 docs/make_qr_assets.py    # docs/assets/qr-demo.png, qr-repo.png, scan-card.png
+python3 docs/make_app_icons.py    # web/icon-*.png, web/apple-touch-icon.png
+```
+
 ### Bilingual interface (中文 / EN)
 
 The interface is bilingual and defaults to Chinese. The switch in the header toggles between `中文` and `EN`, and the choice is kept in `localStorage` under `smoothgo_lang`, so it survives a reload.

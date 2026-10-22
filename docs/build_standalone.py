@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import base64
+import json
 import os
 import re
 from pathlib import Path
@@ -11,6 +13,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 OUTPUT = ROOT / "SmoothGo-Web-Demo.html"
+
+# Where the repo's GitHub Pages site lives. The manifest has to name this
+# absolutely: a data: URI manifest cannot resolve a relative start_url, and the
+# single-file build ships no sibling files to resolve against.
+SITE_URL = "https://zhulian33.github.io/SmoothGo/"
 
 
 def read(name: str) -> str:
@@ -48,10 +55,46 @@ def main() -> None:
                 config,
             )
 
+    # --- Keep the single file installable without shipping extra files -------
+    # A relative manifest would 404 next to a lone .html, and a data: manifest
+    # cannot resolve relative URLs, so rewrite start_url/scope to absolute and
+    # inline every icon as base64.
+    def png_data_uri(name: str) -> str:
+        p = WEB / name
+        if not p.exists():
+            raise RuntimeError(f"Missing app icon: {p.relative_to(ROOT)}")
+        return "data:image/png;base64," + base64.b64encode(p.read_bytes()).decode("ascii")
+
+    manifest = json.loads((WEB / "manifest.webmanifest").read_text(encoding="utf-8"))
+    manifest["start_url"] = SITE_URL
+    manifest["scope"] = SITE_URL
+    for icon in manifest["icons"]:
+        icon["src"] = png_data_uri(icon["src"])
+    manifest_b64 = base64.b64encode(
+        json.dumps(manifest, separators=(",", ":")).encode("utf-8")
+    ).decode("ascii")
+
+    for old, new in (
+        (
+            '<link rel="manifest" href="manifest.webmanifest" />',
+            '<link rel="manifest" href="'
+            f'data:application/manifest+json;base64,{manifest_b64}" />',
+        ),
+        (
+            '<link rel="apple-touch-icon" href="apple-touch-icon.png" />',
+            '<link rel="apple-touch-icon" href="'
+            f'{png_data_uri("apple-touch-icon.png")}" />',
+        ),
+    ):
+        if old not in html:
+            raise RuntimeError(f"Missing marker in web/index.html: {old}")
+        html = html.replace(old, new)
+
     replacements = {
         '<link rel="stylesheet" href="styles.css" />': f"<style>\n{read('styles.css')}\n</style>",
         '<script src="config.js"></script>': f"<script>\n{config}\n</script>",
     }
+
     for marker, content in replacements.items():
         if marker not in html:
             # `defer` on every <script src> means the strict marker no
@@ -89,6 +132,8 @@ def main() -> None:
         raise RuntimeError("Standalone build still references a separate local asset.")
     if re.search(r'<script src="(?!https?:)', html):
         raise RuntimeError("Standalone build still references an external local script.")
+    if re.search(r'(?:manifest\.webmanifest|apple-touch-icon\.png|icon-\d+\.png)', html):
+        raise RuntimeError("Standalone build still references an app icon or manifest file.")
 
     OUTPUT.write_text(html, encoding="utf-8")
     print(f"Wrote {OUTPUT.relative_to(ROOT)} ({OUTPUT.stat().st_size:,} bytes)")
