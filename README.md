@@ -2,6 +2,8 @@
 
 **Travel smart. Skip the wait.**
 
+![SmoothGo — a Changchun day planner that replans itself when the queues change](docs/assets/social-preview.png)
+
 SmoothGo is an AI-assisted travel planner that turns live crowd and queue signals into a personalized, continuously updated day plan. The first pilot is designed for **Changchun, China**, with a roadmap to expand to other Chinese tourism cities.
 
 > This repository is a student project for the ENGL1006 Business Communication final presentation at Changchun Normal University, delivered in partnership with Southern Cross University (SCU). The demo uses illustrative data and is not affiliated with any venue, map provider, or booking platform.
