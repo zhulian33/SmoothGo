@@ -32,3 +32,9 @@ docs/build_simple_role_docs.py
 
 # devDependency install (only package.json + package-lock.json are committed)
 node_modules/
+
+# WeChat DevTools writes this the moment it first opens the mini program. It
+# holds per-developer state -- which page was open, whether the simulator is
+# docked, the last compile options -- so committing it means every machine that
+# imports the project shows up as a dirty tree.
+miniprogram/project.private.config.json
