@@ -4,21 +4,39 @@ const core = require("../../utils/core.js");
 
 const { t } = i18n;
 
+const CENTRE = { latitude: 43.883, longitude: 125.324 };
+
 Page({
   data: {
+    kicker: "",
     title: "",
-    hasPlan: false,
-    days: [],
-    showDays: false,
-    stops: [],
-    tiles: [],
+    subtitle: "",
+    summary: [],
+    navLabel: "",
     replanLabel: "",
-    mapLabel: "",
-    replanNote: "",
-    emptyTitle: "",
+    addLabel: "",
+    removeLabel: "",
+    queueLabel: "",
+    minuteLabel: "",
+
+    showDays: false,
+    days: [],
+    banner: "",
+
+    hasRoute: false,
+    hasPlan: false,
+    latitude: CENTRE.latitude,
+    longitude: CENTRE.longitude,
+    scale: 11,
+    markers: [],
+    polyline: [],
+    mapEmptyLabel: "",
+
+    sheetTitle: "",
+    sheetNote: "",
+    stops: [],
     emptyBody: "",
-    emptyCta: "",
-    labels: {},
+    footnote: "",
   },
 
   onShow() {
@@ -27,73 +45,119 @@ Page({
   },
 
   refresh() {
-    wx.setNavigationBarTitle({ title: t("路线") });
+    const state = store.state;
+    const day = store.currentDay();
+    const map = core.routeMapModel();
+    const model = day
+      ? core.dayModel(day, core.parseTime(state.startTime) || 570)
+      : null;
+    const dayCount = (state.itinerary || []).length;
 
-    const shared = {
-      title: t("当日路线"),
-      replanLabel: t("智能重排"),
-      mapLabel: t("在地图查看"),
-      labels: {
-        arrives: t("预计到达"),
-        visit: t("停留"),
-        queue: t("排队"),
-      },
-      emptyTitle: t("还没有行程"),
-      emptyBody: t("先去首页生成一条路线"),
-      emptyCta: t("去生成"),
-    };
-
-    const startMinutes = core.parseTime(store.state.startTime) || 570;
-    const model = core.planCurrentDay(startMinutes);
-
-    if (!model || !model.stops.length) {
-      this.setData({ ...shared, hasPlan: false, stops: [] });
-      return;
-    }
-
-    const days = store.state.itinerary.map((day, index) => ({
-      index,
-      label: t("第 {v0} 天", { v0: index + 1 }),
-      active: index === store.state.selectedDay,
-    }));
-
-    const last = store.state.lastReplan;
     this.setData({
-      ...shared,
-      hasPlan: true,
-      days,
-      showDays: days.length > 1,
-      stops: model.stops,
-      tiles: [
-        { key: "duration", label: t("总时长"), value: model.totals.duration },
-        { key: "travel", label: t("路上"), value: model.totals.travel },
-        { key: "queue", label: t("排队"), value: model.totals.queue },
-        { key: "budget", label: t("花费"), value: model.totals.budget },
-      ],
-      replanNote: last
+      kicker: t("路线规划"),
+      title:
+        dayCount > 1
+          ? t("长春 {v0} 日路线", { v0: dayCount })
+          : t("长春一日路线"),
+      subtitle: model
+        ? t("{v0} 个地点 · {v1} · {v2} 开始", {
+            v0: model.stops.length,
+            v1: t("今天"),
+            v2: state.startTime,
+          })
+        : t("还没有地点，先去地图添加。"),
+      summary: model
+        ? [
+            { key: "stops", value: model.stops.length, label: t("个地点") },
+            { key: "total", value: model.totals.duration, label: t("总时长") },
+            { key: "travel", value: model.totals.travel, label: t("总车程") },
+            { key: "budget", value: model.totals.budget, label: t("当日人均 · 估") },
+          ]
+        : [],
+      navLabel: t("开始导航"),
+      replanLabel: t("智能重排"),
+      addLabel: t("＋ 添加地点"),
+      removeLabel: t("移除"),
+      queueLabel: t("推算等候"),
+      minuteLabel: t("分钟"),
+
+      showDays: dayCount > 1,
+      days: (state.itinerary || []).map((_, index) => ({
+        index,
+        label: t("第 {v0} 天", { v0: index + 1 }),
+        active: index === state.selectedDay,
+      })),
+      banner: state.lastReplan
         ? t("已重排：{v0} 换成 {v1}，省下约 {v2} 分钟", {
-            v0: last.from,
-            v1: last.to,
-            v2: last.queueSaved || last.durationSaved || 0,
+            v0: state.lastReplan.from,
+            v1: state.lastReplan.to,
+            v2: state.lastReplan.queueSaved || state.lastReplan.durationSaved || 0,
           })
         : "",
+
+      hasRoute: map.hasRoute,
+      hasPlan: Boolean(model),
+      latitude: map.hasRoute ? map.latitude : CENTRE.latitude,
+      longitude: map.hasRoute ? map.longitude : CENTRE.longitude,
+      scale: map.hasRoute ? map.scale : 11,
+      markers: map.markers,
+      polyline: map.polyline,
+      mapEmptyLabel: t("还没有行程"),
+
+      sheetTitle: t("最优连接"),
+      sheetNote: t("驾车优先 · 按路程估算"),
+      stops: model ? model.stops : [],
+      emptyBody: t("还没有地点，先去地图添加。"),
+      footnote: t("排队为模型推算并附依据；车程按直线距离估算，非实时路况。"),
     });
+
+    wx.setNavigationBarTitle({ title: t("路线") });
   },
 
   onDay(event) {
-    store.selectDay(Number(event.currentTarget.dataset.index));
+    const index = Number(event.currentTarget.dataset.index);
+    store.patch({ selectedDay: index });
     this.refresh();
   },
 
   onReplan() {
-    if (core.replan()) this.refresh();
+    core.replan();
+    this.refresh();
   },
 
-  onMap() {
+  onNavigate() {
+    const route = store.currentRoute();
+    if (!route.length) {
+      wx.showToast({ title: t("还没有地点，先去地图添加。"), icon: "none" });
+      return;
+    }
+    // The web build hands this to Amap's own navigation. Here it opens the
+    // system map at the first stop, which is the closest honest equivalent.
+    const first = route[0];
+    wx.openLocation({
+      latitude: first.lat,
+      longitude: first.lng,
+      name: first.name,
+      address: first.address || "",
+      scale: 15,
+    });
+  },
+
+  onAddPlace() {
     wx.switchTab({ url: "/pages/map/map" });
   },
 
-  onEmpty() {
-    wx.switchTab({ url: "/pages/home/home" });
+  onRemove(event) {
+    const id = event.currentTarget.dataset.id;
+    const days = store.state.itinerary.slice();
+    const at = store.state.selectedDay;
+    if (!days[at]) return;
+    days[at] = {
+      route: days[at].route.filter((place) => place.id !== id),
+      reasons: { ...(days[at].reasons || {}) },
+    };
+    store.state.itinerary = days;
+    store.save();
+    this.refresh();
   },
 });

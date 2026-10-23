@@ -142,6 +142,7 @@ function preferences() {
 function dayModel(day, startMinutes) {
   const stops = (day.route || []).filter(Boolean);
   const summary = PLANNER.summarize(stops, startMinutes, travelBetween, { queueFor });
+  const reasons = day.reasons || {};
 
   return {
     stops: summary.stops.map((stop, index) => ({
@@ -158,7 +159,14 @@ function dayModel(day, startMinutes) {
       queueBasis: queueBasisText(stop, stop.arrival),
       queueAverage: stop.queueAverage,
       visitLabel: t("{v0} 分钟", { v0: stop.visit || 60 }),
-      avgLabel: `¥${stop.avg ?? 0}`,
+      avgLabel: stop.avg ? `¥${stop.avg}` : t("暂无"),
+      // The route page prints these three the way the web build does -- rating,
+      // spend, opening hours -- and an absent one has to render as a dash, not
+      // as "undefined" or a stray ¥0.
+      rating: stop.rating ? Number(stop.rating).toFixed(1) : "—",
+      hours: stop.hours || t("暂无"),
+      // Why the replanner moved this stop in, if it did.
+      reason: reasons[stop.id] ? t(reasons[stop.id]) : "",
     })),
     totals: {
       duration: durationLabel(summary.totalDuration),
@@ -172,6 +180,43 @@ function dayModel(day, startMinutes) {
 function planCurrentDay(startMinutes) {
   const day = store.currentDay();
   return day ? dayModel(day, startMinutes) : null;
+}
+
+/**
+ * Markers, polyline and centre for the current route, in the shape <map> wants.
+ *
+ * Home and Map both draw this. When two pages each build their own, they drift
+ * -- one numbers the pins, the other does not, one draws the leg dotted and the
+ * other solid -- and neither looks wrong on its own. One function, one answer.
+ *
+ * `count: 0` with `hasRoute: false` is deliberate: the caller decides what an
+ * empty map means, and it is not the same on the two pages.
+ */
+function routeMapModel() {
+  const route = store.currentRoute();
+  if (route.length < 2) {
+    return { hasRoute: false, count: route.length, markers: [], polyline: [], points: [] };
+  }
+  const points = route.map((place) => ({ latitude: place.lat, longitude: place.lng }));
+  return {
+    hasRoute: true,
+    count: route.length,
+    latitude: route[0].lat,
+    longitude: route[0].lng,
+    scale: 12,
+    markers: route.map((place, index) => ({
+      id: index,
+      latitude: place.lat,
+      longitude: place.lng,
+      title: place.name,
+      width: 28,
+      height: 28,
+    })),
+    // Same ink as the rules and headings, at partial alpha so the pins stay
+    // readable on top of it. The web build draws this leg in black too.
+    polyline: [{ points, color: "#11111199", width: 5, dottedLine: true }],
+    points,
+  };
 }
 
 function generateItinerary() {
@@ -342,6 +387,7 @@ module.exports = {
   preferences,
   dayModel,
   planCurrentDay,
+  routeMapModel,
   generateItinerary,
   replan,
   extractPreferences,

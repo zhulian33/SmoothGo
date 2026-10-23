@@ -1,66 +1,167 @@
 <view class="page">
+
+  <!-- Top bar. The web build puts brand, city and language switch on one
+       sticky row; the tab bar below is the mini program's own, so only the
+       identity half is reproduced here. -->
+  <view class="topbar">
+    <view class="brand">
+      <text class="brand-mark">S</text>
+      <view class="brand-type">
+        <text class="brand-name">SmoothGo</text>
+        <text class="brand-sub">{{brandSub}}</text>
+      </view>
+    </view>
+    <view class="top-actions">
+      <view class="city-button">
+        <text class="city-dot"></text>
+        <text>{{cityLabel}}</text>
+      </view>
+      <view class="lang-button" bindtap="onLang">{{langLabel}}</view>
+    </view>
+  </view>
+
+  <!-- Hero -->
   <view class="hero">
-    <view class="hero-bar">
-      <text class="wordmark">{{brand}}</text>
-      <view class="lang-btn" bindtap="onLang">{{langLabel}}</view>
+    <view class="kicker">{{todayLabel}}</view>
+    <view class="h1">
+      <text>{{title}}</text>
+      <text class="h1-em">{{sub}}</text>
     </view>
-    <view class="hero-title">{{title}}</view>
-    <view class="hero-sub">{{sub}}</view>
-    <view class="stat-row">
-      <view class="stat" wx:for="{{stats}}" wx:key="key">
-        <view class="stat-value">{{item.value}}</view>
-        <view class="stat-label">{{item.label}}</view>
+    <view class="lede">{{lede}}</view>
+
+    <view class="planner-card">
+      <view class="planner-head">
+        <text class="serif planner-title">{{plannerTitle}}</text>
+        <text class="micro muted">{{plannerHint}}</text>
+      </view>
+
+      <view class="nlp-row">
+        <textarea
+          class="input-line nlp-input"
+          value="{{sentence}}"
+          bindinput="onSentence"
+          bindblur="onSentenceBlur"
+          maxlength="140"
+          auto-height
+          placeholder="{{placeholder}}"
+          placeholder-class="ph"
+        />
+        <view class="btn dark nlp-btn" bindtap="onExtract">{{extractLabel}}</view>
+      </view>
+
+      <view class="field-grid">
+        <view class="field">
+          <text>{{labels.start}}</text>
+          <picker mode="time" value="{{startTime}}" bindchange="onStartTime">
+            <view class="value picker-value">{{startTime}}<text class="caret">▾</text></view>
+          </picker>
+        </view>
+        <view class="field">
+          <text>{{labels.budget}}</text>
+          <input
+            class="value"
+            value="{{budget}}"
+            bindblur="onBudget"
+            placeholder="¥300–500"
+            placeholder-class="ph"
+          />
+        </view>
+        <view class="field">
+          <text>{{labels.days}}</text>
+          <picker range="{{dayRange}}" value="{{dayIndex}}" bindchange="onDays">
+            <view class="value picker-value">{{dayLabel}}<text class="caret">▾</text></view>
+          </picker>
+        </view>
+        <view class="field">
+          <text>{{labels.location}}</text>
+          <input
+            class="value"
+            value="{{location}}"
+            bindblur="onLocation"
+            placeholder="长春市朝阳区"
+            placeholder-class="ph"
+          />
+        </view>
+        <view class="field">
+          <text>{{labels.people}}</text>
+          <picker range="{{peopleRange}}" value="{{peopleIndex}}" bindchange="onPeople">
+            <view class="value picker-value">{{peopleLabel}}<text class="caret">▾</text></view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="planner-foot">
+        <view class="btn dark" bindtap="onGenerate">{{generateLabel}}</view>
+        <text class="micro muted">{{extractStatus}}</text>
       </view>
     </view>
   </view>
 
-  <view class="sheet">
-    <view class="field-label">{{placeholder}}</view>
-    <textarea
-      class="input"
-      value="{{sentence}}"
-      bindinput="onSentence"
-      bindblur="onSentenceBlur"
-      maxlength="140"
-      auto-height
-      placeholder="{{placeholder}}"
-    />
-
-    <view class="row">
-      <view class="btn ghost" bindtap="onExtract">{{extractLabel}}</view>
-      <view class="btn solid" bindtap="onGenerate">{{generateLabel}}</view>
+  <!-- Map preview. A native <map> sits above everything else in the stacking
+       order, so the summary card goes underneath it instead of being overlaid
+       like it is on the web build. -->
+  <view class="pad">
+    <view class="map-card">
+      <view class="map-top">
+        <text class="map-label">{{mapLabel}}</text>
+        <text class="map-live"><text class="live-dot"></text>{{mapLive}}</text>
+      </view>
+      <map
+        wx:if="{{hasRoute}}"
+        class="home-map"
+        latitude="{{latitude}}"
+        longitude="{{longitude}}"
+        scale="{{scale}}"
+        markers="{{markers}}"
+        polyline="{{polyline}}"
+        enable-scroll="{{false}}"
+        enable-zoom="{{false}}"
+      ></map>
+      <view wx:else class="home-map home-map-empty">
+        <text class="micro muted">{{mapEmptyLabel}}</text>
+      </view>
     </view>
 
-    <view class="extract-status" wx:if="{{extractVisible}}">{{extractStatus}}</view>
-
-    <view class="grid">
-      <picker mode="time" value="{{startTime}}" bindchange="onStart">
-        <view class="cell">
-          <text class="cell-label">{{labels.start}}</text>
-          <text class="cell-value">{{startTime}}</text>
-        </view>
-      </picker>
-
-      <picker range="{{dayRange}}" bindchange="onDays">
-        <view class="cell">
-          <text class="cell-label">{{labels.days}}</text>
-          <text class="cell-value">{{dayLabel}}</text>
-        </view>
-      </picker>
-
-      <picker range="{{peopleRange}}" bindchange="onPeople">
-        <view class="cell">
-          <text class="cell-label">{{labels.people}}</text>
-          <text class="cell-value">{{peopleLabel}}</text>
-        </view>
-      </picker>
-
-      <view class="cell">
-        <text class="cell-label">{{labels.budget}}</text>
-        <input class="cell-input" value="{{budget}}" bindblur="onBudget" />
-      </view>
+    <view class="preview-card">
+      <text class="serif preview-title">{{previewTitle}}</text>
+      <text class="micro muted preview-summary">{{previewSummary}}</text>
+      <view class="text-link" bindtap="onOpenRoute">{{routeLinkLabel}}</view>
     </view>
   </view>
 
-  <view class="footnote">{{note}}</view>
+  <!-- Signal strip. Four across on the web build, 2x2 on a phone. Two of the
+       four deliberately read "—": the project states what it does not have
+       rather than inventing a number. -->
+  <view class="signal-strip">
+    <view class="signal-item" wx:for="{{signals}}" wx:key="key">
+      <text class="tracked muted">{{item.label}}</text>
+      <text class="serif signal-value">{{item.value}}</text>
+      <text class="micro muted">{{item.note}}</text>
+    </view>
+  </view>
+
+  <!-- Today's route -->
+  <view class="section-head">
+    <view>
+      <view class="kicker">{{todayKicker}}</view>
+      <view class="h2">{{todayHeading}}</view>
+    </view>
+    <view class="text-link" bindtap="onOpenRoute">{{routeLinkLabel}}</view>
+  </view>
+
+  <scroll-view wx:if="{{todayStops.length}}" class="today-row" scroll-x enable-flex>
+    <view class="today-card" wx:for="{{todayStops}}" wx:key="id">
+      <text class="today-index">{{item.index}}</text>
+      <text class="serif today-name">{{item.name}}</text>
+      <text class="micro muted">{{item.type}}</text>
+      <text class="micro today-arrival">{{item.arrival}}</text>
+      <text class="micro muted">{{item.queueRange}}′</text>
+    </view>
+  </scroll-view>
+  <view wx:else class="empty">
+    <view class="empty-title">{{emptyTitle}}</view>
+    <view class="empty-body">{{emptyBody}}</view>
+  </view>
+
+  <view class="notice">{{footnote}}</view>
 </view>
