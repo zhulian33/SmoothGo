@@ -6,17 +6,17 @@
     "pages/queue/queue"
   ],
   "window": {
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#0B2A23",
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#FFFFFF",
     "navigationBarTitleText": "SmoothGo 畅游通",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#F4F6F5"
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#EDEDED"
   },
   "tabBar": {
-    "color": "#8CA49D",
-    "selectedColor": "#0B2A23",
+    "color": "#6C6C6C",
+    "selectedColor": "#111111",
     "backgroundColor": "#FFFFFF",
-    "borderStyle": "white",
+    "borderStyle": "black",
     "list": [
       {
         "pagePath": "pages/home/home",

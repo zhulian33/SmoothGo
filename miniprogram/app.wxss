@@ -1,240 +1,293 @@
-page {
-  --ink: #0b2a23;
-  --ink-soft: #123a31;
-  --mint: #7fe0bc;
-  --pale: #c9ddd5;
-  --muted: #8ca49d;
-  --paper: #f4f6f5;
-  --line: #e2e8e5;
-  --card: #ffffff;
+/**
+ * SmoothGo mini program -- the web demo's design language, sized for a phone.
+ *
+ * The palette, the type pairing and the rules are web/styles.css, which is
+ * what the deck screenshots and the GitHub preview show. A green card here
+ * would make the two products look like different projects.
+ *
+ * What had to change for the smaller canvas:
+ *   - Sizes are in rpx, not px. The web app sets labels at 7-9px, which is
+ *     legible on a 1440px desktop and invisible on a 375px phone. The ratios
+ *     are kept (label ~0.4 of the section heading) but the floor is 20rpx.
+ *   - Two column desktop grids -- the hero, the signal strip, the queue list --
+ *     collapse to one column, or to 2x2 where four numbers belong together.
+ *   - `:root` becomes `page`, and `font-family` is inherited the same way.
+ */
 
-  background: var(--paper);
+page {
+  --ink: #111111;
+  --ink-soft: #3a3a3a;
+  --muted: #6c6c6c;
+  --line: #d8d8d8;
+  --line-dark: #a8a8a8;
+  --paper: #ffffff;
+  --soft: #f5f5f5;
+  --app-bg: #ededed;
+  --serif: "Songti SC", "Noto Serif SC", "STSong", Georgia, serif;
+  --sans: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif;
+
+  background: var(--app-bg);
   color: var(--ink);
-  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Helvetica, sans-serif;
-  font-size: 28rpx;
-  line-height: 1.5;
+  font-family: var(--sans);
+  font-size: 26rpx;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
-view, text, scroll-view, input, textarea {
+view, text, scroll-view, input, textarea, button {
   box-sizing: border-box;
 }
 
+button::after {
+  border: none;
+}
+
+/* ---------- shell ---------- */
+
 .page {
-  padding-bottom: 60rpx;
+  min-height: 100vh;
+  padding-bottom: 40rpx;
 }
-
-/* ---------- hero ---------- */
-
-.hero {
-  background: linear-gradient(170deg, var(--ink-soft), var(--ink));
-  padding: 32rpx 40rpx 44rpx;
-  color: #fff;
-}
-
-.hero-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 40rpx;
-}
-
-.wordmark {
-  font-size: 26rpx;
-  letter-spacing: 6rpx;
-  color: var(--mint);
-  font-weight: 600;
-}
-
-.lang-btn {
-  border: 1rpx solid rgba(127, 224, 188, 0.5);
-  color: var(--mint);
-  border-radius: 999rpx;
-  padding: 6rpx 22rpx;
-  font-size: 24rpx;
-}
-
-.hero-title {
-  display: block;
-  font-size: 52rpx;
-  font-weight: 700;
-  letter-spacing: 1rpx;
-}
-
-.hero-sub {
-  display: block;
-  font-size: 30rpx;
-  color: var(--pale);
-  margin-top: 10rpx;
-}
-
-.stat-row {
-  display: flex;
-  margin-top: 36rpx;
-}
-
-.stat {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #fff;
-}
-
-.stat-label {
-  font-size: 22rpx;
-  color: var(--muted);
-  margin-top: 4rpx;
-}
-
-/* ---------- sheets and cards ---------- */
 
 .sheet {
-  background: var(--card);
-  border-radius: 24rpx;
-  margin: -24rpx 28rpx 0;
-  padding: 32rpx;
-  box-shadow: 0 8rpx 32rpx rgba(11, 42, 35, 0.08);
-}
-
-.card {
-  background: var(--card);
-  border-radius: 20rpx;
-  padding: 28rpx;
-  margin: 0 28rpx 20rpx;
-  box-shadow: 0 4rpx 18rpx rgba(11, 42, 35, 0.05);
-}
-
-.field-label {
-  font-size: 24rpx;
-  color: var(--muted);
-  margin-bottom: 12rpx;
-}
-
-.input {
-  width: 100%;
   background: var(--paper);
-  border: 1rpx solid var(--line);
-  border-radius: 14rpx;
-  padding: 20rpx;
-  font-size: 28rpx;
-  min-height: 120rpx;
-}
-
-.row {
-  display: flex;
-  gap: 20rpx;
-  margin-top: 24rpx;
-}
-
-.btn {
-  border-radius: 999rpx;
-  padding: 20rpx 32rpx;
-  font-size: 28rpx;
-  text-align: center;
-  font-weight: 600;
-}
-
-.btn.solid {
-  background: var(--ink);
-  color: #fff;
-  flex: 1;
-}
-
-.btn.ghost {
-  border: 2rpx solid var(--ink);
-  color: var(--ink);
-}
-
-.btn:active {
-  opacity: 0.7;
-}
-
-.extract-status {
-  margin-top: 20rpx;
-  padding: 16rpx 20rpx;
-  background: rgba(127, 224, 188, 0.16);
-  border-radius: 12rpx;
-  color: var(--ink-soft);
-  font-size: 24rpx;
-}
-
-.grid {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 32rpx;
   border-top: 1rpx solid var(--line);
-  padding-top: 8rpx;
 }
 
-.cell {
-  width: 50%;
-  padding: 18rpx 0;
-}
+/* ---------- type ---------- */
 
-.cell-label {
-  display: block;
-  font-size: 22rpx;
+.kicker {
+  display: flex;
+  align-items: center;
   color: var(--muted);
-}
-
-.cell-value {
-  display: block;
-  font-size: 30rpx;
-  font-weight: 600;
-  margin-top: 4rpx;
-}
-
-.cell-input {
-  display: block;
-  font-size: 30rpx;
-  font-weight: 600;
-  margin-top: 4rpx;
-}
-
-.footnote {
-  margin: 32rpx 40rpx 0;
-  font-size: 22rpx;
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-/* ---------- shared bits ---------- */
-
-.section-title {
-  font-size: 34rpx;
-  font-weight: 700;
-  margin: 36rpx 40rpx 18rpx;
-}
-
-.tag {
-  display: inline-block;
   font-size: 20rpx;
-  padding: 4rpx 14rpx;
-  border-radius: 999rpx;
-  background: rgba(127, 224, 188, 0.2);
-  color: var(--ink-soft);
-  margin-right: 10rpx;
+  font-weight: 600;
+  letter-spacing: 3rpx;
+}
+
+/* The 23px rule in front of every kicker on the web build. Without it these
+   read as ordinary grey text rather than as section eyebrows. */
+.kicker::before {
+  content: "";
+  display: inline-block;
+  width: 46rpx;
+  height: 2rpx;
+  margin-right: 14rpx;
+  background: var(--ink);
+}
+
+.serif {
+  font-family: var(--serif);
+  font-weight: 400;
+}
+
+.h1 {
+  margin: 20rpx 0 0;
+  font-family: var(--serif);
+  font-size: 68rpx;
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -2rpx;
+}
+
+.h1 em {
+  font-style: normal;
+  text-decoration: underline;
+  text-decoration-thickness: 2rpx;
+  text-underline-offset: 12rpx;
+}
+
+.h2 {
+  margin: 8rpx 0 0;
+  font-family: var(--serif);
+  font-size: 44rpx;
+  font-weight: 400;
+  letter-spacing: -1rpx;
+}
+
+.lede {
+  margin: 14rpx 0 0;
+  color: var(--muted);
+  font-size: 24rpx;
+  line-height: 1.7;
 }
 
 .muted {
   color: var(--muted);
+}
+
+.tiny {
+  font-size: 22rpx;
+}
+
+.micro {
+  font-size: 20rpx;
+}
+
+.tracked {
+  font-size: 20rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+/* ---------- structure ---------- */
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 28rpx 28rpx 14rpx;
+  border-bottom: 1rpx solid var(--ink);
+}
+
+.section-head .section-actions {
+  flex: none;
+}
+
+.pad {
+  padding: 0 28rpx;
+}
+
+.rule {
+  height: 1rpx;
+  background: var(--line);
+}
+
+/* ---------- controls ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60rpx;
+  padding: 0 24rpx;
+  border: 1rpx solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 24rpx;
+  line-height: 1;
+}
+
+.btn.dark {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn.outline {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.btn.block {
+  width: 100%;
+  min-height: 76rpx;
+}
+
+.text-link {
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  border-bottom: 1rpx solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font-size: 22rpx;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 56rpx;
+  padding: 0 18rpx;
+  border: 1rpx solid var(--line);
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 22rpx;
+  line-height: 1;
+}
+
+.chip.on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ---------- form ---------- */
+
+.card {
+  background: var(--paper);
+  border: 1rpx solid var(--ink);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.field > text {
+  color: var(--muted);
+  font-size: 20rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+.field input,
+.field .value {
+  min-height: 60rpx;
+  padding: 0 14rpx;
+  border: 1rpx solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 24rpx;
+  line-height: 60rpx;
+}
+
+.field .value {
+  color: var(--ink);
+}
+
+.input-line {
+  min-height: 76rpx;
+  padding: 0 16rpx;
+  border: 1rpx solid var(--line-dark);
+  background: var(--soft);
+  color: var(--ink);
   font-size: 24rpx;
 }
 
-.empty {
-  text-align: center;
-  padding: 120rpx 60rpx;
-}
+/* ---------- notice ---------- */
 
-.empty-title {
-  font-size: 34rpx;
-  font-weight: 700;
-}
-
-.empty-body {
-  font-size: 26rpx;
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  margin: 28rpx;
+  padding: 20rpx 24rpx;
+  border-left: 4rpx solid var(--ink);
+  background: var(--soft);
   color: var(--muted);
-  margin: 16rpx 0 40rpx;
+  font-size: 22rpx;
+  line-height: 1.7;
+}
+
+/* ---------- empty ---------- */
+
+.empty {
+  padding: 80rpx 40rpx;
+  text-align: center;
+}
+
+.empty .empty-title {
+  font-family: var(--serif);
+  font-size: 36rpx;
+}
+
+.empty .empty-body {
+  margin-top: 14rpx;
+  color: var(--muted);
+  font-size: 24rpx;
+  line-height: 1.7;
 }

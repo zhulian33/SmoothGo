@@ -21,8 +21,11 @@ OUT = ROOT / "miniprogram" / "images"
 SIZE = 81
 SCALE = 3
 CANVAS = SIZE * SCALE
-INK = (11, 42, 35)        # #0B2A23 selected
-MUTED = (140, 164, 157)   # #8CA49D normal
+# The web build is black on white with no brand colour anywhere, so the tab bar
+# follows it: grey for unselected, near black for selected. A green set here
+# was the one place the mini program did not look like the same product.
+INK = (17, 17, 17)        # #111111 selected
+MUTED = (108, 108, 108)   # #6C6C6C normal
 STROKE = 16
 C = CANVAS // 2
 
