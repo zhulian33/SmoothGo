@@ -18,7 +18,15 @@
 5. **后端服务**：选 **不使用云服务**
 6. 点 **导入** → 模拟器里直接出首页
 
-> `project.config.json` 里的 `appid` 写的是 `touristappid`，这就是「游客/测试」模式。
+> 仓库里不放 `project.config.json` —— DevTools 一打开项目就会把里面的 `appid`
+> 改成当前登录账号的 AppID，跟着提交就等于把私人测试号推到公开仓库。
+> 第一次用请先复制模板：
+>
+> ```bash
+> cp project.config.example.json project.config.json
+> ```
+>
+> 模板里 `appid` 是 `touristappid`，也就是「游客/测试」模式；
 > 等你注册了真 AppID，把它替换掉就行，其余不用动。
 
 ## 四个页面
@@ -129,7 +137,8 @@ AppID + AppSecret 换来的，而且要求小程序已经发布（生成 `scene`
 ```
 miniprogram/
 ├── app.js / app.json / app.wxss     全局入口、四个 tab、品牌色变量
-├── project.config.json              DevTools 项目配置（含 touristappid）
+├── project.config.example.json      DevTools 项目配置模板（含 touristappid）
+├── project.config.json              本地副本 —— 由上面那份复制而来，不入库
 ├── data/places.js                   574 条地点 —— 自动生成，不要手改
 ├── utils/
 │   ├── planner.js                   打分/排序/多日/重排 —— 从 web/ 拷贝，不要手改

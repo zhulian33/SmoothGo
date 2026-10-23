@@ -38,3 +38,10 @@ node_modules/
 # docked, the last compile options -- so committing it means every machine that
 # imports the project shows up as a dirty tree.
 miniprogram/project.private.config.json
+
+# project.config.json carries the `appid`, and DevTools silently rewrites that
+# field to whatever account is signed in (a personal test account, in practice).
+# Keeping it untracked stops a private AppID from reaching the public repo.
+# Start from the committed template instead:
+#   cp miniprogram/project.config.example.json miniprogram/project.config.json
+miniprogram/project.config.json
