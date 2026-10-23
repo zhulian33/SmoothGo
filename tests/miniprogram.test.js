@@ -258,6 +258,16 @@ test("the map draws one marker per stop and a connecting line", () => {
   page.onMode({ currentTarget: { dataset: { key: "landmark" } } });
   assert.ok(page.data.markers.length > 10);
   assert.equal(page.data.polyline.length, 0);
+
+  // Every pin is the drawn ink dot. WeChat's default is a fat red teardrop,
+  // and fifty of them turn the city centre into a red smear -- dropping the
+  // iconPath is a one-word edit that nothing else on screen would flag.
+  const dot = "/images/marker-dot.png";
+  assert.ok(fs.existsSync(path.join(MP, dot)), `${dot} is missing`);
+  for (const marker of page.data.markers) {
+    assert.equal(marker.iconPath, dot, "a marker fell back to the default pin");
+    assert.ok(marker.width > 0 && marker.height > 0, "a marker has no size");
+  }
 });
 
 test("the map filters, searches and puts places on today's route", () => {

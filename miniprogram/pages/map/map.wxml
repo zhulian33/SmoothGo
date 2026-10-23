@@ -4,11 +4,11 @@
     <view class="kicker">{{kicker}}</view>
     <view class="h2">{{title}}</view>
     <view class="lede">{{subtitle}}</view>
-    <view class="micro muted">{{dataNote}}</view>
+    <view class="micro muted data-note">{{dataNote}}</view>
   </view>
 
-  <view class="pad">
-    <view class="search-box">
+  <view class="toolbar">
+    <view class="toolbar-search">
       <input
         class="search-input"
         value="{{searchValue}}"
@@ -19,52 +19,58 @@
       <view wx:if="{{searchValue}}" class="search-clear" bindtap="onClearSearch">×</view>
     </view>
 
-    <scroll-view class="filter-chips" scroll-x enable-flex>
-      <view
-        wx:for="{{filters}}"
-        wx:key="key"
-        class="chip {{item.key === activeFilter ? 'on' : ''}}"
-        data-key="{{item.key}}"
-        bindtap="onFilter"
-      >{{item.label}}</view>
-    </scroll-view>
-
-    <scroll-view class="layer-chips" scroll-x enable-flex>
-      <view
-        wx:for="{{layers}}"
-        wx:key="key"
-        class="chip {{item.key === activeLayer ? 'on' : ''}}"
-        data-key="{{item.key}}"
-        bindtap="onMode"
-      >{{item.label}} <text class="chip-count">{{item.count}}</text></view>
-    </scroll-view>
-
-    <view class="mode-row">
-      <text class="micro muted">{{baseLabel}}</text>
-      <view class="chip {{satellite ? 'on' : ''}}" bindtap="onSatellite">{{satelliteLabel}}</view>
-      <view class="chip {{traffic ? 'on' : ''}}" bindtap="onTraffic">{{trafficLabel}}</view>
+    <view class="filter-wrap">
+      <scroll-view class="filter-chips" scroll-x>
+        <view
+          wx:for="{{filters}}"
+          wx:key="key"
+          class="chip {{item.key === activeFilter ? 'on' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onFilter"
+        >{{item.label}}</view>
+      </scroll-view>
+      <view class="filter-fade"></view>
     </view>
   </view>
 
-  <view class="pad">
-    <view class="map-card">
-      <map
-        wx:if="{{hasPoints}}"
-        id="placeMap"
-        class="map"
-        latitude="{{latitude}}"
-        longitude="{{longitude}}"
-        scale="{{scale}}"
-        markers="{{markers}}"
-        polyline="{{polyline}}"
-        include-points="{{points}}"
-        enable-satellite="{{satellite}}"
-        enable-traffic="{{traffic}}"
-        bindmarkertap="onMarkerTap"
-        show-location="{{false}}"
-      ></map>
-      <view wx:else class="map-empty">
-        <text class="micro muted">{{emptyLabel}}</text>
+  <!-- The layer switcher and the base-map toggles sit on the map's own top
+       edge, so they read as map controls rather than as two more form rows. -->
+  <view class="map-card">
+    <view class="map-bar">
+      <view
+        wx:for="{{layers}}"
+        wx:key="key"
+        class="layer-tab {{item.key === activeLayer ? 'on' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onMode"
+      >{{item.label}}<text class="layer-count">{{item.count}}</text></view>
+
+    </view>
+
+    <map
+      wx:if="{{hasPoints}}"
+      id="placeMap"
+      class="map"
+      latitude="{{latitude}}"
+      longitude="{{longitude}}"
+      scale="{{scale}}"
+      markers="{{markers}}"
+      polyline="{{polyline}}"
+      include-points="{{points}}"
+      enable-satellite="{{satellite}}"
+      enable-traffic="{{traffic}}"
+      bindmarkertap="onMarkerTap"
+      show-location="{{false}}"
+    ></map>
+    <view wx:else class="map-empty">
+      <text class="micro muted">{{emptyLabel}}</text>
+    </view>
+
+    <view class="map-foot">
+      <text class="micro muted map-credit">{{footnote}}</text>
+      <view class="mode-row">
+        <view class="chip small {{satellite ? 'on' : ''}}" bindtap="onSatellite">{{satelliteLabel}}</view>
+        <view class="chip small {{traffic ? 'on' : ''}}" bindtap="onTraffic">{{trafficLabel}}</view>
       </view>
     </view>
   </view>
@@ -74,7 +80,6 @@
       <view class="card detail">
         <view class="detail-head">
           <text class="serif detail-name">{{selected.name}}</text>
-          <text class="tag">{{selected.modelled}}</text>
         </view>
         <text class="micro muted">{{selected.type}} · {{selected.subtitle}} · {{selected.distance}}</text>
         <text class="micro muted">{{selected.rating}} · {{selected.avg}} · {{selected.hours}}</text>
@@ -85,6 +90,10 @@
           <text class="micro muted detail-basis">{{labels.wait}} · {{selected.basis}}</text>
         </view>
 
+        <!-- The qualifier used to sit beside the name and squeezed it onto two
+             lines; here it reads as a footnote to the estimate it qualifies. -->
+        <text class="micro muted detail-note">{{selected.modelled}}</text>
+
         <view class="detail-actions">
           <view class="btn {{selected.inRoute ? 'dark' : ''}}" data-id="{{selected.id}}" bindtap="onAdd">{{selected.addLabel}}</view>
           <view class="btn" data-id="{{selected.id}}" bindtap="onNavigate">{{labels.nav}}</view>
@@ -94,14 +103,11 @@
   </block>
 
   <view class="section-head">
-    <view>
-      <view class="kicker">{{listKicker}}</view>
-      <view class="serif section-title">{{listTitle}}</view>
-    </view>
+    <view class="serif section-title">{{listTitle}}</view>
     <text class="micro muted">{{countLabel}}</text>
   </view>
 
-  <view class="pad">
+  <view class="place-list">
     <block wx:if="{{hasPlaces}}">
       <view
         wx:for="{{places}}"
@@ -126,8 +132,9 @@
       </view>
     </block>
 
-    <view wx:else class="notice">{{emptyLabel}}</view>
+    <view wx:else class="empty">
+      <view class="empty-body">{{emptyLabel}}</view>
+    </view>
   </view>
 
-  <view class="notice">{{footnote}}</view>
 </view>

@@ -192,6 +192,14 @@ function planCurrentDay(startMinutes) {
  * `count: 0` with `hasRoute: false` is deliberate: the caller decides what an
  * empty map means, and it is not the same on the two pages.
  */
+/**
+ * The pin drawn by docs/make_map_marker.py: an ink dot in a white ring.
+ * WeChat's default marker is a fat red teardrop, and fifty of them turn the
+ * city centre into a red smear -- plus red is the one colour this palette
+ * does not use.
+ */
+const MARKER = { iconPath: "/images/marker-dot.png", width: 18, height: 18 };
+
 function routeMapModel() {
   const route = store.currentRoute();
   if (route.length < 2) {
@@ -209,8 +217,7 @@ function routeMapModel() {
       latitude: place.lat,
       longitude: place.lng,
       title: place.name,
-      width: 28,
-      height: 28,
+      ...MARKER,
     })),
     // Same ink as the rules and headings, at partial alpha so the pins stay
     // readable on top of it. The web build draws this leg in black too.
@@ -374,6 +381,7 @@ function stats() {
 
 module.exports = {
   PLACES,
+  MARKER,
   distanceKm,
   travelBetween,
   timeLabel,

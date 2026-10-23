@@ -153,9 +153,7 @@ Page({
     places: [],
     hasPlaces: false,
     selected: null,
-    listKicker: "",
     listTitle: "",
-    baseLabel: "",
     satelliteLabel: "",
     trafficLabel: "",
     labels: {},
@@ -216,8 +214,7 @@ Page({
         id: index,
         ...toPoint(place),
         title: place.name,
-        width: 28,
-        height: 28,
+        ...core.MARKER,
       })),
       polyline: isRoute && shown.length > 1
         ? [{ points: shown.map(toPoint), color: "#111111CC", width: 5, dottedLine: true }]
@@ -226,9 +223,7 @@ Page({
       places: shown.map((place) => placeRow(place, routeIds, selectedId)),
       hasPlaces: shown.length > 0,
       selected,
-      listKicker: t("地点"),
       listTitle: t("地点列表"),
-      baseLabel: t("底图"),
       satelliteLabel: t("卫星"),
       trafficLabel: t("实时路况"),
       labels: {

@@ -84,6 +84,13 @@
   background: var(--paper);
 }
 
+/* The web build puts a <br> between the two halves of the title. Two inline
+   <text> nodes have no such break, so "Any season is a good season" ran
+   straight into "It is Changchun." */
+.h1 text {
+  display: block;
+}
+
 .h1-em {
   font-style: normal;
   text-decoration: underline;
