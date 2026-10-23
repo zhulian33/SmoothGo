@@ -118,6 +118,8 @@
       >
         <view class="place-head">
           <text class="serif place-name">{{item.name}}</text>
+        </view>
+        <view class="place-meta">
           <text wx:if="{{item.badge}}" class="tag">{{item.badge}}</text>
           <text class="micro muted">{{item.type}}</text>
         </view>
