@@ -22,7 +22,7 @@ const MP = path.join(ROOT, "miniprogram");
 /* ---------- a wx good enough to boot a page ---------- */
 
 function makeWx(storage = new Map()) {
-  const calls = { toast: [], title: [], tabBar: [], switchTab: [] };
+  const calls = { toast: [], title: [], tabBar: [], switchTab: [], location: [] };
   return {
     calls,
     getStorageSync: (key) => (storage.has(key) ? storage.get(key) : ""),
@@ -35,6 +35,7 @@ function makeWx(storage = new Map()) {
     hideLoading: () => {},
     switchTab: ({ url }) => calls.switchTab.push(url),
     navigateTo: () => {},
+    openLocation: (options) => calls.location.push(options),
   };
 }
 
@@ -197,7 +198,9 @@ test("the route page renders times, waits and a basis for every stop", () => {
 
   assert.equal(page.data.hasPlan, true);
   assert.ok(page.data.stops.length >= 2);
-  assert.equal(page.data.tiles.length, 4);
+  // `summary`, matching .route-summary in the web build: stops, total time,
+  // travel time and the estimate per head.
+  assert.equal(page.data.summary.length, 4);
 
   for (const stop of page.data.stops) {
     assert.match(stop.arrival, /^\d{2}:\d{2}$/, `bad arrival ${stop.arrival}`);
@@ -207,8 +210,9 @@ test("the route page renders times, waits and a basis for every stop", () => {
     assert.ok(stop.queueBasis.length > 0, `no basis for ${stop.name}`);
   }
 
-  // Totals have to add up or the summary tiles contradict the timeline.
-  assert.ok(page.data.tiles.every((tile) => tile.value.length > 0));
+  // Totals have to add up or the summary contradicts the timeline. Values are
+  // numbers as often as strings, hence the String().
+  assert.ok(page.data.summary.every((cell) => String(cell.value).length > 0));
 });
 
 test("replanning either moves the route or says why it will not", () => {
@@ -231,7 +235,7 @@ test("replanning either moves the route or says why it will not", () => {
   );
 });
 
-test("the map draws one numbered marker per stop and a connecting line", () => {
+test("the map draws one marker per stop and a connecting line", () => {
   const wx = makeWx();
   bootApp(wx);
   const store = require(path.join(MP, "utils", "store.js"));
@@ -241,7 +245,7 @@ test("the map draws one numbered marker per stop and a connecting line", () => {
   const page = loadPage(path.join("pages", "map", "map.js"), wx);
   page.onShow();
 
-  assert.equal(page.data.hasRoute, true);
+  assert.equal(page.data.hasPoints, true);
   assert.equal(page.data.markers.length, store.currentRoute().length);
   assert.equal(page.data.polyline.length, 1);
   assert.equal(page.data.polyline[0].points.length, page.data.markers.length);
@@ -254,6 +258,50 @@ test("the map draws one numbered marker per stop and a connecting line", () => {
   page.onMode({ currentTarget: { dataset: { key: "landmark" } } });
   assert.ok(page.data.markers.length > 10);
   assert.equal(page.data.polyline.length, 0);
+});
+
+test("the map filters, searches and puts places on today's route", () => {
+  const wx = makeWx();
+  bootApp(wx);
+  const store = require(path.join(MP, "utils", "store.js"));
+  const core = require(path.join(MP, "utils", "core.js"));
+  store.patch({ interests: ["历史"] });
+  core.generateItinerary();
+
+  const page = loadPage(path.join("pages", "map", "map.js"), wx);
+  page.onSearch({ detail: { value: "" } });
+  page.onMode({ currentTarget: { dataset: { key: "attraction" } } });
+
+  const total = page.data.places.length;
+  page.onSearch({ detail: { value: "净月潭" } });
+  assert.ok(page.data.places.length < total, "a search must narrow the list");
+  // The library holds several places whose names start with these characters;
+  // the exact one has to come back, just not necessarily first.
+  assert.ok(
+    page.data.places.some((row) => row.name === "净月潭"),
+    "the searched place is missing from the results"
+  );
+
+  page.onClearSearch();
+  page.onFilter({ currentTarget: { dataset: { key: "featured" } } });
+  assert.ok(page.data.places.length > 0, "the Changchun picks filter is not empty");
+  for (const row of page.data.places) {
+    assert.ok(row.badge.length > 0, `${row.name} is not flagged as a pick`);
+  }
+
+  // Adding has to reach the plan the Route tab reads, not just the page data.
+  const extra = core.PLACES.find(
+    (place) => !store.currentRoute().some((stop) => stop.id === place.id)
+  );
+  const before = store.currentRoute().length;
+  page.onAdd({ currentTarget: { dataset: { id: extra.id } } });
+  assert.equal(store.currentRoute().length, before + 1);
+
+  page.onNavigate({ currentTarget: { dataset: { id: extra.id } } });
+  const opened = wx.calls.location[wx.calls.location.length - 1];
+  assert.ok(opened, "navigation must hand real coordinates to WeChat Maps");
+  assert.equal(opened.name, extra.name);
+  assert.ok(Number.isFinite(opened.latitude) && Number.isFinite(opened.longitude));
 });
 
 test("the queue tab falls back to live hotspots when there is no plan", () => {
@@ -343,6 +391,40 @@ test("the plan survives a reload and the language switches whole", () => {
   assert.deepEqual(wx.calls.tabBar, ["Plan", "Route", "Map", "Queues"]);
 
   i18n.setLang("zh");
+});
+
+test("every class a template uses has a rule in a stylesheet", () => {
+  // A missing rule is invisible here and silently unstyled on the phone, and
+  // it is exactly what happens when a card is copied from the web build and
+  // its CSS is not. Page stylesheets apply to their own page only, so the
+  // global sheet is the baseline and the page sheet sits on top of it.
+  const appSheet = fs.readFileSync(path.join(MP, "app.wxss"), "utf8");
+  const globals = new Set(
+    [...appSheet.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((match) => match[1])
+  );
+
+  for (const page of ["home/home", "route/route", "map/map", "queue/queue"]) {
+    const name = page.split("/")[0];
+    const defined = new Set(globals);
+    const sheet = fs.readFileSync(path.join(MP, `pages/${page}.wxss`), "utf8");
+    for (const match of sheet.matchAll(/\.([a-zA-Z][\w-]*)/g)) defined.add(match[1]);
+
+    const markup = fs.readFileSync(path.join(MP, `pages/${page}.wxml`), "utf8");
+    const used = new Set();
+    for (const match of markup.matchAll(/class="([^"]*)"/g)) {
+      // Both halves of a `{{on ? 'dark' : ''}}` have to count.
+      const literals = match[1].match(/'([^']*)'/g) || [];
+      const names = match[1].replace(/\{\{[\s\S]*?\}\}/g, " ").split(/\s+/);
+      for (const raw of [...names, ...literals]) {
+        const clean = raw.replace(/'/g, "").trim();
+        if (clean) used.add(clean);
+      }
+    }
+
+    for (const name2 of used) {
+      assert.ok(defined.has(name2), `${page}.wxml uses .${name2} with no rule`);
+    }
+  }
 });
 
 test("every page refreshes without throwing in both languages", () => {

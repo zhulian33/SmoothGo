@@ -89,21 +89,61 @@ const EN = {
   "已重排：{v0} 换成 {v1}，省下约 {v2} 分钟":
     "Replanned: swapped {v0} for {v1}, saving about {v2} min",
 
+  /* place cards — the metrics line every card prints */
+  "高德 {v0}": "Amap {v0}",
+  暂无评分: "No rating",
+  "人均约 ¥{v0}": "About ¥{v0} a head",
+  人均待接入: "Spend not wired up",
+  "营业 {v0}": "Open {v0}",
+  营业时间待确认: "Hours unconfirmed",
+  加入路线: "Add to route",
+  已加入路线: "In route",
+  已经在路线里: "Already on the route",
+  导航: "Navigate",
+  分钟: "min",
+
   /* map */
   行程路线: "Route",
-  全部地点: "All places",
+  地标: "Landmarks",
+  "地图 · 全城": "Map · the whole city",
+  "长春的地点都在这一张图上": "Every place in Changchun, on one map",
+  "点地图标注或下方地点卡片，查看营业时间、参考等候和票务入口。":
+    "Tap a pin or a card below for hours, modelled waits and ticket entry.",
+  "图片已省略 · 评分与营业时间来自地点库 · 人均与等候为估算":
+    "Photos omitted · ratings and hours from the library · spend and waits modelled",
+  "搜索长春的餐厅、景点": "Search restaurants and sights",
+  全部: "All",
+  排队少: "Short waits",
+  "人均 ¥100 以下": "Under ¥100",
+  "4.5 分以上": "Rated 4.5+",
+  长春特色: "Changchun picks",
+  "长春 · {v0} 个地点": "Changchun · {v0} places",
   "共 {v0} 个地点": "{v0} places",
+  地点列表: "Place list",
+  地点: "Places",
+  底图: "Base map",
+  卫星: "Satellite",
+  实时路况: "Live traffic",
+  "没有符合条件的地点，换个筛选试试": "Nothing matches — try another filter",
   "坐标为 gcj02，与微信地图一致": "gcj02 coordinates, matching WeChat Maps",
 
   /* queue */
+  "现在 · 排队": "Now · Queues",
+  "哪些地方要等，等多久": "Where you wait, and for how long",
+  "排队信息来自演示数据，真实产品需场地授权或用户主动上报。":
+    "Queue data is demo data; a real product needs venue feeds or user reports.",
+  刷新估算: "Refresh estimates",
+  置信度: "Confidence",
+  "还没有行程，先去首页生成一条路线": "No plan yet — generate one on the Plan tab",
+  "公交到站时间需要对接公交集团数据源，目前未接入；请以站牌或官方 App 为准。":
+    "Bus arrival times need a transit operator feed, which is not wired up. Trust the stop display or the official app.",
+  "等候时长为模型推算，依据写在每张卡片上":
+    "Waits are modelled, and each card says what the model used",
   排队估算: "Queue estimates",
-  参考等候: "Est. wait",
-  依据: "Basis",
-  现在: "Now",
   推算: "Modelled",
   "推算，非实时排队数据": "Modelled, not live queue data",
   来自当日路线: "from today's route",
-  "按当前时间刷新": "Refresh for now",
+  现在: "Now",
 
   /* queue model — periods, so the basis line reads in English too */
   餐厅: "Restaurant",

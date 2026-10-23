@@ -1,47 +1,133 @@
 <view class="page">
-  <view class="modes">
-    <view
-      wx:for="{{modes}}"
-      wx:key="key"
-      class="mode {{item.key === activeMode ? 'on' : ''}}"
-      data-key="{{item.key}}"
-      bindtap="onMode"
-    >{{item.label}}</view>
+
+  <view class="view-head">
+    <view class="kicker">{{kicker}}</view>
+    <view class="h2">{{title}}</view>
+    <view class="lede">{{subtitle}}</view>
+    <view class="micro muted">{{dataNote}}</view>
   </view>
 
-  <view class="map-wrap">
-    <map
-      wx:if="{{hasRoute}}"
-      id="placeMap"
-      class="map"
-      latitude="{{latitude}}"
-      longitude="{{longitude}}"
-      scale="{{scale}}"
-      markers="{{markers}}"
-      polyline="{{polyline}}"
-      include-points="{{points}}"
-      bindmarkertap="onMarkerTap"
-      show-location="{{false}}"
-    ></map>
-    <view wx:else class="map-empty">
-      <view class="empty-title">{{emptyLabel}}</view>
+  <view class="pad">
+    <view class="search-box">
+      <input
+        class="search-input"
+        value="{{searchValue}}"
+        placeholder="{{searchPlaceholder}}"
+        placeholder-class="search-placeholder"
+        bindinput="onSearch"
+      />
+      <view wx:if="{{searchValue}}" class="search-clear" bindtap="onClearSearch">×</view>
+    </view>
+
+    <scroll-view class="filter-chips" scroll-x enable-flex>
+      <view
+        wx:for="{{filters}}"
+        wx:key="key"
+        class="chip {{item.key === activeFilter ? 'on' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onFilter"
+      >{{item.label}}</view>
+    </scroll-view>
+
+    <scroll-view class="layer-chips" scroll-x enable-flex>
+      <view
+        wx:for="{{layers}}"
+        wx:key="key"
+        class="chip {{item.key === activeLayer ? 'on' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onMode"
+      >{{item.label}} <text class="chip-count">{{item.count}}</text></view>
+    </scroll-view>
+
+    <view class="mode-row">
+      <text class="micro muted">{{baseLabel}}</text>
+      <view class="chip {{satellite ? 'on' : ''}}" bindtap="onSatellite">{{satelliteLabel}}</view>
+      <view class="chip {{traffic ? 'on' : ''}}" bindtap="onTraffic">{{trafficLabel}}</view>
     </view>
   </view>
 
-  <view class="card selected" wx:if="{{selected}}">
-    <view class="sel-head">
-      <text class="sel-name">{{selected.name}}</text>
-      <text class="tag">{{selected.modelled}}</text>
-    </view>
-    <view class="muted">{{selected.type}}</view>
-    <view class="sel-row">
-      <text class="sel-wait">{{selected.wait}}′</text>
-      <text class="muted">{{selected.basis}}</text>
+  <view class="pad">
+    <view class="map-card">
+      <map
+        wx:if="{{hasPoints}}"
+        id="placeMap"
+        class="map"
+        latitude="{{latitude}}"
+        longitude="{{longitude}}"
+        scale="{{scale}}"
+        markers="{{markers}}"
+        polyline="{{polyline}}"
+        include-points="{{points}}"
+        enable-satellite="{{satellite}}"
+        enable-traffic="{{traffic}}"
+        bindmarkertap="onMarkerTap"
+        show-location="{{false}}"
+      ></map>
+      <view wx:else class="map-empty">
+        <text class="micro muted">{{emptyLabel}}</text>
+      </view>
     </view>
   </view>
 
-  <view class="footnote">
-    <view wx:if="{{countLabel}}">{{countLabel}}</view>
-    <view>{{footnote}}</view>
+  <block wx:if="{{selected}}">
+    <view class="pad">
+      <view class="card detail">
+        <view class="detail-head">
+          <text class="serif detail-name">{{selected.name}}</text>
+          <text class="tag">{{selected.modelled}}</text>
+        </view>
+        <text class="micro muted">{{selected.type}} · {{selected.subtitle}} · {{selected.distance}}</text>
+        <text class="micro muted">{{selected.rating}} · {{selected.avg}} · {{selected.hours}}</text>
+
+        <view class="detail-queue">
+          <text class="serif detail-wait">{{selected.wait}}</text>
+          <text class="micro muted detail-unit">{{labels.minute}}</text>
+          <text class="micro muted detail-basis">{{labels.wait}} · {{selected.basis}}</text>
+        </view>
+
+        <view class="detail-actions">
+          <view class="btn {{selected.inRoute ? 'dark' : ''}}" data-id="{{selected.id}}" bindtap="onAdd">{{selected.addLabel}}</view>
+          <view class="btn" data-id="{{selected.id}}" bindtap="onNavigate">{{labels.nav}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="section-head">
+    <view>
+      <view class="kicker">{{listKicker}}</view>
+      <view class="serif section-title">{{listTitle}}</view>
+    </view>
+    <text class="micro muted">{{countLabel}}</text>
   </view>
+
+  <view class="pad">
+    <block wx:if="{{hasPlaces}}">
+      <view
+        wx:for="{{places}}"
+        wx:key="id"
+        class="place-card {{item.selected ? 'selected' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onSelectPlace"
+      >
+        <view class="place-head">
+          <text class="serif place-name">{{item.name}}</text>
+          <text wx:if="{{item.badge}}" class="tag">{{item.badge}}</text>
+          <text class="micro muted">{{item.type}}</text>
+        </view>
+        <text class="micro muted">{{item.subtitle}} · {{item.distance}}</text>
+        <text class="micro muted">{{item.rating}} · {{item.avg}} · {{item.hours}}</text>
+        <text class="micro place-queue">{{labels.wait}} {{item.wait}} {{labels.minute}} · {{item.basis}}</text>
+
+        <view class="place-actions">
+          <view class="btn small {{item.inRoute ? 'dark' : ''}}" data-id="{{item.id}}" catchtap="onAdd">{{item.addLabel}}</view>
+          <view class="btn small" data-id="{{item.id}}" catchtap="onNavigate">{{labels.nav}}</view>
+        </view>
+      </view>
+    </block>
+
+    <view wx:else class="notice">{{emptyLabel}}</view>
+  </view>
+
+  <view class="notice">{{footnote}}</view>
 </view>

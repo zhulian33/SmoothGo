@@ -1,28 +1,51 @@
 <view class="page">
-  <view class="head">
-    <view>
-      <view class="head-title">{{title}}</view>
-      <view class="muted">{{stamp}} · {{sourceNote}}</view>
+
+  <view class="view-head">
+    <view class="view-head-text">
+      <view class="kicker">{{kicker}}</view>
+      <view class="h2">{{title}}</view>
+      <view class="lede">{{subtitle}}</view>
+      <view class="micro muted">{{stamp}} · {{countLabel}}</view>
     </view>
-    <view class="refresh" bindtap="onRefresh">{{refreshLabel}}</view>
+    <view class="btn head-btn" bindtap="onRefresh">{{refreshLabel}}</view>
   </view>
 
-  <view class="card queue-card" wx:for="{{items}}" wx:key="id">
-    <view class="q-top">
-      <view class="q-left">
-        <view class="q-name">{{item.name}}</view>
-        <view class="muted">{{item.type}}</view>
+  <view class="pad">
+    <block wx:if="{{hasItems}}">
+      <view class="queue-card" wx:for="{{items}}" wx:key="id">
+        <view class="queue-head">
+          <text class="serif queue-name">{{item.name}}</text>
+          <text class="micro muted">{{item.type}}</text>
+        </view>
+
+        <text class="micro muted">{{item.rating}} · {{item.avg}} · {{item.hours}}</text>
+        <text class="micro muted">{{item.source}} · {{labels.confidence}} {{item.confidence}}</text>
+
+        <view class="queue-body">
+          <view class="queue-range">
+            <text class="serif queue-value">{{item.range}}</text>
+            <text class="micro muted queue-unit">{{labels.minute}}</text>
+          </view>
+          <view class="queue-meta">
+            <text class="micro">{{labels.wait}} · {{item.basis}}</text>
+            <text class="micro muted">{{item.arrival}}</text>
+          </view>
+        </view>
+
+        <view class="queue-actions">
+          <view class="btn small {{item.inRoute ? 'dark' : ''}}" data-id="{{item.id}}" bindtap="onAdd">{{item.addLabel}}</view>
+          <view class="btn small" data-id="{{item.id}}" bindtap="onNavigate">{{labels.nav}}</view>
+        </view>
       </view>
-      <view class="q-right">
-        <view class="q-wait">{{item.range}}<text class="unit">′</text></view>
-        <view class="q-arrival muted">{{item.arrival}}</view>
-      </view>
-    </view>
-    <view class="q-basis">
-      <text class="tag">{{tagLabel}}</text>
-      <text>{{item.basis}}</text>
-    </view>
+    </block>
+
+    <view wx:else class="notice">{{emptyLabel}}</view>
   </view>
 
-  <view class="footnote">{{footnote}}</view>
+  <view class="notice">
+    <text class="notice-mark"></text>
+    <text class="notice-text">{{notice}}</text>
+  </view>
+
+  <view class="micro muted footnote">{{footnote}}</view>
 </view>

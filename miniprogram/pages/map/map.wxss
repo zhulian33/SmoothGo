@@ -1,70 +1,213 @@
-.modes {
-  display: flex;
-  gap: 16rpx;
-  padding: 24rpx 28rpx 0;
-}
+/* Map. Mirrors .view-head, .map-toolbar, .filter-chips, .map-layer-bar,
+   .map-card and .place-card from the web build. The desktop puts the place
+   list to the left of the map; here it goes below, because half-width list
+   rows are unreadable on a phone. */
 
-.mode {
-  padding: 12rpx 32rpx;
-  border-radius: 999rpx;
-  background: #eef2f0;
-  color: var(--muted);
-  font-size: 26rpx;
-}
-
-.mode.on {
-  background: var(--ink);
-  color: #fff;
-  font-weight: 600;
-}
-
-.map-wrap {
-  margin: 20rpx 28rpx 0;
-  height: 62vh;
-  border-radius: 20rpx;
-  overflow: hidden;
+.view-head {
+  padding: 32rpx 28rpx 22rpx;
+  border-bottom: 1rpx solid var(--line);
   background: var(--paper);
-  box-shadow: 0 4rpx 18rpx rgba(11, 42, 35, 0.05);
+}
+
+.view-head .lede {
+  max-width: 620rpx;
+}
+
+/* ---------- search + chips ---------- */
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 24rpx;
+  padding: 0 16rpx;
+  border: 1rpx solid var(--line-dark);
+  background: var(--paper);
+}
+
+.search-input {
+  flex: 1;
+  min-height: 72rpx;
+  font-size: 24rpx;
+}
+
+.search-placeholder {
+  color: var(--muted);
+}
+
+.search-clear {
+  flex: none;
+  width: 48rpx;
+  height: 48rpx;
+  color: var(--muted);
+  font-size: 32rpx;
+  line-height: 44rpx;
+  text-align: center;
+}
+
+.filter-chips,
+.layer-chips {
+  display: flex;
+  white-space: nowrap;
+  margin-top: 16rpx;
+}
+
+.filter-chips .chip,
+.layer-chips .chip {
+  margin-right: 12rpx;
+}
+
+.chip-count {
+  margin-left: 8rpx;
+  font-size: 20rpx;
+  opacity: 0.7;
+}
+
+.mode-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.mode-row .micro {
+  margin-right: 4rpx;
+}
+
+/* ---------- map ---------- */
+
+.map-card {
+  overflow: hidden;
+  margin-top: 24rpx;
+  border: 1rpx solid var(--line-dark);
+  background: #f2f2f2;
 }
 
 .map {
   width: 100%;
-  height: 100%;
+  height: 520rpx;
 }
 
 .map-empty {
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  width: 100%;
+  height: 300rpx;
 }
 
-.card.selected {
+/* ---------- selected card ---------- */
+
+.tag {
+  flex: none;
+  padding: 2rpx 10rpx;
+  border: 1rpx solid var(--line-dark);
+  color: var(--muted);
+  font-size: 18rpx;
+}
+
+.detail {
+  margin-top: 24rpx;
+  padding: 24rpx;
+}
+
+.detail-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+}
+
+.detail-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 36rpx;
+  line-height: 1.3;
+}
+
+.detail .micro {
+  display: block;
+  margin-top: 6rpx;
+}
+
+.detail-queue {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 16rpx;
+  padding: 14rpx 16rpx;
+  background: var(--soft);
+}
+
+.detail-wait {
+  font-size: 44rpx;
+  line-height: 1.1;
+}
+
+.detail-unit {
+  flex: none;
+}
+
+.detail-basis {
+  width: 100%;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 14rpx;
   margin-top: 20rpx;
 }
 
-.sel-head {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+/* ---------- list ---------- */
+
+.section-title {
+  margin-top: 4rpx;
+  font-size: 34rpx;
 }
 
-.sel-name {
-  font-size: 32rpx;
-  font-weight: 700;
-  margin-right: 14rpx;
+.place-card {
+  padding: 24rpx;
+  border-bottom: 1rpx solid var(--line);
+  background: var(--paper);
 }
 
-.sel-row {
+.place-card.selected {
+  border-left: 6rpx solid var(--ink);
+  padding-left: 20rpx;
+}
+
+.place-head {
   display: flex;
   align-items: baseline;
-  gap: 18rpx;
-  margin-top: 14rpx;
+  gap: 12rpx;
 }
 
-.sel-wait {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: var(--ink);
+.place-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 32rpx;
+  line-height: 1.3;
+}
+
+.place-card .micro {
+  display: block;
+  margin-top: 6rpx;
+}
+
+.place-queue {
+  margin-top: 12rpx;
+  padding: 12rpx 14rpx;
+  background: var(--soft);
+}
+
+.place-actions {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 16rpx;
+}
+
+.btn.small {
+  min-height: 52rpx;
+  padding: 0 18rpx;
+  font-size: 22rpx;
 }
