@@ -145,6 +145,57 @@ const EN = {
   来自当日路线: "from today's route",
   现在: "Now",
 
+  /* home — the hero, the planner card and the signal strip.
+     The same English as web/i18n.js where the string appears there too. */
+  畅游通: "Travel, unhurried",
+  长春: "Changchun",
+  "长春 · 今天": "Changchun · today",
+  "自己填条件，或者直接说一段话。SmoothGo 会把地点、天气、车程、排队和购票连成一天到三周的顺路行程。":
+    "Fill in the conditions yourself, or just say a sentence. SmoothGo threads places, weather, driving time, queues and tickets into one route, from a day to three weeks.",
+  一句话规划: "Plan in one sentence",
+  也可以自己编辑下面条件: "Or edit the conditions below",
+  生成路线: "Build the route",
+  每日预算: "Daily budget",
+  长春市朝阳区: "Chaoyang, Changchun",
+  "地图预览 · {v0} 个地点": "Map · {v0} places",
+  高德底图: "Amap tiles",
+  生成路线后这里会显示地图: "The map appears once a route exists",
+  "{v0} 个地点 · 约 {v1} · 总车程 {v2}": "{v0} stops · about {v1} · {v2} driving",
+  还没有生成路线: "No route yet",
+  "查看完整路线 →": "See the full route →",
+  天气: "Weather",
+  未接入数据源: "No data source",
+  "{v0} 个": "{v0}",
+  "推算等候 · 非实时": "Modelled waits, not live",
+  公交: "Transit",
+  已保存: "Saved",
+  路线中的地点: "places on the route",
+  今日路线: "Today's route",
+  今天可以这样走: "Here is how today could go",
+  还没有今日路线: "No route for today yet",
+  "填一句话或按「生成路线」，这里会列出今天的站点":
+    "Say a sentence or tap Build the route, and today's stops appear here",
+
+  /* route — the head, the summary row and the sheet */
+  路线规划: "Route planning",
+  "长春 {v0} 日路线": "Changchun, {v0} days",
+  长春一日路线: "One day in Changchun",
+  "{v0} 个地点 · {v1} · {v2} 开始": "{v0} stops · {v1} · starting {v2}",
+  今天: "Today",
+  "还没有地点，先去地图添加。": "No stops yet — add them from the Map tab.",
+  个地点: "stops",
+  总车程: "Driving",
+  "当日人均 · 估": "Per head · est.",
+  开始导航: "Start navigation",
+  "＋ 添加地点": "＋ Add a place",
+  移除: "Remove",
+  最优连接: "Best order",
+  "驾车优先 · 按路程估算": "Driving first · estimated from distance",
+  "排队为模型推算并附依据；车程按直线距离估算，非实时路况。":
+    "Waits are modelled and every stop states its basis; driving times are straight-line estimates, not live traffic.",
+  推算等候: "Est. wait",
+  暂无: "None",
+
   /* queue model — periods, so the basis line reads in English too */
   餐厅: "Restaurant",
   景点: "Attraction",

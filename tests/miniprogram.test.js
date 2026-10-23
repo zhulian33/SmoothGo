@@ -427,6 +427,52 @@ test("every class a template uses has a rule in a stylesheet", () => {
   }
 });
 
+test("the English UI is English, not half Chinese", () => {
+  // A missing dictionary entry does not throw and does not fall back to a
+  // placeholder -- it falls back to the Chinese key. So a page can look
+  // translated in the tab bar and half-Chinese everywhere else, which is
+  // exactly what the running simulator showed.
+  const wx = makeWx();
+  bootApp(wx);
+  const i18n = require(path.join(MP, "utils", "i18n.js"));
+  require(path.join(MP, "utils", "core.js")).generateItinerary();
+
+  // Place names, types and addresses are library data and stay Chinese in both
+  // languages; the user's own sentence and location do too. langLabel is the
+  // switch itself, so it reads 中 while the UI is English.
+  const DATA = new Set([
+    "places", "stops", "items", "selected", "todayStops",
+    "markers", "polyline", "points", "sentence", "location", "langLabel",
+  ]);
+
+  function scan(value, at) {
+    if (typeof value === "string") {
+      if (/[\u4e00-\u9fa5]/.test(value)) {
+        assert.fail(`English UI still shows Chinese at ${at}: "${value}"`);
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => scan(item, `${at}[${index}]`));
+      return;
+    }
+    if (value && typeof value === "object") {
+      for (const [key, inner] of Object.entries(value)) {
+        if (DATA.has(key)) continue;
+        scan(inner, `${at}.${key}`);
+      }
+    }
+  }
+
+  i18n.setLang("en");
+  for (const page of ["home/home", "route/route", "map/map", "queue/queue"]) {
+    const instance = loadPage(path.join("pages", page + ".js"), wx);
+    instance.onShow();
+    scan(instance.data, page);
+  }
+  i18n.setLang("zh");
+});
+
 test("every page refreshes without throwing in both languages", () => {
   const wx = makeWx();
   bootApp(wx);
